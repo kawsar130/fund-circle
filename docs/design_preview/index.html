@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fund Circle — Android Material 3 Interactive Design System & Mockups</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* M3 Light Palette */
+      --fc-primary: #006D4D;
+      --fc-on-primary: #FFFFFF;
+      --fc-primary-container: #82F8C5;
+      --fc-on-primary-container: #002114;
+      --fc-secondary: #1B365D;
+      --fc-on-secondary: #FFFFFF;
+      --fc-secondary-container: #D9E2FF;
+      --fc-on-secondary-container: #001944;
+      --fc-tertiary: #7D5700;
+      --fc-tertiary-container: #FFDE9C;
+      --fc-on-tertiary-container: #261900;
+      --fc-error: #BA1A1A;
+      --fc-on-error: #FFFFFF;
+      --fc-error-container: #FFDAD6;
+      --fc-on-error-container: #410002;
+      --fc-background: #FCFDF7;
+      --fc-on-background: #191C1A;
+      --fc-surface: #FCFDF7;
+      --fc-on-surface: #191C1A;
+      --fc-surface-variant: #DDE5DE;
+      --fc-on-surface-variant: #404944;
+      --fc-outline: #707973;
+      --fc-outline-variant: #BFC9C2;
+
+      /* Semantic Financial Tokens */
+      --fc-deposit: #006D4D;
+      --fc-deposit-bg: #82F8C5;
+      --fc-expense: #BA1A1A;
+      --fc-expense-bg: #FFDAD6;
+      --fc-voided: #747775;
+      --fc-voided-bg: #E3E3E3;
+
+      /* Elevations (Tonal Surface Tint) */
+      --fc-elev-0: #FCFDF7;
+      --fc-elev-1: #F2F7F2;
+      --fc-elev-2: #EAF3EC;
+      --fc-elev-3: #E1EFE6;
+      --fc-elev-4: #DEECE3;
+      --fc-elev-5: #D7E7DC;
+
+      --app-bg: #F4F6F4;
+      --shell-sidebar: #FFFFFF;
+      --shell-border: #E0E4E0;
+    }
+
+    [data-theme="dark"] {
+      /* M3 Dark Palette */
+      --fc-primary: #00DF9A;
+      --fc-on-primary: #003826;
+      --fc-primary-container: #005239;
+      --fc-on-primary-container: #82F8C5;
+      --fc-secondary: #AFC6FF;
+      --fc-on-secondary: #10305F;
+      --fc-secondary-container: #2B4776;
+      --fc-on-secondary-container: #D9E2FF;
+      --fc-tertiary: #FABC3C;
+      --fc-tertiary-container: #5F4100;
+      --fc-on-tertiary-container: #FFDE9C;
+      --fc-error: #FFB4AB;
+      --fc-on-error: #690005;
+      --fc-error-container: #93000A;
+      --fc-on-error-container: #FFDAD6;
+      --fc-background: #111412;
+      --fc-on-background: #E1E3DF;
+      --fc-surface: #111412;
+      --fc-on-surface: #E1E3DF;
+      --fc-surface-variant: #404944;
+      --fc-on-surface-variant: #BFC9C2;
+      --fc-outline: #89938D;
+      --fc-outline-variant: #404944;
+
+      /* Semantic Financial Tokens */
+      --fc-deposit: #00DF9A;
+      --fc-deposit-bg: #005239;
+      --fc-expense: #FFB4AB;
+      --fc-expense-bg: #93000A;
+      --fc-voided: #8E918F;
+      --fc-voided-bg: #2C2C2C;
+
+      /* Elevations (Dark Tonal Tint) */
+      --fc-elev-0: #111412;
+      --fc-elev-1: #181D1A;
+      --fc-elev-2: #1E2521;
+      --fc-elev-3: #232C27;
+      --fc-elev-4: #252F2A;
+      --fc-elev-5: #29342E;
+
+      --app-bg: #0A0C0B;
+      --shell-sidebar: #151917;
+      --shell-border: #2A302C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--app-bg);
+      color: var(--fc-on-background);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Tabular Numeral Enforcement */
+    .tnum, .amount, .date, .counter {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* Desktop Navigation Shell */
+    .shell-nav {
+      width: 320px;
+      background: var(--shell-sidebar);
+      border-right: 1px solid var(--shell-border);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .shell-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--shell-border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--fc-primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fc-on-primary);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--fc-on-surface);
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: var(--fc-on-surface-variant);
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--fc-on-surface-variant);
+      padding: 16px 20px 8px;
+    }
+
+    .nav-item {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--fc-on-surface-variant);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item:hover {
+      background: rgba(0, 109, 77, 0.08);
+      color: var(--fc-primary);
+    }
+
+    .nav-item.active {
+      background: rgba(0, 109, 77, 0.12);
+      color: var(--fc-primary);
+      border-left-color: var(--fc-primary);
+      font-weight: 600;
+    }
+
+    .theme-toggle-container {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--shell-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-theme-toggle {
+      background: var(--fc-surface-variant);
+      color: var(--fc-on-surface-variant);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Device Preview Workspace */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .workspace-header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .screen-meta h2 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .screen-meta p {
+      font-size: 13px;
+      color: var(--fc-on-surface-variant);
+      margin-top: 4px;
+    }
+
+    /* Realistic Android Frame (Pixel 8 Viewport: 412x915) */
+    .phone-mockup {
+      width: 412px;
+      height: 880px;
+      background: var(--fc-surface);
+      border-radius: 40px;
+      border: 12px solid #2B2F2C;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 36px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fc-on-surface);
+      flex-shrink: 0;
+      background: transparent;
+      z-index: 10;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    /* Screen Content Container */
+    .screen-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* App Top Bar */
+    .top-app-bar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      color: var(--fc-on-surface);
+      flex-shrink: 0;
+    }
+
+    .top-app-bar h3 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--fc-on-surface);
+      background: transparent;
+      border: none;
+    }
+    .icon-btn:hover {
+      background: rgba(0,0,0,0.06);
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      height: 64px;
+      background: var(--fc-elev-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border-top: 1px solid var(--fc-outline-variant);
+      flex-shrink: 0;
+    }
+
+    .nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--fc-on-surface-variant);
+      cursor: pointer;
+    }
+
+    .nav-tab.active {
+      color: var(--fc-primary);
+      font-weight: 600;
+    }
+
+    .nav-tab-pill {
+      width: 48px;
+      height: 24px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-tab.active .nav-tab-pill {
+      background: var(--fc-primary-container);
+      color: var(--fc-on-primary-container);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--fc-elev-1);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--fc-outline-variant);
+    }
+
+    .card-hero {
+      background: var(--fc-elev-2);
+      border: 1px solid var(--fc-outline-variant);
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--fc-primary);
+      color: var(--fc-on-primary);
+      border: none;
+      height: 50px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-tonal {
+      background: var(--fc-primary-container);
+      color: var(--fc-on-primary-container);
+      border: none;
+      height: 48px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-outlined {
+      background: transparent;
+      color: var(--fc-primary);
+      border: 1px solid var(--fc-outline);
+      height: 48px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-destructive {
+      background: var(--fc-error);
+      color: var(--fc-on-error);
+      border: none;
+      height: 48px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    /* Floating Action Button (FAB) */
+    .fab-extended {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      height: 56px;
+      padding: 0 20px;
+      background: var(--fc-primary);
+      color: var(--fc-on-primary);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      border: none;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    /* Status Pills */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .pill-active { background: var(--fc-primary-container); color: var(--fc-on-primary-container); }
+    .pill-inactive { background: var(--fc-surface-variant); color: var(--fc-on-surface-variant); }
+    .pill-left { background: var(--fc-error-container); color: var(--fc-on-error-container); }
+    .pill-admin { background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); }
+    .pill-voided { background: var(--fc-error-container); color: var(--fc-error); border: 1px solid var(--fc-error); }
+
+    /* Category Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .chip-sec { background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); }
+    .chip-tert { background: var(--fc-tertiary-container); color: var(--fc-on-tertiary-container); }
+    .chip-err { background: var(--fc-error-container); color: var(--fc-on-error-container); }
+    .chip-prim { background: var(--fc-primary-container); color: var(--fc-on-primary-container); }
+    .chip-surf { background: var(--fc-surface-variant); color: var(--fc-on-surface-variant); }
+
+    /* Input Field */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+    }
+    .input-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--fc-on-surface-variant);
+    }
+    .input-box {
+      height: 52px;
+      border-radius: 8px;
+      border: 1px solid var(--fc-outline-variant);
+      background: var(--fc-surface);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: var(--fc-on-surface);
+    }
+    .input-box.focused {
+      border: 2px solid var(--fc-primary);
+    }
+    .input-hint {
+      font-size: 11px;
+      color: var(--fc-on-surface-variant);
+    }
+
+    /* Modal Sheet Overlay */
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      z-index: 50;
+    }
+    .modal-sheet {
+      background: var(--fc-surface);
+      border-radius: 28px 28px 0 0;
+      padding: 24px 20px;
+      max-height: 90%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.25);
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--fc-outline-variant);
+      align-self: center;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Desktop Navigation Shell -->
+  <aside class="shell-nav">
+    <div class="shell-header">
+      <div class="brand-logo">FC</div>
+      <div>
+        <div class="brand-title">Fund Circle</div>
+        <div class="brand-sub">Android Material 3 Spec</div>
+      </div>
+    </div>
+
+    <div class="nav-section-title">Design Foundations</div>
+    <div class="nav-item active" onclick="showScreen('screen_tokens')">🎨 Design Tokens & Atoms</div>
+
+    <div class="nav-section-title">Flow 1: Auth & Circle Hub</div>
+    <div class="nav-item" onclick="showScreen('screen_01')">01. Sign-In (auth_welcome)</div>
+    <div class="nav-item" onclick="showScreen('screen_02')">02. Circle Hub (circle_hub)</div>
+    <div class="nav-item" onclick="showScreen('screen_03')">03. Create Wizard (circle_create)</div>
+
+    <div class="nav-section-title">Flow 2: Dashboard & Ledgers</div>
+    <div class="nav-item" onclick="showScreen('screen_04')">04. Circle Dashboard (dashboard_home)</div>
+    <div class="nav-item" onclick="showScreen('screen_05')">05. Transactions Ledger (ledger_transactions)</div>
+    <div class="nav-item" onclick="showScreen('screen_06')">06. Transaction Detail & Audit Card</div>
+
+    <div class="nav-section-title">Flow 3: Financial Recording & Voids</div>
+    <div class="nav-item" onclick="showScreen('screen_07')">07. Add Transaction Modal (modal_add_tx)</div>
+    <div class="nav-item" onclick="showScreen('screen_14')">14. Void Confirmation Dialog (dialog_void_tx)</div>
+
+    <div class="nav-section-title">Flow 4: Stakeholders & KYC</div>
+    <div class="nav-item" onclick="showScreen('screen_08')">08. Stakeholders Roster (members_roster)</div>
+    <div class="nav-item" onclick="showScreen('screen_09')">09. Member Detail & Ledger (member_detail)</div>
+    <div class="nav-item" onclick="showScreen('screen_10')">10. Add Stakeholder Modal (modal_add_member)</div>
+    <div class="nav-item" onclick="showScreen('screen_11')">11. Edit My Profile (Self-Service)</div>
+
+    <div class="nav-section-title">Flow 5: Reports & Administration</div>
+    <div class="nav-item" onclick="showScreen('screen_12')">12. Reports & CSV Export (reports_export)</div>
+    <div class="nav-item" onclick="showScreen('screen_13')">13. Settings & Governance (settings_admin)</div>
+
+    <div class="theme-toggle-container">
+      <span style="font-size: 13px; font-weight: 500;">Preview Theme</span>
+      <button class="btn-theme-toggle" onclick="toggleTheme()">
+        <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Device Preview Workspace -->
+  <main class="workspace">
+    <div class="workspace-header">
+      <div class="screen-meta">
+        <h2 id="viewTitle">🎨 Design Tokens & Component Foundations</h2>
+        <p id="viewDesc">Material 3 Tonal Palettes, Tabular Typography Scale, and Atomic Badges</p>
+      </div>
+      <div style="font-size: 12px; font-weight: 600; color: var(--fc-primary); background: var(--fc-primary-container); padding: 6px 14px; border-radius: 20px;">
+        Android 8.0+ (API 26–35) • Inter (tnum)
+      </div>
+    </div>
+
+    <!-- The Phone Mockup -->
+    <div class="phone-mockup" id="phoneContainer">
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <span>5G</span>
+          <span>📶</span>
+          <span>100% 🔋</span>
+        </div>
+      </div>
+
+      <!-- Screen Container (Dynamically rendered via JS) -->
+      <div class="screen-body" id="screenContent">
+        <!-- Rendered by JavaScript -->
+      </div>
+
+      <!-- Bottom Nav (Visible on Dashboard, Transactions, Members, Reports, Settings) -->
+      <nav class="bottom-nav" id="bottomNav">
+        <div class="nav-tab active" id="nav_tab_04" onclick="showScreen('screen_04')">
+          <div class="nav-tab-pill">🏠</div>
+          <span>Home</span>
+        </div>
+        <div class="nav-tab" id="nav_tab_08" onclick="showScreen('screen_08')">
+          <div class="nav-tab-pill">👥</div>
+          <span>Members</span>
+        </div>
+        <div class="nav-tab" id="nav_tab_05" onclick="showScreen('screen_05')">
+          <div class="nav-tab-pill">📋</div>
+          <span>Transactions</span>
+        </div>
+        <div class="nav-tab" id="nav_tab_12" onclick="showScreen('screen_12')">
+          <div class="nav-tab-pill">📊</div>
+          <span>Reports</span>
+        </div>
+        <div class="nav-tab" id="nav_tab_13" onclick="showScreen('screen_13')">
+          <div class="nav-tab-pill">⚙️</div>
+          <span>Settings</span>
+        </div>
+      </nav>
+
+    </div>
+  </main>
+
+  <script>
+    // Theme Switcher
+    function toggleTheme() {
+      const body = document.body;
+      const isDark = body.getAttribute('data-theme') === 'dark';
+      body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
+      document.getElementById('themeText').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+    }
+
+    // Modal Add Transaction Mode (deposit vs expense)
+    let currentTxMode = 'deposit';
+    function setTxMode(mode) {
+      currentTxMode = mode;
+      showScreen('screen_07');
+    }
+
+    // Transactions Ledger Segmented Tab (deposits vs expenses)
+    let currentLedgerTab = 'deposits';
+    function setLedgerTab(tab) {
+      currentLedgerTab = tab;
+      showScreen('screen_05');
+    }
+
+    // Reports Format Selector
+    let currentReportType = 'monthly_summary';
+    function setReportType(type) {
+      currentReportType = type;
+      showScreen('screen_12');
+    }
+
+    // Screen Renderers
+    const screens = {
+      // 00. Tokens & Atoms
+      screen_tokens: {
+        title: "🎨 Design Tokens & Component Foundations",
+        desc: "Material 3 Tonal Palettes, Tabular Typography Scale, and Atomic Badges",
+        showNav: false,
+        render: () => `
+          <div style="font-size: 18px; font-weight: 700;">Foundational M3 Tokens</div>
+          
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Semantic Financial Indicators (Protected)</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="pill pill-active">Deposit: +৳ 50,000</span>
+              <span class="pill pill-left">Expense: -৳ 3,500</span>
+              <span class="pill pill-voided">Voided: ~৳ 20,000~</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Stakeholder Status & Roles</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="pill pill-admin">ADMIN 🛡️</span>
+              <span class="pill pill-inactive">STAKEHOLDER 👤</span>
+              <span class="pill pill-active">ACTIVE ✓</span>
+              <span class="pill pill-inactive">INACTIVE ⏱</span>
+              <span class="pill pill-left">LEFT ✕</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">8 Predefined Expense Categories</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <span class="chip chip-sec">🏢 Office & Admin</span>
+              <span class="chip chip-tert">🚗 Travel & Transport</span>
+              <span class="chip chip-err">🏦 Bank Charges</span>
+              <span class="chip chip-surf">⚖️ Legal & Docs</span>
+              <span class="chip chip-prim">👥 Meetings & Events</span>
+              <span class="chip chip-sec">⚡ Utilities & Comm</span>
+              <span class="chip chip-tert">🏠 Rent & Maint</span>
+              <span class="chip chip-surf">⋯ Others</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">3 Payment Methods</div>
+            <div style="display: flex; gap: 8px;">
+              <span class="chip chip-surf">💵 Cash</span>
+              <span class="chip chip-sec">🏦 Bank Transfer</span>
+              <span class="chip chip-prim">📱 Mobile Banking</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Tabular Numbers Verification</div>
+            <div class="tnum" style="font-size: 20px; font-weight: 700; line-height: 1.5;">
+              <div>৳ 4,850,000</div>
+              <div>৳ 1,200,000</div>
+              <div>৳   350,000</div>
+            </div>
+          </div>
+        `
+      },
+
+      // 01. Welcome & Google Sign-In
+      screen_01: {
+        title: "01. Welcome & Google Sign-In (auth_welcome)",
+        desc: "Screen 01: Native Google One-Tap authentication with brand archetype presentation",
+        showNav: false,
+        render: () => `
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 24px; padding: 20px 0;">
+            <div style="width: 84px; height: 84px; background: var(--fc-primary); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: white; font-size: 38px; font-weight: 800; box-shadow: 0 12px 30px rgba(0,109,77,0.3);">
+              FC
+            </div>
+            <div>
+              <h1 style="font-size: 28px; font-weight: 700;">Fund Circle</h1>
+              <p style="font-size: 14px; color: var(--fc-on-surface-variant); margin-top: 6px;">Transparent Capital Management</p>
+            </div>
+            <div style="max-width: 280px; font-size: 13px; color: var(--fc-on-surface-variant); line-height: 1.5;">
+              Immutable pooled-capital ledgers, real-time stakeholder transparency, and verified fiduciary governance.
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+            <button class="btn-primary" onclick="showScreen('screen_02')">
+              <span>G</span> Continue with Google One-Tap
+            </button>
+            <div style="font-size: 11px; text-align: center; color: var(--fc-on-surface-variant);">
+              Zero passwords. Instant cryptographic sign-in via Android Credential Manager.
+            </div>
+          </div>
+        `
+      },
+
+      // 02. Circle Selector & Hub
+      screen_02: {
+        title: "02. Circle Selector & Invitation Hub (circle_hub)",
+        desc: "Screen 02: Switch between managed circles and review incoming invitations",
+        showNav: false,
+        render: () => `
+          <div class="top-app-bar">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; color: var(--fc-on-surface-variant);">Signed In</div>
+              <h3 style="font-size: 18px;">kawsar@example.com</h3>
+            </div>
+            <button class="icon-btn" onclick="showScreen('screen_01')">🚪</button>
+          </div>
+
+          <!-- Pending Invitations Section -->
+          <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-top: 12px;">Pending Invites (1)</div>
+          
+          <div class="card" style="border-left: 4px solid var(--fc-secondary);">
+            <div style="font-weight: 700; font-size: 15px;">Apex Angel Syndicate</div>
+            <p style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">Invited by: kamal@example.com</p>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button class="btn-primary" style="height: 38px; font-size: 13px;" onclick="showScreen('screen_04')">Accept</button>
+              <button class="btn-outlined" style="height: 38px; font-size: 13px;" onclick="alert('Invitation declined.')">Decline</button>
+            </div>
+          </div>
+
+          <!-- Circles I Manage -->
+          <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-top: 12px;">Circles I Manage (1/5)</div>
+
+          <div class="card" style="cursor: pointer;" onclick="showScreen('screen_04')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span class="pill pill-admin" style="margin-bottom: 6px;">ADMIN</span>
+                <div style="font-weight: 700; font-size: 16px;">Green Valley Property Pool</div>
+                <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">14 Members • BDT (৳)</div>
+              </div>
+              <div class="tnum" style="text-align: right;">
+                <div style="font-size: 18px; font-weight: 800; color: var(--fc-deposit);">৳ 1,450,000</div>
+                <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Balance</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Circles I Joined -->
+          <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-top: 12px;">Circles I Joined (1)</div>
+
+          <div class="card" style="cursor: pointer;" onclick="showScreen('screen_04')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span class="pill pill-inactive" style="margin-bottom: 6px;">STAKEHOLDER</span>
+                <div style="font-weight: 700; font-size: 16px;">Silicon Valley Seed Pool</div>
+                <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">6 Members • USD ($)</div>
+              </div>
+              <div class="tnum" style="text-align: right;">
+                <div style="font-size: 18px; font-weight: 800; color: var(--fc-deposit);">$ 120,000</div>
+                <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Balance</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-tonal" style="margin-top: auto; border: 1px dashed var(--fc-outline);" onclick="showScreen('screen_03')">
+            + Create New Fund Circle
+          </button>
+        `
+      },
+
+      // 03. Create Circle Wizard
+      screen_03: {
+        title: "03. Create Circle Wizard (circle_create)",
+        desc: "Screen 03: Establish circle name and permanently lock base currency",
+        showNav: false,
+        render: () => `
+          <div class="top-app-bar">
+            <button class="icon-btn" onclick="showScreen('screen_02')">←</button>
+            <h3>New Fund Circle</h3>
+            <div style="width: 40px;"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Circle Name *</label>
+            <div class="input-box focused">
+              <span>🏛️</span>
+              <input type="text" value="Green Valley Property Pool" style="border:none; outline:none; background:transparent; color:inherit; font-size:15px; width:100%;">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Base Currency (Permanent Lock) *</label>
+            <div class="input-box">
+              <span>💱</span>
+              <select style="border:none; outline:none; background:transparent; color:inherit; font-size:15px; width:100%;">
+                <option selected>BDT - Bangladeshi Taka (৳)</option>
+                <option>USD - United States Dollar ($)</option>
+                <option>EUR - Euro (€)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="background: var(--fc-tertiary-container); color: var(--fc-on-tertiary-container); border: none;">
+            <div style="display: flex; gap: 8px; font-size: 12px; line-height: 1.4;">
+              <span>⚠️</span>
+              <span><strong>Permanence Notice:</strong> Once the first deposit or expense is recorded, the base currency is locked permanently and cannot be edited.</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Initial Purpose Note (Optional)</label>
+            <div class="input-box" style="height: 72px; align-items: flex-start; padding-top: 10px;">
+              <span>📝</span>
+              <textarea placeholder="e.g. Commercial plot purchase pool" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%; resize:none;"></textarea>
+            </div>
+          </div>
+
+          <button class="btn-primary" style="margin-top: auto;" onclick="showScreen('screen_04')">
+            Create & Enter Circle
+          </button>
+        `
+      },
+
+      // 04. Circle Home Dashboard
+      screen_04: {
+        title: "04. Circle Home Dashboard (dashboard_home)",
+        desc: "Screen 04: Real-time balance card, aggregate statistics, and fast entry FAB",
+        showNav: true,
+        render: () => `
+          <div class="top-app-bar">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; color: var(--fc-on-surface-variant);">Active Circle</div>
+              <h3 style="font-size: 18px;">Green Valley Property Pool</h3>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <button class="icon-btn">🔔</button>
+              <button class="icon-btn" onclick="showScreen('screen_13')">⚙️</button>
+            </div>
+          </div>
+
+          <!-- Hero Balance Card -->
+          <div class="card-hero">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--fc-on-surface-variant);">Recorded Pool Balance</span>
+              <span class="pill pill-active">LIVE</span>
+            </div>
+            <div class="tnum" style="font-size: 36px; font-weight: 800; color: var(--fc-deposit); margin: 12px 0 16px;">
+              ৳ 1,450,000
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 12px; border-top: 1px solid var(--fc-outline-variant);">
+              <div>
+                <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Total Deposits (14)</div>
+                <div class="tnum" style="font-size: 16px; font-weight: 700; color: var(--fc-deposit);">৳ 1,600,000</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Total Expenses (6)</div>
+                <div class="tnum" style="font-size: 16px; font-weight: 700; color: var(--fc-expense);">৳ 150,000</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <span style="font-size: 14px; font-weight: 700;">Recent Transactions</span>
+            <span style="font-size: 12px; color: var(--fc-primary); font-weight: 600; cursor: pointer;" onclick="showScreen('screen_05')">View All</span>
+          </div>
+
+          <!-- Transaction Row 1 -->
+          <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+            <div style="display: flex; justify-content: space-between;">
+              <div style="font-weight: 600; font-size: 14px;">Rahim Uddin (FC-002)</div>
+              <div class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 100,000</div>
+            </div>
+            <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">Monthly Capital • Bank Transfer</div>
+            <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">12 Nov 2026 • Verified</div>
+          </div>
+
+          <!-- Transaction Row 2 -->
+          <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+            <div style="display: flex; justify-content: space-between;">
+              <div style="font-weight: 600; font-size: 14px;">Office Supplies</div>
+              <div class="tnum" style="font-weight: 700; color: var(--fc-expense);">-৳ 3,500</div>
+            </div>
+            <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">Office & Admin • Cash</div>
+            <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 10, 2026 • Paid by: Tareq</div>
+          </div>
+
+          <button class="fab-extended" onclick="showScreen('screen_07')">
+            <span>+</span> Record Transaction
+          </button>
+        `
+      },
+
+      // 05. Transactions Ledger Screen (Unified Segmented Tabs: Deposits / Expenses)
+      screen_05: {
+        title: "05. Transactions Ledger Screen (ledger_transactions)",
+        desc: "Screen 05: Searchable, filterable ledger with interactive segmented tabs for Deposits and Expenses",
+        showNav: true,
+        render: () => {
+          const isDep = currentLedgerTab === 'deposits';
+          return `
+          <div class="top-app-bar">
+            <h3>Transactions Ledger</h3>
+            <button class="icon-btn">🔍</button>
+          </div>
+
+          <!-- Interactive Primary Segmented Tab Row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; background: var(--fc-surface-variant); padding: 4px; border-radius: 12px; margin-bottom: 8px;">
+            <button onclick="setLedgerTab('deposits')" style="border:none; padding: 10px; border-radius: 9px; font-weight: ${isDep ? '700' : '500'}; background: ${isDep ? 'var(--fc-surface)' : 'transparent'}; color: ${isDep ? 'var(--fc-primary)' : 'var(--fc-on-surface-variant)'}; cursor: pointer; transition: all 0.2s;">
+              Deposits (14)
+            </button>
+            <button onclick="setLedgerTab('expenses')" style="border:none; padding: 10px; border-radius: 9px; font-weight: ${!isDep ? '700' : '500'}; background: ${!isDep ? 'var(--fc-surface)' : 'transparent'}; color: ${!isDep ? 'var(--fc-error)' : 'var(--fc-on-surface-variant)'}; cursor: pointer; transition: all 0.2s;">
+              Expenses (6)
+            </button>
+          </div>
+
+          ${isDep ? `
+            <!-- Deposits View -->
+            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+              <span class="chip chip-prim">All Dates ▼</span>
+              <span class="chip chip-surf">Rafiq Ahmed</span>
+              <span class="chip chip-surf">Tareq Hasan</span>
+              <span class="chip chip-surf">Bank Transfer</span>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-top: 8px;">October 2026</div>
+
+            <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px;">Rafiq Ahmed (FC-002)</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 50,000</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Monthly installment share • Bank Transfer</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 12, 2026 • Verified</div>
+            </div>
+
+            <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px;">Tareq Hasan (FC-003)</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 100,000</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Q3 Capital Addition • Cheque #9821</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 08, 2026 • Verified</div>
+            </div>
+
+            <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px;">Kamal Hossain (FC-004)</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 50,000</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Monthly installment share • Mobile Banking</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 05, 2026 • Verified</div>
+            </div>
+
+            <div class="card" style="padding: 12px 14px; opacity: 0.8; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px; text-decoration: line-through;">~Sajjad Hossain (FC-005)~</span>
+                <span class="pill pill-voided">VOIDED</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-error); margin-top: 2px;">Original: ৳ 50,000 • Reversal: -৳ 50,000</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 02, 2026 • Reason: Check bounced</div>
+            </div>
+          ` : `
+            <!-- Expenses View -->
+            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+              <span class="chip chip-err">All Categories ▼</span>
+              <span class="chip chip-surf">Office & Admin</span>
+              <span class="chip chip-surf">Legal & Docs</span>
+              <span class="chip chip-surf">Bank Charges</span>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-top: 8px;">October 2026</div>
+
+            <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px;">City Registry Fee</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-expense);">-৳ 25,000</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Legal & Documentation • Bank Transfer</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 11, 2026 • Paid to: Land Office</div>
+            </div>
+
+            <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px;">Stationery & Printing</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-expense);">-৳ 3,500</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Office & Administration • Cash</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 10, 2026 • Paid by: Tareq</div>
+            </div>
+
+            <div class="card" style="padding: 12px 14px; opacity: 0.8; cursor: pointer;" onclick="showScreen('screen_06')">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: 600; font-size: 14px; text-decoration: line-through;">~Audit Consultation Fee~</span>
+                <span class="pill pill-voided">VOIDED</span>
+              </div>
+              <div style="font-size: 12px; color: var(--fc-error); margin-top: 2px;">Original: ৳ 15,000 • Reversal: +৳ 15,000</div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 09, 2026 • Reason: Duplicate voucher</div>
+            </div>
+          `}
+        `;}
+      },
+
+      // 06. Transaction Details & Audit Disclosure Card
+      screen_06: {
+        title: "06. Transaction Detail & Audit Card (modal_tx_detail)",
+        desc: "Screen 06: Complete transaction transparency, strike-through styling, and immutable audit disclosure card",
+        showNav: false,
+        render: () => `
+          <div class="top-app-bar">
+            <button class="icon-btn" onclick="showScreen('screen_05')">←</button>
+            <h3>Transaction Details</h3>
+            <span class="pill pill-admin" style="font-size: 11px;">Admin View</span>
+          </div>
+
+          <div class="card" style="text-align: center; padding: 24px 16px;">
+            <div style="font-size: 13px; color: var(--fc-on-surface-variant); text-transform: uppercase;">Capital Contribution</div>
+            <div class="tnum" style="font-size: 32px; font-weight: 800; color: var(--fc-deposit); margin: 8px 0;">
+              +৳ 100,000
+            </div>
+            <span class="pill pill-active">COMPLETED & VERIFIED</span>
+          </div>
+
+          <!-- Transaction Specs -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+              <span style="color: var(--fc-on-surface-variant);">Transaction ID:</span>
+              <span class="tnum" style="font-weight: 600;">TX-DEP-9821</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+              <span style="color: var(--fc-on-surface-variant);">Contributor:</span>
+              <span style="font-weight: 600;">Rahim Uddin (FC-002)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+              <span style="color: var(--fc-on-surface-variant);">Date Recorded:</span>
+              <span class="tnum" style="font-weight: 600;">12 Nov 2026</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+              <span style="color: var(--fc-on-surface-variant);">Payment Method:</span>
+              <span style="font-weight: 600;">Bank Transfer (EBL)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+              <span style="color: var(--fc-on-surface-variant);">Recorded By:</span>
+              <span style="font-weight: 600;">kawsar@example.com (Admin)</span>
+            </div>
+          </div>
+
+          <!-- Void Action -->
+          <button class="btn-destructive" style="margin-top: 8px;" onclick="showScreen('screen_14')">
+            🚫 Void Transaction (Admin Only)
+          </button>
+
+          <!-- Immutable Void Audit Disclosure Card -->
+          <div class="card" style="background: var(--fc-elev-2); border-left: 4px solid var(--fc-secondary); margin-top: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--fc-secondary);">📋 IMMUTABLE VOID DISCLOSURE SPEC</div>
+            <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 4px; line-height: 1.4;">
+              If voided, the original whole-integer amount is permanently preserved. An audit card records the exact timestamp, admin email, reason, and atomic aggregate reversal.
+            </div>
+          </div>
+        `
+      },
+
+      // 07. Add Transaction Modal (Admin — Deposit & Expense Tabs)
+      screen_07: {
+        title: "07. Add Transaction Modal (modal_add_tx)",
+        desc: "Screen 07: Dual tab entry enforcing exactly 5 inputs, past/present dates, and whole integer amounts",
+        showNav: false,
+        render: () => {
+          const isDeposit = currentTxMode === 'deposit';
+          return `
+          <div class="modal-overlay">
+            <div class="modal-sheet">
+              <div class="sheet-handle"></div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 18px;">${isDeposit ? 'Record Deposit (+)' : 'Record Expense (-)'}</h3>
+                <span style="cursor: pointer; font-size: 18px;" onclick="showScreen('screen_04')">✕</span>
+              </div>
+
+              <!-- Interactive Segmented Switcher -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; background: var(--fc-surface-variant); padding: 4px; border-radius: 10px;">
+                <button onclick="setTxMode('deposit')" style="border:none; padding: 8px; border-radius: 8px; font-weight: ${isDeposit ? '700' : '500'}; background: ${isDeposit ? 'var(--fc-surface)' : 'transparent'}; color: ${isDeposit ? 'var(--fc-primary)' : 'var(--fc-on-surface-variant)'}; cursor: pointer;">
+                  Deposit (+)
+                </button>
+                <button onclick="setTxMode('expense')" style="border:none; padding: 8px; border-radius: 8px; font-weight: ${!isDeposit ? '700' : '500'}; background: ${!isDeposit ? 'var(--fc-surface)' : 'transparent'}; color: ${!isDeposit ? 'var(--fc-error)' : 'var(--fc-on-surface-variant)'}; cursor: pointer;">
+                  Expense (-)
+                </button>
+              </div>
+
+              ${isDeposit ? `
+                <!-- 5 Deposit Fields -->
+                <div class="input-group">
+                  <label class="input-label">1. Member *</label>
+                  <div class="input-box">
+                    <span>👤</span>
+                    <select style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                      <option>Rahim Uddin (FC-002)</option>
+                      <option>Tareq Hasan (FC-003)</option>
+                      <option>Kamal Hossain (FC-004)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">2. Deposit Amount (Whole BDT) *</label>
+                  <div class="input-box focused">
+                    <span style="font-weight: 700; color: var(--fc-deposit);">৳</span>
+                    <input class="tnum" type="text" value="50,000" style="border:none; outline:none; background:transparent; color:inherit; font-size:16px; font-weight:700; width:100%;">
+                  </div>
+                  <span class="input-hint">Whole positive integer (no decimals/cents).</span>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">3. Date (Past or Present) *</label>
+                  <div class="input-box">
+                    <span>📅</span>
+                    <input type="date" value="2026-10-12" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">4. Payment Method *</label>
+                  <div style="display: flex; gap: 6px;">
+                    <span class="chip chip-surf">Cash</span>
+                    <span class="chip chip-prim">Bank Transfer ✓</span>
+                    <span class="chip chip-surf">Mobile Banking</span>
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">5. Note / Reference (Optional)</label>
+                  <div class="input-box">
+                    <span>📝</span>
+                    <input type="text" value="Monthly Capital Installment" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                  </div>
+                </div>
+
+                <button class="btn-primary" style="margin-top: 8px;" onclick="showScreen('screen_05')">
+                  Save & Post Deposit
+                </button>
+              ` : `
+                <!-- 5 Expense Fields (Admin Only) -->
+                <div class="input-group">
+                  <label class="input-label">1. Expense Category (Strictly 8 Options) *</label>
+                  <div class="input-box focused">
+                    <span>🏷️</span>
+                    <select style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                      <option selected>1. Office & Administration</option>
+                      <option>2. Travel & Transportation</option>
+                      <option>3. Bank & Transaction Charges</option>
+                      <option>4. Legal & Documentation</option>
+                      <option>5. Meetings & Events</option>
+                      <option>6. Utilities & Communication</option>
+                      <option>7. Rent & Maintenance</option>
+                      <option>8. Others</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">2. Expense Amount (Whole BDT) *</label>
+                  <div class="input-box">
+                    <span style="font-weight: 700; color: var(--fc-expense);">৳</span>
+                    <input class="tnum" type="text" value="3,500" style="border:none; outline:none; background:transparent; color:inherit; font-size:16px; font-weight:700; width:100%;">
+                  </div>
+                  <span class="input-hint">Whole positive integer only.</span>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">3. Expense Date (Past or Present) *</label>
+                  <div class="input-box">
+                    <span>📅</span>
+                    <input type="date" value="2026-10-10" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">4. Description or Purpose (3-250 chars) *</label>
+                  <div class="input-box">
+                    <span>📄</span>
+                    <input type="text" value="Purchased legal registers and ledgers" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">5. Payment Method & Paid By *</label>
+                  <div style="display: flex; gap: 6px;">
+                    <span class="chip chip-prim">Cash ✓</span>
+                    <span class="chip chip-surf">Bank Transfer</span>
+                    <span class="chip chip-surf">Mobile Banking</span>
+                  </div>
+                </div>
+
+                <button class="btn-destructive" style="margin-top: 8px;" onclick="showScreen('screen_05')">
+                  Record Group Expense
+                </button>
+              `}
+            </div>
+          </div>
+        `;}
+      },
+
+      // 08. Stakeholders Roster Screen
+      screen_08: {
+        title: "08. Stakeholders Roster Screen (members_roster)",
+        desc: "Screen 08: Searchable roster of all circle stakeholders with cumulative contributions and status chips",
+        showNav: true,
+        render: () => `
+          <div class="top-app-bar">
+            <h3>Stakeholders Roster (14)</h3>
+            <button class="icon-btn">🔍</button>
+          </div>
+
+          <div class="input-box" style="height: 44px; margin-bottom: 8px;">
+            <span>🔍</span>
+            <input type="text" placeholder="Search by name, phone, or ID..." style="border:none; outline:none; background:transparent; color:inherit; font-size:13px; width:100%;">
+          </div>
+
+          <!-- Stakeholder Cards -->
+          <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_09')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="width: 38px; height: 38px; border-radius: 19px; background: var(--fc-primary-container); color: var(--fc-on-primary-container); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                  KA
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px;">Kawsar Ahmed (FC-001)</div>
+                  <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Deposits: ৳ 600,000 • 4 Tx</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                <span class="pill pill-admin">ADMIN 🛡️</span>
+                <span class="pill pill-active">ACTIVE ✓</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_09')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="width: 38px; height: 38px; border-radius: 19px; background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                  RU
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px;">Rahim Uddin (FC-002)</div>
+                  <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Deposits: ৳ 450,000 • 3 Tx</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                <span class="pill pill-inactive">STAKEHOLDER 👤</span>
+                <span class="pill pill-active">ACTIVE ✓</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_09')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="width: 38px; height: 38px; border-radius: 19px; background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                  TH
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px;">Tareq Hasan (FC-003)</div>
+                  <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Deposits: ৳ 300,000 • 2 Tx</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                <span class="pill pill-inactive">STAKEHOLDER 👤</span>
+                <span class="pill pill-active">ACTIVE ✓</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 12px 14px; cursor: pointer;" onclick="showScreen('screen_09')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="width: 38px; height: 38px; border-radius: 19px; background: var(--fc-surface-variant); color: var(--fc-on-surface-variant); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                  TA
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px;">Tanvir Ahmed (FC-004)</div>
+                  <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Deposits: ৳ 100,000 • 1 Tx</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                <span class="pill pill-inactive">STAKEHOLDER 👤</span>
+                <span class="pill pill-inactive">INACTIVE ⏱</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="fab-extended" onclick="showScreen('screen_10')">
+            <span>+</span> Add Stakeholder
+          </button>
+        `
+      },
+
+      // 09. Member Details & Individual Ledger
+      screen_09: {
+        title: "09. Member Details & Individual Ledger (member_detail)",
+        desc: "Screen 09: Individual stakeholder profile, cumulative totals, and chronological deposit ledger",
+        showNav: false,
+        render: () => `
+          <div class="top-app-bar">
+            <button class="icon-btn" onclick="showScreen('screen_08')">←</button>
+            <h3>Stakeholder Profile</h3>
+            <span class="pill pill-admin" style="font-size: 11px;">Admin View</span>
+          </div>
+
+          <div class="card" style="text-align: center; padding: 20px;">
+            <div style="width: 60px; height: 60px; border-radius: 30px; background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+              RU
+            </div>
+            <h3 style="font-size: 18px;">Rahim Uddin</h3>
+            <div style="font-size: 12px; color: var(--fc-primary); font-weight: 600; margin-top: 2px;">Member ID: FC-002</div>
+            <p style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Status: ACTIVE • Joined: 10 Jan 2026</p>
+            <div style="margin-top: 8px;">
+              <span class="pill pill-inactive">STAKEHOLDER 👤</span>
+              <span class="pill pill-active">ACTIVE ✓</span>
+            </div>
+          </div>
+
+          <!-- Cumulative Total Card -->
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Cumulative Deposits</div>
+              <div class="tnum" style="font-size: 20px; font-weight: 800; color: var(--fc-deposit);">৳ 450,000</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; color: var(--fc-on-surface-variant);">Transactions Count</div>
+              <div style="font-size: 14px; font-weight: 700;">3 Deposits</div>
+            </div>
+          </div>
+
+          <!-- Individual Deposit Ledger Section -->
+          <div style="font-size: 13px; font-weight: 700; margin-top: 8px;">Chronological Deposit History</div>
+
+          <div class="card" style="padding: 10px 14px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="font-size: 13px; font-weight: 600;">Monthly Installment</span>
+              <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 100,000</span>
+            </div>
+            <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 2px;">12 Nov 2026 • Bank Transfer (EBL)</div>
+          </div>
+
+          <div class="card" style="padding: 10px 14px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="font-size: 13px; font-weight: 600;">Monthly Installment</span>
+              <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 100,000</span>
+            </div>
+            <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 2px;">10 Oct 2026 • Bank Transfer (EBL)</div>
+          </div>
+
+          <div class="card" style="padding: 10px 14px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="font-size: 13px; font-weight: 600;">Initial Syndicate Seed Capital</span>
+              <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+৳ 250,000</span>
+            </div>
+            <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 2px;">15 Jan 2026 • Cheque #1029</div>
+          </div>
+        `
+      },
+
+      // 10. Add Stakeholder Modal (Admin)
+      screen_10: {
+        title: "10. Add Stakeholder Modal (modal_add_member)",
+        desc: "Screen 10: Admin invitation flow allocating sequential Member ID with contact validation",
+        showNav: false,
+        render: () => `
+          <div class="modal-overlay">
+            <div class="modal-sheet">
+              <div class="sheet-handle"></div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <h3 style="font-size: 18px;">Add New Stakeholder</h3>
+                  <div style="font-size: 12px; color: var(--fc-primary); font-weight: 600; margin-top: 2px;">System will allocate Member ID: FC-005</div>
+                </div>
+                <span style="cursor: pointer; font-size: 18px;" onclick="showScreen('screen_08')">✕</span>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Full Name *</label>
+                <div class="input-box">
+                  <input type="text" placeholder="e.g. Tariqul Islam" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Mobile Phone Number * (11 digits)</label>
+                <div class="input-box">
+                  <input type="tel" placeholder="01712345678" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Stakeholder Gmail Address * (Used for Google Sign-In)</label>
+                <div class="input-box focused">
+                  <span>✉️</span>
+                  <input type="email" placeholder="tariqul.invest@gmail.com" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                </div>
+                <span class="input-hint">An in-app invitation will be delivered to their Google account.</span>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Assigned Circle Role</label>
+                <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); font-size: 13px; font-weight: 600; width: fit-content;">
+                  Stakeholder 👤
+                </div>
+              </div>
+
+              <div class="card" style="background: var(--fc-elev-1); font-size: 12px; color: var(--fc-on-surface-variant); line-height: 1.4;">
+                Stakeholders have full read transparency across all live ledgers, aggregate balances, and audit records. Only the Circle Creator is Admin.
+              </div>
+
+              <button class="btn-primary" style="margin-top: 8px;" onclick="showScreen('screen_08')">
+                Send Invitation
+              </button>
+            </div>
+          </div>
+        `
+      },
+
+      // 11. Edit My Profile (Self-Service)
+      screen_11: {
+        title: "11. Edit My Profile (Self-Service) (edit_profile)",
+        desc: "Screen 11: Private self-service profile and fiduciary beneficiary/nominee management",
+        showNav: false,
+        render: () => `
+          <div class="top-app-bar">
+            <button class="icon-btn" onclick="showScreen('screen_13')">←</button>
+            <h3>Edit My Profile</h3>
+            <button class="btn-tonal" style="height: 32px; padding: 0 14px; font-size: 12px;" onclick="showScreen('screen_13')">Save</button>
+          </div>
+
+          <div class="card" style="background: var(--fc-primary-container); color: var(--fc-on-primary-container); border: none;">
+            <div style="font-size: 12px; font-weight: 600;">Circle: Green Valley Property Pool (FC-001)</div>
+            <div style="font-size: 11px; margin-top: 2px;">Private fields are isolated to this Fund Circle and never shared publicly.</div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Full Name *</label>
+            <div class="input-box">
+              <input type="text" value="Kawsar Ahmed" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Mobile Phone Number *</label>
+            <div class="input-box">
+              <input type="tel" value="01712345678" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">National Identity Number (NID) *</label>
+            <div class="input-box focused">
+              <span>🔒</span>
+              <input type="text" value="19882692015000123" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+            </div>
+            <span class="input-hint">Masked on member displays: •••• •••• 0123</span>
+          </div>
+
+          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-top: 8px;">
+            Beneficiary / Nominee Information
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Nominee Full Name *</label>
+            <div class="input-box">
+              <input type="text" value="Nasrin Akter" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Relationship *</label>
+            <div class="input-box">
+              <select style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                <option selected>Spouse</option>
+                <option>Child</option>
+                <option>Parent</option>
+                <option>Sibling</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Nominee Contact Phone *</label>
+            <div class="input-box">
+              <input type="tel" value="01812345678" style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+            </div>
+          </div>
+
+          <button class="btn-primary" style="margin-top: 12px;" onclick="showScreen('screen_13')">
+            Save Profile
+          </button>
+        `
+      },
+
+      // 12. Reports Screen & Live Preview (CSV Export Engine)
+      screen_12: {
+        title: "12. Reports Screen & Live Preview (reports_export)",
+        desc: "Screen 12: Period filtering, on-screen statement preview, and $0 on-device RFC 4180 CSV export via Android FileProvider",
+        showNav: true,
+        render: () => `
+          <div class="top-app-bar">
+            <h3>Financial Reports Engine</h3>
+            <div style="width: 40px;"></div>
+          </div>
+
+          <!-- Reporting Period Selector -->
+          <div class="card" style="padding: 12px;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fc-on-surface-variant); margin-bottom: 8px;">Reporting Period</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <button class="btn-tonal" style="height: 36px; font-size: 12px; font-weight: 700;">✓ Month & Year</button>
+              <button class="btn-outlined" style="height: 36px; font-size: 12px;">All Time</button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <select style="flex: 1; height: 38px; border-radius: 8px; border: 1px solid var(--fc-outline-variant); background: var(--fc-surface); color: inherit; padding: 0 10px; font-size: 13px;">
+                <option selected>November 2026</option>
+                <option>October 2026</option>
+                <option>September 2026</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Report Type Selector -->
+          <div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fc-on-surface-variant);">Report Type</div>
+            <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="rpt" checked> Monthly Financial Summary
+            </label>
+            <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="rpt"> Member-wise Deposit Statement
+            </label>
+            <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="rpt"> Complete Deposit History
+            </label>
+            <label style="font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="rpt"> Complete Expense History
+            </label>
+          </div>
+
+          <!-- On-Screen Statement Preview Card -->
+          <div class="card" style="background: var(--fc-surface); border: 2px solid var(--fc-outline-variant);">
+            <div style="font-size: 11px; font-weight: 700; color: var(--fc-primary); text-transform: uppercase;">ON-SCREEN PREVIEW</div>
+            <div style="font-size: 14px; font-weight: 700; margin-top: 4px;">Green Valley Property Pool</div>
+            <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Statement for: November 2026</div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 13px; border-top: 1px dashed var(--fc-outline-variant); padding-top: 8px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--fc-on-surface-variant);">Opening Balance:</span>
+                <span class="tnum" style="font-weight: 600;">৳ 1,000,000</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--fc-on-surface-variant);">Deposits (Nov):</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+ ৳ 500,000</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--fc-on-surface-variant);">Expenses (Nov):</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-expense);">- ৳ 50,000</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--fc-outline-variant); padding-top: 4px;">
+                <span style="color: var(--fc-on-surface-variant);">Net Surplus:</span>
+                <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">+ ৳ 450,000</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--fc-outline-variant); padding-top: 4px;">
+                <span style="font-weight: 700;">Closing Balance:</span>
+                <span class="tnum" style="font-weight: 800; color: var(--fc-primary);">৳ 1,450,000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CSV Export Button -->
+          <button class="btn-primary" style="height: 52px; font-size: 14px; margin-top: 4px;" onclick="alert('Generating RFC 4180 CSV export in internal cache and sharing via Android FileProvider / Share Sheet (Zero Server Fees)...')">
+            📄 Export Ledger (CSV)
+          </button>
+        `
+      },
+
+      // 13. Settings & Circle Governance
+      screen_13: {
+        title: "13. Settings & Circle Governance (settings_admin)",
+        desc: "Screen 13: Circle governance, member profile navigation, and circle switcher (clean top bar rule)",
+        showNav: true,
+        render: () => `
+          <div class="top-app-bar">
+            <h3>Circle Settings</h3>
+            <div style="width: 40px;"></div>
+          </div>
+
+          <!-- Switcher Card (Clean Top Bar Rule) -->
+          <div class="card" style="background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); cursor: pointer;" onclick="showScreen('screen_02')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 11px; text-transform: uppercase;">Workspace Switcher</div>
+                <div style="font-size: 15px; font-weight: 700;">Switch Fund Circle 🔄</div>
+                <div style="font-size: 12px; margin-top: 2px;">Return to Hub to manage other circles</div>
+              </div>
+              <span style="font-size: 20px;">→</span>
+            </div>
+          </div>
+
+          <!-- Membership & Profile -->
+          <div class="card" style="cursor: pointer;" onclick="showScreen('screen_11')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">My Member Profile (FC-001)</div>
+                <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Update Phone, National ID (NID), and Nominee</div>
+              </div>
+              <span style="font-size: 18px;">✏️</span>
+            </div>
+          </div>
+
+          <!-- Currency Permanence -->
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600; font-size: 14px;">Base Currency</div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Locked permanently to circle</div>
+            </div>
+            <span class="pill pill-admin">BDT (৳) 🔒</span>
+          </div>
+
+          <!-- App Preferences & Sign Out -->
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600; font-size: 14px;">Color Theme</div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant);">Toggle light / dark appearance</div>
+            </div>
+            <button class="btn-tonal" style="width: auto; height: 34px; padding: 0 12px; font-size: 12px;" onclick="toggleTheme()">Toggle Mode</button>
+          </div>
+
+          <!-- Administration (Danger Zone) -->
+          <div class="card" style="border-color: var(--fc-error); margin-top: 8px;">
+            <div style="font-weight: 600; font-size: 14px; color: var(--fc-error);">Circle Governance (Admin Only)</div>
+            <p style="font-size: 12px; color: var(--fc-on-surface-variant); margin: 4px 0 12px;">
+              Admin actions require zero active financial liability.
+            </p>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-outlined" style="height: 38px; font-size: 12px;" onclick="alert('Voluntary exit disabled while owning active balance.')">Leave Circle</button>
+              <button class="btn-destructive" style="height: 38px; font-size: 12px;" onclick="alert('Circle deletion requires 0 recorded transactions.')">Delete Circle</button>
+            </div>
+          </div>
+        `
+      },
+
+      // 14. Void Transaction Dialog (Admin)
+      screen_14: {
+        title: "14. Void Transaction Dialog (dialog_void_tx)",
+        desc: "Screen 14: Immutable transaction voiding protocol with mandatory reason and atomic balance reversal",
+        showNav: false,
+        render: () => `
+          <div class="modal-overlay" style="align-items: center; justify-content: center; padding: 20px;">
+            <div class="card" style="background: var(--fc-surface); width: 100%; border-radius: 24px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 26px;">⚠️</div>
+                <span style="cursor: pointer; font-size: 18px;" onclick="showScreen('screen_06')">✕</span>
+              </div>
+              <h3 style="font-size: 18px; font-weight: 700;">Void Transaction?</h3>
+              <p style="font-size: 12px; color: var(--fc-on-surface-variant); margin: 6px 0 12px; line-height: 1.4;">
+                Financial records are immutable. The original amount remains recorded, while circle aggregate balances are atomically reversed. This record will permanently remain in the ledger marked as VOIDED.
+              </p>
+
+              <!-- Read-only Summary -->
+              <div class="card" style="background: var(--fc-surface-variant); padding: 10px 12px; font-size: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 600;">TX-DEP-9821 • Deposit • Bank Transfer</div>
+                <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                  <span>Original Amount:</span>
+                  <span class="tnum" style="font-weight: 700; color: var(--fc-deposit);">৳ 50,000</span>
+                </div>
+                <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 2px;">Recorded: 12 Oct 2026 by Admin</div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Mandatory Void Reason *</label>
+                <div class="input-box focused">
+                  <input type="text" value="Duplicate bank payment voucher entry." style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
+                </div>
+                <span class="input-hint">Must provide explanatory reason (5-250 characters).</span>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button class="btn-outlined" style="height: 44px; flex: 1;" onclick="showScreen('screen_06')">Cancel</button>
+                <button class="btn-destructive" style="height: 44px; flex: 2;" onclick="showScreen('screen_05')">Confirm Void & Reverse</button>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    };
+
+    function showScreen(screenId) {
+      const screen = screens[screenId];
+      if (!screen) return;
+
+      document.getElementById('viewTitle').textContent = screen.title;
+      document.getElementById('viewDesc').textContent = screen.desc;
+      document.getElementById('screenContent').innerHTML = screen.render();
+      document.getElementById('bottomNav').style.display = screen.showNav ? 'flex' : 'none';
+
+      // Update sidebar nav active state
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeItem = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick')?.includes(screenId));
+      if (activeItem) activeItem.classList.add('active');
+
+      // Update active bottom nav tab
+      document.querySelectorAll('.bottom-nav .nav-tab').forEach(el => el.classList.remove('active'));
+      if (screenId === 'screen_04') document.getElementById('nav_tab_04')?.classList.add('active');
+      if (screenId === 'screen_08') document.getElementById('nav_tab_08')?.classList.add('active');
+      if (screenId === 'screen_05') document.getElementById('nav_tab_05')?.classList.add('active');
+      if (screenId === 'screen_12') document.getElementById('nav_tab_12')?.classList.add('active');
+      if (screenId === 'screen_13') document.getElementById('nav_tab_13')?.classList.add('active');
+    }
+
+    // Default screen
+    showScreen('screen_tokens');
+  </script>
+</body>
+</html>

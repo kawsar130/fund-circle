@@ -1,0 +1,75 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+build/
+app/build/
+*/build/
+
+# Gradle files
+.gradle/
+buildOutputCleanup/
+
+# Android Studio & IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+.navigation/
+
+# Signing files & Keystores (Strictly Private)
+*.jks
+*.keystore
+*.key
+*.p12
+*.p8
+
+# Local configuration file (sdk.dir, etc.)
+local.properties
+
+# Log files
+*.log
+
+# Android Profiling memory dumps & traces
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Google Services / Firebase Credentials (local secrets)
+# Uncomment if using real production credentials in local build:
+# google-services.json
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Visual Studio Code
+.vscode/
+
+# Backup & swap files
+*.bak
+*.swp
+*~
