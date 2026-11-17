@@ -12,10 +12,11 @@
 - Design Tokens (Semantic Styling): [Design_Tokens.md](file:///Users/kawsar/Desktop/projects/personal/Android/fund-circle/docs/Design_Tokens.md)
 - Branding & Style Guide (Archived): [Fund_Circle_Branding_and_Style_Guide_v1.0.md](file:///Users/kawsar/Desktop/projects/personal/Android/fund-circle/docs/archive/Fund_Circle_Branding_and_Style_Guide_v1.0.md) (v1.2)
 - API Specification & Data Contracts: [Fund_Circle_API_Specification_v1.0.md](file:///Users/kawsar/Desktop/projects/personal/Android/fund-circle/docs/Fund_Circle_API_Specification_v1.0.md) (v1.0)
-- Master Figma Design File: [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)
+- Master Figma File: [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ) ("Interactive Prototype Sandbox" page)
 - Interactive Canvas Preview: [Fund Circle Interactive Canvas (Node 27:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=27-3&autoplay-code-preview=27-3)
 - Master Flowchart (FigJam): [Fund Circle — Master User Flow Architecture](https://www.figma.com/board/dxkTCpjsDBnEQp2zJRphAI)
 - Local Design Prototype: [docs/design_preview/index.html](file:///Users/kawsar/Desktop/projects/personal/Android/fund-circle/docs/design_preview/index.html)
+- Visual Screen Gallery (2x Retina): [docs/design_preview/gallery.html](file:///Users/kawsar/Desktop/projects/personal/Android/fund-circle/docs/design_preview/gallery.html)
 
 ---
 

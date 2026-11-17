@@ -34,7 +34,8 @@ Located in **[`features/`](features/)**:
 | :--- | :--- |
 | **[`Fund_Circle_User_Flowcharts_v1.0.md`](Fund_Circle_User_Flowcharts_v1.0.md)** | Visual Mermaid state machines mapping CUJ-01 through CUJ-08 (Smart Launch, Invitation Gate, Voiding Reversals, Circle Archival). |
 | **[`design_preview/index.html`](design_preview/index.html)** | Standalone interactive HTML/CSS responsive prototype demonstrating the 14 Android screens with live tab switching and theme toggling. |
-| **[Master Figma Design File](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)** | Live cloud design file containing production Android Material 3 frames, components, and code connections. |
+| **[`design_preview/gallery.html`](design_preview/gallery.html)** | High-resolution visual gallery showcasing all 14 Android screens with routes and invariant compliance. |
+| **[Master Figma File](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)** | Live cloud design workspace featuring the canonical **Interactive Prototype Sandbox** page ([Node 27:3](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=27-3&autoplay-code-preview=27-3)). |
 | **[Master FigJam Board](https://www.figma.com/board/dxkTCpjsDBnEQp2zJRphAI)** | Interactive cloud user flow diagrams and architectural branching tree. |
 
 ---
