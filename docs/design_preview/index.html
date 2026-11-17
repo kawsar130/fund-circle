@@ -490,7 +490,7 @@
     .pill-inactive { background: var(--fc-surface-variant); color: var(--fc-on-surface-variant); }
     .pill-left { background: var(--fc-error-container); color: var(--fc-on-error-container); }
     .pill-admin { background: var(--fc-secondary-container); color: var(--fc-on-secondary-container); }
-    .pill-voided { background: var(--fc-error-container); color: var(--fc-error); border: 1px solid var(--fc-error); }
+    .pill-reversed, .pill-voided { background: var(--fc-surface-variant); color: var(--fc-on-surface-variant); border: 1px solid var(--fc-outline-variant); font-weight: 700; }
 
     /* Category Chips */
     .chip {
@@ -625,9 +625,9 @@
     <div class="nav-item" onclick="showScreen('screen_05')">05. Transactions Ledger (ledger_transactions)</div>
     <div class="nav-item" onclick="showScreen('screen_06')">06. Transaction Detail & Audit Card</div>
 
-    <div class="nav-section-title">Flow 3: Financial Recording & Voids</div>
-    <div class="nav-item" onclick="showScreen('screen_07')">07. Add Transaction Modal (modal_add_tx)</div>
-    <div class="nav-item" onclick="showScreen('screen_14')">14. Void Confirmation Dialog (dialog_void_tx)</div>
+    <div class="nav-section-title">Flow 3: Financial Recording & Reversals</div>
+    <div class="nav-item" onclick="showScreen('screen_07')">07. Record Transaction Modal (modal_add_tx)</div>
+    <div class="nav-item" onclick="showScreen('screen_14')">14. Reverse Confirmation Dialog (dialog_reverse_tx)</div>
 
     <div class="nav-section-title">Flow 4: Stakeholders & KYC</div>
     <div class="nav-item" onclick="showScreen('screen_08')">08. Stakeholders Roster (members_roster)</div>
@@ -750,7 +750,7 @@
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <span class="pill pill-active">Deposit: +৳ 50,000</span>
               <span class="pill pill-left">Expense: -৳ 3,500</span>
-              <span class="pill pill-voided">Voided: ~৳ 20,000~</span>
+              <span class="pill pill-reversed">REVERSED: ~৳ 20,000~</span>
             </div>
           </div>
 
@@ -1082,9 +1082,9 @@
             <div class="card" style="padding: 12px 14px; opacity: 0.8; cursor: pointer;" onclick="showScreen('screen_06')">
               <div style="display: flex; justify-content: space-between;">
                 <span style="font-weight: 600; font-size: 14px; text-decoration: line-through;">~Sajjad Hossain (FC-005)~</span>
-                <span class="pill pill-voided">VOIDED</span>
+                <span class="pill pill-reversed">REVERSED ↩</span>
               </div>
-              <div style="font-size: 12px; color: var(--fc-error); margin-top: 2px;">Original: ৳ 50,000 • Reversal: -৳ 50,000</div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">Original: ৳ 50,000 • Reversal: -৳ 50,000</div>
               <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 02, 2026 • Reason: Check bounced</div>
             </div>
           ` : `
@@ -1119,9 +1119,9 @@
             <div class="card" style="padding: 12px 14px; opacity: 0.8; cursor: pointer;" onclick="showScreen('screen_06')">
               <div style="display: flex; justify-content: space-between;">
                 <span style="font-weight: 600; font-size: 14px; text-decoration: line-through;">~Audit Consultation Fee~</span>
-                <span class="pill pill-voided">VOIDED</span>
+                <span class="pill pill-reversed">REVERSED ↩</span>
               </div>
-              <div style="font-size: 12px; color: var(--fc-error); margin-top: 2px;">Original: ৳ 15,000 • Reversal: +৳ 15,000</div>
+              <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 2px;">Original: ৳ 15,000 • Reversal: +৳ 15,000</div>
               <div style="font-size: 11px; color: var(--fc-on-surface-variant); margin-top: 4px;">Oct 09, 2026 • Reason: Duplicate voucher</div>
             </div>
           `}
@@ -1172,16 +1172,16 @@
             </div>
           </div>
 
-          <!-- Void Action -->
+          <!-- Reverse Action -->
           <button class="btn-destructive" style="margin-top: 8px;" onclick="showScreen('screen_14')">
-            🚫 Void Transaction (Admin Only)
+            ↩️ Reverse Transaction (Admin Only)
           </button>
 
-          <!-- Immutable Void Audit Disclosure Card -->
+          <!-- Transparency Audit Note Card -->
           <div class="card" style="background: var(--fc-elev-2); border-left: 4px solid var(--fc-secondary); margin-top: 12px;">
-            <div style="font-size: 12px; font-weight: 700; color: var(--fc-secondary);">📋 IMMUTABLE VOID DISCLOSURE SPEC</div>
+            <div style="font-size: 12px; font-weight: 700; color: var(--fc-secondary);">🛡️ TRANSPARENCY AUDIT NOTE</div>
             <div style="font-size: 12px; color: var(--fc-on-surface-variant); margin-top: 4px; line-height: 1.4;">
-              If voided, the original whole-integer amount is permanently preserved. An audit card records the exact timestamp, admin email, reason, and atomic aggregate reversal.
+              To protect financial trust, entries cannot be erased. If reversed, the original whole-integer amount is permanently preserved, while circle balances are atomically reversed by -originalAmount with an audit note.
             </div>
           </div>
         `
@@ -1770,21 +1770,21 @@
         `
       },
 
-      // 14. Void Transaction Dialog (Admin)
+      // 14. Reverse Transaction Dialog (Admin)
       screen_14: {
-        title: "14. Void Transaction Dialog (dialog_void_tx)",
-        desc: "Screen 14: Immutable transaction voiding protocol with mandatory reason and atomic balance reversal",
+        title: "14. Reverse Transaction Dialog (dialog_reverse_tx)",
+        desc: "Screen 14: Immutable transaction reversal protocol with mandatory reason and atomic balance reversal",
         showNav: false,
         render: () => `
           <div class="modal-overlay" style="align-items: center; justify-content: center; padding: 20px;">
             <div class="card" style="background: var(--fc-surface); width: 100%; border-radius: 24px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 26px;">⚠️</div>
+                <div style="font-size: 26px;">↩️</div>
                 <span style="cursor: pointer; font-size: 18px;" onclick="showScreen('screen_06')">✕</span>
               </div>
-              <h3 style="font-size: 18px; font-weight: 700;">Void Transaction?</h3>
+              <h3 style="font-size: 18px; font-weight: 700;">Reverse this Transaction?</h3>
               <p style="font-size: 12px; color: var(--fc-on-surface-variant); margin: 6px 0 12px; line-height: 1.4;">
-                Financial records are immutable. The original amount remains recorded, while circle aggregate balances are atomically reversed. This record will permanently remain in the ledger marked as VOIDED.
+                This will subtract the amount back from the pool balance. To protect trust among all circle members, financial records are immutable—this entry will permanently remain in the ledger marked as REVERSED.
               </p>
 
               <!-- Read-only Summary -->
@@ -1798,7 +1798,7 @@
               </div>
 
               <div class="input-group">
-                <label class="input-label">Mandatory Void Reason *</label>
+                <label class="input-label">Reason for Reversal *</label>
                 <div class="input-box focused">
                   <input type="text" value="Duplicate bank payment voucher entry." style="border:none; outline:none; background:transparent; color:inherit; font-size:14px; width:100%;">
                 </div>
@@ -1806,8 +1806,8 @@
               </div>
 
               <div style="display: flex; gap: 8px; margin-top: 16px;">
-                <button class="btn-outlined" style="height: 44px; flex: 1;" onclick="showScreen('screen_06')">Cancel</button>
-                <button class="btn-destructive" style="height: 44px; flex: 2;" onclick="showScreen('screen_05')">Confirm Void & Reverse</button>
+                <button class="btn-outlined" style="height: 44px; flex: 1;" onclick="showScreen('screen_06')">Keep Entry</button>
+                <button class="btn-destructive" style="height: 44px; flex: 2;" onclick="showScreen('screen_05')">Confirm & Reverse</button>
               </div>
             </div>
           </div>

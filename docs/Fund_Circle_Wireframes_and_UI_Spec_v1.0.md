@@ -274,7 +274,7 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
 │ │ 10 Nov 2026 • Cash                                 │ │
 │ ├────────────────────────────────────────────────────┤ │
 │ │ Sajjad Hossain (FC-004)              ~+ ৳ 50,000~  │ │ <-- Strikethrough Original Amount
-│ │ 05 Nov 2026 • Cash                      [VOIDED]   │ │ <-- Amber Outline Badge (isVoid=true)
+│ │ 05 Nov 2026 • Cash                    [REVERSED ↩]  │ │ <-- Outline Badge (isVoid=true)
 │ └────────────────────────────────────────────────────┘ │
 │                                                        │
 │ OCTOBER 2026                                           │
@@ -289,8 +289,8 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
 ---
 
 ### Screen 06: Transaction Details & Audit Disclosure Card
-*   **Purpose:** Complete transparency for a single transaction, showing immutable values, void status, and audit disclosures.
-*   **User Roles:** Both roles (Admin has 'Void Transaction' button if active).
+*   **Purpose:** Complete transparency for a single transaction, showing immutable values, reversal status, and audit disclosures.
+*   **User Roles:** Both roles (Admin has 'Reverse Transaction' button if active).
 
 ```text
 ┌────────────────────────────────────────────────────────┐
@@ -305,13 +305,13 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
 │ Status:         Posted • Active                        │
 │                                                        │
 │ ┌────────────────────────────────────────────────────┐ │
-│ │ [Ban] Void Transaction                             │ │ <-- Admin Only Action Button (Opens Screen 14)
-│ └────────────────────────────────────────────────────┘ │     (Disabled / hidden if already voided)
+│ │ [↩] Reverse Transaction (Admin Only)                │ │ <-- Admin Only Action Button (Opens Screen 14)
+│ └────────────────────────────────────────────────────┘ │     (Disabled / hidden if already reversed)
 ├────────────────────────────────────────────────────────┤
-│ [!] VOID AUDIT DISCLOSURE                              │ <-- Visible only if isVoid == true
+│ [🛡️] TRANSPARENCY AUDIT NOTE                          │ <-- Visible only if isVoid == true
 │ ┌────────────────────────────────────────────────────┐ │
-│ │ VOIDED ON: 13 Nov 2026, 14:32                      │ │ <-- Immutable Void Audit Card
-│ │ Voided by: kawsar@example.com (Admin)              │ │
+│ │ REVERSED ON: 13 Nov 2026, 14:32                     │ │ <-- Immutable Reversal Audit Card
+│ │ Reversed by: kawsar@example.com (Admin)            │ │
 │ │ Reason: "Duplicate bank payment voucher entry."     │ │
 │ │ Impact: Balance atomically reversed by -৳ 100,000  │ │
 │ └────────────────────────────────────────────────────┘ │
@@ -635,17 +635,18 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
 
 ---
 
-### Screen 14: Void Transaction Dialog (Admin)
-*   **Purpose:** Immutable transaction voiding protocol with mandatory reason and atomic balance reversal.
+### Screen 14: Reverse Transaction Dialog (Admin)
+*   **Purpose:** Immutable transaction reversal protocol with mandatory reason and atomic balance reversal.
 *   **User Roles:** Admin only.
 
 ```text
 ┌────────────────────────────────────────────────────────┐
 │                        [Drag Handle]                   │
 │                                                        │
-│ Void Transaction                              [X Close]│
-│ Financial records are immutable. Voiding reverses the  │
-│ balance impact and permanently logs an audit entry.    │
+│ Reverse this Transaction?                     [X Close]│
+│ This will subtract the amount back from the pool       │
+│ balance. Financial records are immutable—this entry    │
+│ will permanently remain marked as REVERSED.            │
 │                                                        │
 │ ┌────────────────────────────────────────────────────┐ │
 │ │ TX-001 • Deposit • Bank Transfer                  │ │ <-- Read-Only Transaction Summary
@@ -653,18 +654,18 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
 │ │ Date: 12 / 11 / 2026 • Recorded by Admin           │ │
 │ └────────────────────────────────────────────────────┘ │
 │                                                        │
-│ Mandatory Void Reason *                                │
+│ Reason for Reversal *                                  │
 │ ┌────────────────────────────────────────────────────┐ │
 │ │ Duplicate payment entry reported by bank           │ │ <-- OutlinedTextField (Required)
 │ │ statement reconciliation.                          │ │     Character counter: 53/250
 │ └────────────────────────────────────────────────────┘ │     Helper: 5-250 characters
 │                                                        │
 │ ┌────────────────────────────────────────────────────┐ │
-│ │ Confirm Void & Reverse Balance                     │ │ <-- FilledButton (Error Container)
+│ │ Confirm & Reverse Balance                          │ │ <-- FilledButton (Error Container)
 │ └────────────────────────────────────────────────────┘ │     Disabled until reason >= 5 chars
 │                                                        │
 │ ┌────────────────────────────────────────────────────┐ │
-│ │ Cancel                                             │ │ <-- TextButton (Neutral)
+│ │ Keep Entry                                         │ │ <-- TextButton (Neutral)
 │ └────────────────────────────────────────────────────┘ │
 └────────────────────────────────────────────────────────┘
 ```

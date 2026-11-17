@@ -23,7 +23,7 @@ const SCREENS = [
   { id: 'screen_05', filename: '05_Transactions_Ledger_ledger_transactions.png' },
   { id: 'screen_06', filename: '06_Transaction_Detail_Audit_Card.png' },
   { id: 'screen_07', filename: '07_Add_Transaction_Modal_modal_add_tx.png' },
-  { id: 'screen_14', filename: '07b_Void_Confirmation_Dialog_dialog_void_tx.png' },
+  { id: 'screen_14', filename: '07b_Reverse_Confirmation_Dialog_dialog_reverse_tx.png' },
   { id: 'screen_08', filename: '08_Stakeholders_Roster_members_roster.png' },
   { id: 'screen_09', filename: '09_Member_Detail_Ledger_member_detail.png' },
   { id: 'screen_10', filename: '10_Add_Stakeholder_Modal_modal_add_member.png' },

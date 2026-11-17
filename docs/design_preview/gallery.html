@@ -407,7 +407,7 @@
             <ul>
               <li>Unified chronological journal</li>
               <li>All / Deposits / Expenses filter tabs</li>
-              <li>Voided items strike-through with audit tag</li>
+              <li>Reversed items strike-through with REVERSED ↩ badge</li>
             </ul>
           </div>
         </div>
@@ -427,8 +427,8 @@
           <div class="screen-rules">
             <ul>
               <li>Comprehensive metadata & proof of payment</li>
-              <li>Admin-only Void action trigger</li>
-              <li>Immutable void disclosure card</li>
+              <li>Admin-only Reverse action trigger</li>
+              <li>Transparency audit note card</li>
             </ul>
           </div>
         </div>
@@ -440,7 +440,7 @@
   <section class="flow-section">
     <div class="flow-header">
       <span class="flow-tag">Flow 3</span>
-      <h2 class="flow-title">Financial Recording & Immutable Voids</h2>
+      <h2 class="flow-title">Financial Recording & Reversals</h2>
     </div>
     <div class="flow-grid">
       <!-- Screen 07 -->
@@ -467,18 +467,18 @@
       <!-- Screen 14 -->
       <div class="screen-card">
         <div class="screen-preview">
-          <img src="screens/07b_Void_Confirmation_Dialog_dialog_void_tx.png" alt="14. Void Confirmation Dialog">
+          <img src="screens/07b_Reverse_Confirmation_Dialog_dialog_reverse_tx.png" alt="14. Reverse Confirmation Dialog">
         </div>
         <div class="screen-meta">
           <div>
             <div class="screen-number">Screen 14</div>
-            <div class="screen-name">Void Confirmation Dialog</div>
-            <div class="screen-route">dialog_void_tx • VoidConfirmDialog.kt</div>
+            <div class="screen-name">Reverse Confirmation Dialog</div>
+            <div class="screen-route">dialog_reverse_tx • ReverseConfirmDialog.kt</div>
           </div>
           <div class="screen-rules">
             <ul>
               <li>Zero hard deletes (audit invariant)</li>
-              <li>Mandatory void reason input (&ge; 5 chars)</li>
+              <li>Mandatory reversal reason input (&ge; 5 chars)</li>
               <li>Atomic balance reversal (-originalAmount)</li>
             </ul>
           </div>
