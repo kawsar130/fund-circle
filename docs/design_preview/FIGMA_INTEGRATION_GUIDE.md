@@ -3,7 +3,7 @@
 > **Project:** Fund Circle — Enterprise Collective Capital & Pooled Fund Management for Android  
 > **Master Figma File:** [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)  
 > **Canonical Page in Figma:** `Interactive Prototype Sandbox`  
-> **Interactive Cloud Preview:** [Fund Circle Interactive Canvas (Node 27:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=27-3&autoplay-code-preview=27-3)  
+> **Interactive Cloud Preview:** [Fund Circle Interactive Canvas (Node 42:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3)  
 > **Visual Presentation Gallery:** [`docs/design_preview/gallery.html`](gallery.html)  
 > **Standalone Local Prototype:** [`docs/design_preview/index.html`](index.html)  
 
@@ -13,8 +13,8 @@
 
 To ensure 100% consistency, zero clutter, and flawless presentation fidelity, the Master Figma file is streamlined into a single canonical page:
 
-### ⚡ `Interactive Prototype Sandbox` (Node `27:3`)
-- **Direct Cloud Access:** Click **"Run Prototype"** inside Figma or open [Node 27:3](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=27-3&autoplay-code-preview=27-3).
+### ⚡ `Interactive Prototype Sandbox` (Node `42:3`)
+- **Direct Cloud Access:** Click **"Run Prototype"** inside Figma or open [Node 42:3](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3).
 - **Coverage:** Implements **all 14 commercial screens + Design Tokens** with real interactions, theme toggling (Light / Dark M3), tab switching, and instant calculations.
 - **Architectural Compliance:** 
   - Strict 2-role governance model (`ADMIN 🛡️` & `STAKEHOLDER 👤`), zero "Co-Admin".

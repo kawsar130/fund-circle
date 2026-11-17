@@ -18,7 +18,7 @@
 | Asset | Link | Description |
 | :--- | :--- | :--- |
 | **Master Figma File** | [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ) | Production Android Material 3 workspace featuring the unified **Interactive Prototype Sandbox** page. |
-| **Interactive Prototype Sandbox** | [Figma Interactive Canvas (Node 27:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=27-3&autoplay-code-preview=27-3) | Live cloud-rendered interactive prototype demonstrating all 14 screens + Design Tokens directly inside Figma. |
+| **Interactive Prototype Sandbox** | [Figma Interactive Canvas (Node 42:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3) | Live cloud-rendered interactive prototype demonstrating all 14 screens + Design Tokens directly inside Figma. |
 | **Master FigJam Architecture** | [Fund Circle — Master User Flow Architecture](https://www.figma.com/board/dxkTCpjsDBnEQp2zJRphAI) | Full visual state machines mapping CUJ-01 through CUJ-08. |
 | **Local Design Prototype** | [`docs/design_preview/index.html`](docs/design_preview/index.html) | Standalone responsive HTML/CSS/JS prototype with instant theme toggling and screen switching. |
 | **Visual Gallery (2x Retina)** | [`docs/design_preview/gallery.html`](docs/design_preview/gallery.html) | High-resolution visual gallery showcasing all 14 Android screens with routes and invariant compliance. |
@@ -57,7 +57,7 @@ All development in this repository strictly adheres to the core architectural in
 ## 📱 14-Screen Verified UI Inventory
 
 ```
-docs/design_preview/index.html (Figma Node 27:3)
+docs/design_preview/index.html (Figma Node 42:3)
 ├── 01. Screen 01: Sign-In Screen (auth_welcome) — Google One-Tap Credential Manager
 ├── 02. Screen 02: Circle Hub (circle_hub) — Managed circles (1/5) & joined circles (1)
 ├── 03. Screen 03: Create Circle Wizard (circle_create) — Name, locked base currency (BDT/USD/EUR)
