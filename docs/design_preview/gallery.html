@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fund Circle — Master 14-Screen Design Gallery (Android M3)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0F1412;
+      --surface-dark: #1A211E;
+      --card-dark: #222B27;
+      --border-dark: #2D3833;
+      --primary: #006D4D;
+      --primary-light: #82F8C5;
+      --text-main: #E2E8E4;
+      --text-muted: #8E9B93;
+      --accent-badge: #1B365D;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      padding: 40px;
+      line-height: 1.5;
+    }
+
+    header {
+      max-width: 1600px;
+      margin: 0 auto 40px auto;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .brand-group h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #FFFFFF;
+    }
+
+    .brand-group h1 span.logo-badge {
+      background: var(--primary);
+      color: #FFFFFF;
+      font-size: 16px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .brand-group p {
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--surface-dark);
+      border: 1px solid var(--border-dark);
+      color: var(--primary-light);
+    }
+
+    .action-bar {
+      max-width: 1600px;
+      margin: 0 auto 30px auto;
+      background: var(--surface-dark);
+      border: 1px solid var(--border-dark);
+      border-radius: 14px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .action-bar .info-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .action-bar .info-text strong {
+      color: #FFFFFF;
+    }
+
+    .action-bar .btn-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: #FFFFFF;
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { background: #00563C; }
+
+    .btn-secondary {
+      background: var(--card-dark);
+      border: 1px solid var(--border-dark);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover { background: #2A3631; }
+
+    /* Flow Sections */
+    .flow-section {
+      max-width: 1600px;
+      margin: 0 auto 50px auto;
+    }
+
+    .flow-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .flow-tag {
+      background: var(--primary);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .flow-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 28px;
+    }
+
+    .screen-card {
+      background: var(--card-dark);
+      border: 1px solid var(--border-dark);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .screen-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary-light);
+    }
+
+    .screen-preview {
+      background: #000000;
+      padding: 20px 20px 0 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border-dark);
+      overflow: hidden;
+    }
+
+    .screen-preview img {
+      width: 100%;
+      max-width: 340px;
+      height: auto;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: block;
+    }
+
+    .screen-meta {
+      padding: 20px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .screen-number {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .screen-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    .screen-route {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--surface-dark);
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+
+    .screen-rules {
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-dark);
+      padding-top: 10px;
+      margin-top: 8px;
+    }
+
+    .screen-rules ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .screen-rules li {
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .screen-rules li::before {
+      content: "✓";
+      color: var(--primary-light);
+      font-weight: 800;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-group">
+      <h1><span class="logo-badge">FC</span> Fund Circle — Master Android M3 UI Specification</h1>
+      <p>High-Fidelity 2x Retina Visual Gallery • 14 Screens Fully Reconciled • Material Design 3 • Jetpack Compose BOM 2024.10.01+</p>
+    </div>
+    <div class="badge-bar">
+      <span class="pill">Android 8.0+ (API 26–35)</span>
+      <span class="pill">Strict 2-Role Security</span>
+      <span class="pill">Whole-Integer Long (BDT/USD/EUR)</span>
+      <span class="pill">O(1) Atomic Aggregates</span>
+    </div>
+  </header>
+
+  <div class="action-bar">
+    <div class="info-text">
+      <strong>Figma Design Delivery:</strong> All screens below are 100% aligned with <code>docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md</code> and <code>AGENTS.md</code>.
+    </div>
+    <div class="btn-group">
+      <a href="index.html" class="btn" target="_blank">⚡ Open Interactive Sandbox</a>
+      <a href="https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ" class="btn btn-secondary" target="_blank">🎨 View Figma Workspace</a>
+    </div>
+  </div>
+
+  <!-- FLOW 1 -->
+  <section class="flow-section">
+    <div class="flow-header">
+      <span class="flow-tag">Flow 1</span>
+      <h2 class="flow-title">Authentication & Circle Hub Onboarding</h2>
+    </div>
+    <div class="flow-grid">
+      <!-- Screen 01 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/01_Sign_In_auth_welcome.png" alt="01. Welcome & Sign-In">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 01</div>
+            <div class="screen-name">Welcome & Google Sign-In</div>
+            <div class="screen-route">auth_welcome • AuthScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Google Credential Manager One-Tap</li>
+              <li>48dp Touch Target hygiene</li>
+              <li>EncryptedSharedPreferences session</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 02 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/02_Circle_Hub_circle_hub.png" alt="02. Circle Hub">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 02</div>
+            <div class="screen-name">Circle Hub (Multi-Circle Directory)</div>
+            <div class="screen-route">circle_hub • CircleHubScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Max 5 Circles Created (Admin limit)</li>
+              <li>Pending Invitation Accept/Decline</li>
+              <li>Green Valley Property Pool: ৳ 1,450,000</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 03 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/03_Create_Wizard_circle_create.png" alt="03. Create Wizard">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 03</div>
+            <div class="screen-name">Create Circle Wizard</div>
+            <div class="screen-route">circle_create • CreateCircleScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Currency locked permanently (BDT/USD/EUR)</li>
+              <li>Target amount whole integer (Long &ge; 1)</li>
+              <li>No poisha / decimals validation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOW 2 -->
+  <section class="flow-section">
+    <div class="flow-header">
+      <span class="flow-tag">Flow 2</span>
+      <h2 class="flow-title">Circle Dashboard & Ledgers</h2>
+    </div>
+    <div class="flow-grid">
+      <!-- Screen 04 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/04_Circle_Dashboard_dashboard_home.png" alt="04. Dashboard">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 04</div>
+            <div class="screen-name">Circle Dashboard</div>
+            <div class="screen-route">dashboard_home • DashboardScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>O(1) Atomic Parent Read (৳ 1,450,000)</li>
+              <li>Total Deposits: ৳ 1,600,000 • Expenses: ৳ 150,000</li>
+              <li>Recent activity card with instant void badge</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 05 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/05_Transactions_Ledger_ledger_transactions.png" alt="05. Transactions Ledger">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 05</div>
+            <div class="screen-name">Transactions Ledger</div>
+            <div class="screen-route">ledger_transactions • LedgerScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Unified chronological journal</li>
+              <li>All / Deposits / Expenses filter tabs</li>
+              <li>Voided items strike-through with audit tag</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 06 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/06_Transaction_Detail_Audit_Card.png" alt="06. Transaction Detail">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 06</div>
+            <div class="screen-name">Transaction Detail & Audit Card</div>
+            <div class="screen-route">tx_detail/{id} • TxDetailScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Comprehensive metadata & proof of payment</li>
+              <li>Admin-only Void action trigger</li>
+              <li>Immutable void disclosure card</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOW 3 -->
+  <section class="flow-section">
+    <div class="flow-header">
+      <span class="flow-tag">Flow 3</span>
+      <h2 class="flow-title">Financial Recording & Immutable Voids</h2>
+    </div>
+    <div class="flow-grid">
+      <!-- Screen 07 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/07_Add_Transaction_Modal_modal_add_tx.png" alt="07. Add Transaction Modal">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 07</div>
+            <div class="screen-name">Record Transaction Sheet</div>
+            <div class="screen-route">modal_add_tx • RecordTxSheet.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Capital Inflow / Pool Expense toggle</li>
+              <li>8 predefined M3 category chips</li>
+              <li>Atomic FieldValue.increment() pipeline</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 14 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/07b_Void_Confirmation_Dialog_dialog_void_tx.png" alt="14. Void Confirmation Dialog">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 14</div>
+            <div class="screen-name">Void Confirmation Dialog</div>
+            <div class="screen-route">dialog_void_tx • VoidConfirmDialog.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Zero hard deletes (audit invariant)</li>
+              <li>Mandatory void reason input (&ge; 5 chars)</li>
+              <li>Atomic balance reversal (-originalAmount)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOW 4 -->
+  <section class="flow-section">
+    <div class="flow-header">
+      <span class="flow-tag">Flow 4</span>
+      <h2 class="flow-title">Stakeholders & Identity (Strict 2-Role Invariant)</h2>
+    </div>
+    <div class="flow-grid">
+      <!-- Screen 08 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/08_Stakeholders_Roster_members_roster.png" alt="08. Stakeholders Roster">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 08</div>
+            <div class="screen-name">Stakeholders Roster</div>
+            <div class="screen-route">members_roster • MembersRosterScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Strict 2 Roles: ADMIN 🛡️ & STAKEHOLDER 👤</li>
+              <li>Real-time search & status filtering</li>
+              <li>Individual total contribution breakdown</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 09 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/09_Member_Detail_Ledger_member_detail.png" alt="09. Member Detail">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 09</div>
+            <div class="screen-name">Member Profile & Ledger History</div>
+            <div class="screen-route">member_detail/{id} • MemberDetailScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Member stats: ৳ 450,000 total deposited</li>
+              <li>Personal chronological contribution log</li>
+              <li>Admin actions: Edit info / Deactivate</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 10 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/10_Add_Stakeholder_Modal_modal_add_member.png" alt="10. Add Stakeholder Modal">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 10</div>
+            <div class="screen-name">Invite Stakeholder Sheet</div>
+            <div class="screen-route">modal_add_member • InviteMemberSheet.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Automated Member ID allocation (FC-005)</li>
+              <li>Strictly Stakeholder role (Zero Co-Admin)</li>
+              <li>Google Sign-In Gmail invite delivery</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 11 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/11_Edit_My_Profile_Self_Service.png" alt="11. Edit My Profile">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 11</div>
+            <div class="screen-name">Self-Service Profile Edit</div>
+            <div class="screen-route">profile_edit • ProfileEditScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Stakeholders edit name & phone</li>
+              <li>Member ID & Role permanently locked</li>
+              <li>Immediate optimistic UI sync</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOW 5 -->
+  <section class="flow-section">
+    <div class="flow-header">
+      <span class="flow-tag">Flow 5</span>
+      <h2 class="flow-title">Reports Engine & Circle Governance</h2>
+    </div>
+    <div class="flow-grid">
+      <!-- Screen 12 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/12_Reports_and_CSV_Export_reports_export.png" alt="12. Reports & CSV Export">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 12</div>
+            <div class="screen-name">Financial Reports & CSV Export</div>
+            <div class="screen-route">reports_export • ReportsScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>On-Device Kotlin CSV Engine (LedgerCsvGenerator)</li>
+              <li>Opening ৳ 1M + Inflows ৳ 500K - Outflows ৳ 50K = ৳ 1.45M</li>
+              <li>Android FileProvider Intent.ACTION_SEND</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 13 -->
+      <div class="screen-card">
+        <div class="screen-preview">
+          <img src="screens/13_Settings_and_Governance_settings_admin.png" alt="13. Settings & Governance">
+        </div>
+        <div class="screen-meta">
+          <div>
+            <div class="screen-number">Screen 13</div>
+            <div class="screen-name">Circle Governance & Settings</div>
+            <div class="screen-route">settings_admin • SettingsScreen.kt</div>
+          </div>
+          <div class="screen-rules">
+            <ul>
+              <li>Circle rules & operational guidelines</li>
+              <li>Archive Circle / Leave Circle workflows</li>
+              <li>Firestore offline disk cache quota indicator</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

@@ -570,6 +570,34 @@
       align-self: center;
       margin-bottom: 8px;
     }
+    /* Phone-only export mode */
+    body.phone-mode-only {
+      background: transparent !important;
+      display: block !important;
+      height: 917px !important;
+      width: 412px !important;
+      overflow: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body.phone-mode-only .shell-nav,
+    body.phone-mode-only .workspace-header {
+      display: none !important;
+    }
+    body.phone-mode-only .workspace {
+      padding: 0 !important;
+      margin: 0 !important;
+      display: block !important;
+      background: transparent !important;
+    }
+    body.phone-mode-only .phone-mockup {
+      width: 412px !important;
+      height: 917px !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+    }
   </style>
 </head>
 <body data-theme="light">
@@ -1810,8 +1838,16 @@
       if (screenId === 'screen_13') document.getElementById('nav_tab_13')?.classList.add('active');
     }
 
-    // Default screen
-    showScreen('screen_tokens');
+    // Query parameter support for direct screen linking and phone export
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialScreen = urlParams.get('screen') || 'screen_tokens';
+    const isPhoneMode = urlParams.get('mode') === 'phone';
+
+    if (isPhoneMode) {
+      document.body.classList.add('phone-mode-only');
+    }
+
+    showScreen(initialScreen);
   </script>
 </body>
 </html>
