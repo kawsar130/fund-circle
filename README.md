@@ -62,7 +62,7 @@ docs/design_preview/index.html (Figma Node 42:3)
 ├── 03. Screen 03: Create Circle Wizard (circle_create) — Name, locked base currency (BDT/USD/EUR)
 ├── 04. Screen 04: Circle Home Dashboard (dashboard_home) — O(1) balance metrics, member progress bar
 ├── 05. Screen 05: Transactions Ledger (ledger_transactions) — Segmented tabs [Deposits] & [Expenses]
-├── 06. Screen 06: Transaction Details (modal_tx_detail) — Immutable values, Admin void action, audit disclosure
+├── 06. Screen 06: Transaction Details (modal_tx_detail) — Immutable values, Admin reverse action, audit disclosure
 ├── 07. Screen 07: Add Transaction Modal (modal_add_tx) — Segmented switcher, 5 validated fields
 ├── 08. Screen 08: Stakeholders Roster (members_roster) — Search bar, FC-ID badges, status chips
 ├── 09. Screen 09: Member Details & Ledger (member_detail) — Cumulative total, personal deposit history
@@ -70,7 +70,7 @@ docs/design_preview/index.html (Figma Node 42:3)
 ├── 11. Screen 11: Edit My Profile (edit_profile) — Private self-service KYC, NID masked preview (•••• •••• 0123)
 ├── 12. Screen 12: Reports Screen & Live Preview (reports_export) — Period filters, statement preview, CSV export
 ├── 13. Screen 13: Settings & Governance (settings_admin) — Circle switcher, theme toggle, Danger Zone
-└── 14. Screen 14: Void Transaction Dialog (dialog_void_tx) — Immutable warning, mandatory reason (≥5 chars)
+└── 14. Screen 14: Reverse Transaction Dialog (dialog_reverse_tx) — Immutable warning, mandatory reason (≥5 chars)
 ```
 
 ---

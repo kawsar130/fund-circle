@@ -13,7 +13,7 @@ These four documents form the authoritative **Single Source of Truth (SSOT)** fo
 
 | Document | Primary Focus | Key Responsibilities |
 | :--- | :--- | :--- |
-| **[`Fund_Circle_API_Specification_v1.0.md`](Fund_Circle_API_Specification_v1.0.md)** | **Sole Data Contract SSOT** | Wire types, DTOs, Repository interfaces, UUID idempotency, Voiding Protocol, Firestore schemas, and Error Taxonomy. |
+| **[`Fund_Circle_API_Specification_v1.0.md`](Fund_Circle_API_Specification_v1.0.md)** | **Sole Data Contract SSOT** | Wire types, DTOs, Repository interfaces, UUID idempotency, Transaction Reversal Protocol, Firestore schemas, and Error Taxonomy. |
 | **[`Fund_Circle_System_Architecture_and_Tech_Stack_v1.0.md`](Fund_Circle_System_Architecture_and_Tech_Stack_v1.0.md)** | **Sole Infra & Security SSOT** | Clean Architecture boundaries, Firestore security rules, composite indexes, atomic aggregates (`FieldValue.increment`), Hilt DI, and CI/CD quality gates. |
 | **[`Fund_Circle_Wireframes_and_UI_Spec_v1.0.md`](Fund_Circle_Wireframes_and_UI_Spec_v1.0.md)** | **Sole UI Layout SSOT** | 14-screen inventory, Material 3 layout grids, spacing rules, component hierarchy, and empty/loading/error state UI contracts. |
 | **[`Design_Tokens.md`](Design_Tokens.md)** | **Sole Semantic Styling SSOT** | Lean token reference & Theme.kt contract: exact Material 3 light/dark hex colors, system bar protection, tabular typography (`tnum`), 8dp modular spacing, and 48dp touch targets. |
@@ -32,7 +32,7 @@ Located in **[`features/`](features/)**:
 
 | File / Asset | Description |
 | :--- | :--- |
-| **[`Fund_Circle_User_Flowcharts_v1.0.md`](Fund_Circle_User_Flowcharts_v1.0.md)** | Visual Mermaid state machines mapping CUJ-01 through CUJ-08 (Smart Launch, Invitation Gate, Voiding Reversals, Circle Archival). |
+| **[`Fund_Circle_User_Flowcharts_v1.0.md`](Fund_Circle_User_Flowcharts_v1.0.md)** | Visual Mermaid state machines mapping CUJ-01 through CUJ-08 (Smart Launch, Invitation Gate, Transaction Reversals, Circle Archival). |
 | **[`design_preview/index.html`](design_preview/index.html)** | Standalone interactive HTML/CSS responsive prototype demonstrating the 14 Android screens with live tab switching and theme toggling. |
 | **[`design_preview/gallery.html`](design_preview/gallery.html)** | High-resolution visual gallery showcasing all 14 Android screens with routes and invariant compliance. |
 | **[Figma Interactive Prototype](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3)** | Live cloud-hosted interactive prototype demonstrating all 14 screens + Design Tokens directly inside Figma. |

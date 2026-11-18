@@ -25,7 +25,7 @@ Welcome to **Fund Circle** ("we", "our", or "us"). We are committed to protectin
 We use the collected information solely to provide, operate, and maintain the App:
 - To authenticate your identity and synchronize your workspace memberships.
 - To display synchronized balances, deposit totals, and expenditure ledgers to all members of your Fund Circle.
-- To enforce audit integrity and record immutable transaction voiding reasons.
+- To enforce audit integrity and record immutable transaction reversal reasons.
 - To generate on-device CSV exports upon your explicit request.
 - To diagnose technical crashes and improve app responsiveness.
 

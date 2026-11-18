@@ -47,7 +47,7 @@ It serves as the definitive reference for Android UI/UX engineers, QA test autom
          │                   │                        │                       │                   │
    [CUJ-01: Auth]     [CUJ-02: Create Circle]  [CUJ-03/04: Members]   [CUJ-05/06: Ledgers] [CUJ-07/08: Reports & Ops]
    - Google One-Tap   - Currency Lock          - Invite & Onboard     - Deposit & Expense  - On-Device CSV Export
-   - Smart Launch     - 5-Circle Limit         - Private Profile      - Void Protocol      - Settings & Governance
+   - Smart Launch     - 5-Circle Limit         - Private Profile      - Reversal Protocol  - Settings & Governance
    - Settings Switch  - Atomic Setup           - Voluntary Exit       - Audit Cards        - Archival & Transfer
 ```
 
@@ -249,34 +249,34 @@ flowchart TD
 
 ---
 
-### CUJ-06: Immutable Transaction Void & Reversal Protocol
+### CUJ-06: Immutable Transaction Reversal Protocol
 
-Maps the administrative voiding workflow: mandatory reason, atomic financial reversal (`FieldValue.increment(-originalAmount)`), strike-through ledger rendering, and immutable audit disclosure card.
+Maps the administrative transaction reversal workflow: mandatory reason, atomic financial reversal (`FieldValue.increment(-originalAmount)`), strike-through ledger rendering, and immutable transparency audit card.
 
 ```mermaid
 flowchart TD
-    Start([Admin opens Transaction Details]) --> CheckVoid{Transaction already\nvoided? (isVoid == true)}
+    Start([Admin opens Transaction Details]) --> CheckVoid{Transaction already\nreversed? (isVoid == true)}
     
-    CheckVoid -- Yes --> AlreadyVoided[Void action disabled;\nDisplays permanent 'VOIDED' alert banner]
+    CheckVoid -- Yes --> AlreadyVoided[Reverse action disabled;\nDisplays permanent 'REVERSED' alert banner]
     
-    CheckVoid -- No --> TapVoid[Admin taps 'Void Transaction']
-    TapVoid --> VoidDialog[Void Confirmation Dialog\nShows original transaction amount\n+ Mandatory Void Reason input (5..250 chars)]
+    CheckVoid -- No --> TapVoid[Admin taps 'Reverse Transaction']
+    TapVoid --> VoidDialog[Reverse Transaction Dialog\nShows original transaction amount\n+ Mandatory Reversal Reason input (5..250 chars)]
     
-    VoidDialog --> EnterReason[Admin enters reason for voiding\ne.g., 'Duplicate vendor billing error']
-    EnterReason --> TapConfirm[Admin taps 'Confirm Void']
+    VoidDialog --> EnterReason[Admin enters reason for reversal\ne.g., 'Duplicate vendor billing error']
+    EnterReason --> TapConfirm[Admin taps 'Confirm & Reverse']
     
     %% Reason Validation Gate
-    TapConfirm --> CheckReason{Void Reason valid?\n(5..250 chars non-blank)}
-    CheckReason -- No --> ErrReason[Show Error: 'Void reason is mandatory (min 5 chars)'] --> VoidDialog
+    TapConfirm --> CheckReason{Reversal Reason valid?\n(5..250 chars non-blank)}
+    CheckReason -- No --> ErrReason[Show Error: 'Reversal reason is mandatory (min 5 chars)'] --> VoidDialog
     
     %% Atomic Firestore Transaction Execution
     CheckReason -- Yes --> AtomicVoid[(Firestore Transaction:\n1. Verify isVoid == false\n2. Set isVoid = true\n3. Set voidReason = reasonText\n4. Set voidedBy = adminEmail\n5. Set voidedAt = currentTimeMillis\n6. Append audit record to correctionHistory\n7. Atomically reverse parent /funds/fundId balance:\n   - If Deposit: totalDeposits -= originalAmount, recordedBalance -= originalAmount\n   - If Expense: totalExpenses -= originalAmount, recordedBalance += originalAmount)]
     
-    AtomicVoid --> ToastDone[Toast: 'Transaction Voided & Ledger Reversed']
-    ToastDone --> ShowDetails([Transaction Detail Screen:\n- Amount displayed with strike-through\n- Prominent Amber 'VOIDED' badge\n- Expandable Void Audit Card with reason, actor, and timestamp])
+    AtomicVoid --> ToastDone[Toast: 'Transaction Reversed & Ledger Updated']
+    ToastDone --> ShowDetails([Transaction Detail Screen:\n- Amount displayed with strike-through\n- Prominent Amber 'REVERSED ↩' badge\n- Expandable Transparency Audit Card with reason, actor, and timestamp])
     
     %% Stakeholder Auditing
-    ShowDetails -. Visible to all circle members .-> StakeholderView[Stakeholder Audit View:\nAll members see identical updated balance\nand permanent immutable void audit disclosure]
+    ShowDetails -. Visible to all circle members .-> StakeholderView[Stakeholder Audit View:\nAll members see identical updated balance\nand permanent immutable reversal audit disclosure]
 ```
 
 ---

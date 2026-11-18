@@ -27,7 +27,7 @@ To avoid context drift, hallucinations, and conflicting directives, agents must 
 8. **Archived / Historical Documents:** Files under `docs/archive/` (`Investment_Firm_App_*`, `Fund_Circle_Branding_and_Style_Guide_v1.0.md`) represent upstream discovery and design narrative. **They must NEVER override active Level 1–7 specifications.**
 
 ### ⚖️ Explicit Conflict Resolutions (Resolving Legacy Drift)
-- **Voiding vs. 0-Amount Neutralization:** The **Voiding Protocol** (`isVoid = true`, `voidReason`, `voidedAt`, `voidedBy`) is the sole valid correction mechanism. Amount fields remain their original whole positive integer ($\ge 1$). Setting `amount = 0` or arbitrary field edits are forbidden by Firestore security rules.
+- **Transaction Reversal Protocol vs. 0-Amount Neutralization:** The **Transaction Reversal Protocol** (backend fields: `isVoid = true`, `voidReason`, `voidedAt`, `voidedBy`; UI presentation: "Reverse Transaction" / "REVERSED ↩" / "Transparency Audit Note") is the sole valid correction mechanism. Amount fields remain their original whole positive integer ($\ge 1$). Setting `amount = 0` or arbitrary field edits are forbidden by Firestore security rules.
 - **Reporting Engine:** The definitive export pipeline is an **On-Device Kotlin CSV Engine** (`LedgerCsvGenerator.kt`) outputting to cache and shared via Android `FileProvider` (`Intent.ACTION_SEND`). Zero server fees, 100% offline-ready, no Apache POI.
 - **Push Notifications:** Handled client-side via Firestore real-time snapshot listeners; FCM available for optional cloud alerts.
 - **Base Currencies:** Locked exclusively to `"BDT" | "USD" | "EUR"`.
@@ -81,8 +81,8 @@ Any agent making changes to this repository **MUST STRICTLY ADHERE** to these in
 
 ### 4. Immutable Audit Trail (Zero Hard Deletes)
 - **No Physical Deletions:** Transactions cannot be deleted from Firestore.
-- **Voiding Protocol:** Voiding a transaction sets `isVoid = true`, records mandatory `voidReason`, `voidedAt`, and `voidedBy`, and atomically reverses the parent aggregate balance via `FieldValue.increment(-originalAmount)`.
-- **Permanent Visibility:** Voided transactions remain in the ledger permanently, displayed with strike-through styling and an expandable audit disclosure card.
+- **Transaction Reversal Protocol:** Reversing a transaction sets `isVoid = true`, records mandatory `voidReason`, `voidedAt`, and `voidedBy`, and atomically reverses the parent aggregate balance via `FieldValue.increment(-originalAmount)`.
+- **Permanent Visibility:** Reversed transactions remain in the ledger permanently, displayed with strike-through styling, a `REVERSED ↩` badge, and an expandable transparency audit disclosure card.
 
 ### 5. Offline-First Resilience & Optimistic UI
 - **Persistent Cache:** The Firestore client operates with 100MB persistent disk cache.

@@ -28,7 +28,7 @@ The palette balances financial growth (Emerald Green) with corporate governance 
 | `md_theme_onPrimaryContainer` | `#002114` | `#74F8BD` | Text on primary container |
 | `md_theme_secondary` | `#1B365D` | `#8EAFCE` | Admin badges, secondary chips, filter toggles |
 | `md_theme_tertiary` | `#7D5700` | `#FABC3C` | Pending invitation alerts, currency symbols, correction indicators |
-| `md_theme_error` | `#BA1A1A` | `#FFB4AB` | Negative balance, voided transactions (৳0), leave/deactivate dialogs |
+| `md_theme_error` | `#BA1A1A` | `#FFB4AB` | Negative balance, reversed transactions, leave/deactivate dialogs |
 | `md_theme_background` | `#FCFDF7` | `#111412` | Root window background |
 | `md_theme_surface` | `#FCFDF7` | `#111412` | Top app bars, bottom navigation bar |
 | `md_theme_surfaceContainerLow` | `#F6F7F1` | `#191D1A` | Screen base background, ledger backgrounds |
@@ -79,7 +79,7 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
     Platform & Hub      Circle Home      Transactions        Membership          Reports & Settings
     - Screen 01: Login  - Screen 04: Home- Screen 05: Ledger - Screen 08: Roster - Screen 12: Reports
     - Screen 02: Hub                     - Screen 06: Details- Screen 09: Details- Screen 13: Settings
-    - Screen 03: Create                  - Screen 07: Add Txn- Screen 10: Add Mem- Screen 14: Void Txn
+    - Screen 03: Create                  - Screen 07: Add Txn- Screen 10: Add Mem- Screen 14: Reverse Txn
                                                              - Screen 11: Profile
 ```
 
@@ -694,7 +694,7 @@ MainActivity (enableEdgeToEdge)
                                       │
                                       └── Modals & Sub-Screens:
                                             ├── AddTransactionSheet (Screen 07)
-                                            ├── VoidTransactionDialog (Screen 14)
+                                            ├── ReverseTransactionDialog (Screen 14)
                                             ├── MemberDetailsScreen (Screen 09)
                                             ├── TransactionDetailsScreen (Screen 06)
                                             └── EditProfileScreen (Screen 11)
@@ -705,7 +705,7 @@ MainActivity (enableEdgeToEdge)
 ## 4. Architectural verification & compliance
 
 1. **Clean Top Bar Rule:** Verified across all screens. The top app bar remains uncluttered, and **"Switch Fund Circle"** is cleanly situated inside Screen 13 (Settings).
-2. **Whole Integer Currency:** Verified in Screen 03 (Creation), Screen 04 (Dashboard), Screen 05 (Transactions), Screen 07 (Add Transaction), Screen 12 (Reports), and Screen 14 (Void Dialog). Currency locked strictly to `"BDT" | "USD" | "EUR"`.
+2. **Whole Integer Currency:** Verified in Screen 03 (Creation), Screen 04 (Dashboard), Screen 05 (Transactions), Screen 07 (Add Transaction), Screen 12 (Reports), and Screen 14 (Reverse Dialog). Currency locked strictly to `"BDT" | "USD" | "EUR"`.
 3. **WCAG AAA Accessibility:** Every touch target is explicitly mapped to $\ge 48\text{dp}$. All typography mappings specify `tnum` tabular alignment for financial figures.
 4. **Offline & Edge-to-Edge Compatibility:** `MainActivity` invokes `enableEdgeToEdge()` before `setContent`. The `Scaffold` hierarchy explicitly configures `WindowInsets.safeDrawing`. For scrollable screens (Dashboard, Ledgers, Members), pass `innerPadding` directly into `LazyColumn(modifier = Modifier.fillMaxSize().consumeWindowInsets(innerPadding), contentPadding = innerPadding)` rather than applying it to the outer container, allowing content to scroll fluidly behind the system navigation bar without clipping or double-inset padding bugs. All `ModalBottomSheet` inputs apply `Modifier.imePadding()` to guarantee zero clipping behind transparent system bars across Android 8.0 through Android 15.
 5. **No Layout Gaps:** All 14 primary screens, modal sheets, and sub-screens now have exhaustive ASCII wireframes and interaction specs.

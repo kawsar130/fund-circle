@@ -39,8 +39,8 @@ Every circle member views identical, synchronized numbers. Track total capital d
 • 5-FIELD FINANCIAL RECORDING
 Streamlined, human-error-free recording for deposits and operational expenses. Future dates are strictly blocked to prevent erroneous records.
 
-• IMMUTABLE AUDIT TRAIL & VOIDING
-Financial records are never deleted. Accidental entries can be transparently voided with mandatory explanatory reasons, preserving a complete, tamper-proof audit trail for all partners.
+• IMMUTABLE AUDIT TRAIL & TRANSACTION REVERSALS
+Financial records are never deleted. Accidental entries can be transparently reversed with mandatory explanatory reasons, preserving a complete, tamper-proof audit trail for all partners.
 
 • CSV LEDGER EXPORT
 Generate and export RFC 4180-compliant CSV financial ledgers directly on your device. Share via WhatsApp, Email, or Google Drive for local record-keeping and external audits.
