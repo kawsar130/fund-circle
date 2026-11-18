@@ -53,13 +53,21 @@
 ---
 
 ## 🎯 Slice 2: Circle Hub & Creation Wizard (CUJ-02 & CUJ-03, Screens 02 & 03)
-**Status:** Pending  
+**Status:** Completed ✅  
 **Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-2-circle-hub`  
 **Estimated Scope:** Medium (Circle creation, locked currency, subcollection isolation)
-- [ ] Task 2.1: Domain layer: `Fund` entity, `FundRepository` interface, `CreateFundUseCase`, `GetUserFundsUseCase`.
-- [ ] Task 2.2: Data layer: Firestore `/funds/{fundId}` creation, currency lock validation (`BDT`, `USD`, `EUR`).
-- [ ] Task 2.3: Presentation layer: `CircleHubScreen` (Screen 02), `CreateCircleScreen` (Screen 03).
-- [ ] Task 2.4: Unit tests asserting currency lock and multi-tenancy.
+- [x] Task 2.1: Domain layer: `FundCircle` model, `Currency` enum, `MemberRole` enum, `FundRepository` interface, `CreateCircleUseCase`, `ObserveUserCirclesUseCase`, `ObserveCircleUseCase`.
+- [x] Task 2.2: Data layer: `FundCircleDto` and `MemberDto`, Firestore `/funds/{fundId}` creation with UUIDv4 and subcollection `/funds/{fundId}/members/{adminUid}`, atomic 0L aggregates, 5-circle ceiling validation, `FundRepositoryImpl`, Hilt `FundModule`.
+- [x] Task 2.3: Presentation layer: `CircleHubScreen` (Screen 02) and `CreateCircleScreen` (Screen 03) with MVI state machines, 48dp touch targets, tabular digits (`tnum`), typed `UiText`, zero hardcoded strings, wired in `FundCircleNavHost`.
+- [x] Task 2.4: Unit tests for Repository, UseCases, and ViewModels (71/71 tests passed across 9 suites).
+
+## 🏁 Checkpoint: End of Slice 2 ✅
+- [x] Invariant 1 verified (zero Double/Float in financial fields).
+- [x] Invariant 4 verified (zero hard delete calls).
+- [x] Multi-tenancy subcollection isolation verified (`/funds/{fundId}/members/{adminUid}`).
+- [x] Unit tests pass: `./gradlew testDebugUnitTest` (71 tests passed across 9 test suites).
+- [x] Pre-flight verification passed: `./scripts/verify.sh` (tests + Android Lint 0 errors).
+- [x] Full APK build succeeds: `./gradlew assembleDebug`.
 
 ---
 

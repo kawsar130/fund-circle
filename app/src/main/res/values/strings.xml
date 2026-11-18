@@ -16,4 +16,52 @@
     <string name="auth_logo_content_description">Fund Circle Logo</string>
     <string name="auth_google_icon_content_description">Google Logo</string>
     <string name="auth_offline_cache_warning">Viewing Offline Cache</string>
+
+    <!-- Circle Hub (Screen 02) -->
+    <string name="hub_title">My Fund Circles</string>
+    <string name="hub_counter_badge">%1$d/5 Circles</string>
+    <string name="hub_section_managed">CIRCLES I MANAGE (%1$d/5)</string>
+    <string name="hub_section_joined">CIRCLES I JOINED (%1$d)</string>
+    <string name="hub_badge_admin">ADMIN</string>
+    <string name="hub_badge_member">MEMBER</string>
+    <string name="hub_badge_locked">LOCKED</string>
+    <string name="hub_badge_active">ACTIVE</string>
+    <string name="hub_member_count_single">1 Member</string>
+    <string name="hub_members_count">%1$d Members</string>
+    <string name="hub_currency_and_members">%1$s • %2$s</string>
+    <string name="hub_balance_label">Balance:</string>
+    <string name="hub_btn_new_circle">New Circle</string>
+    <string name="hub_empty_title">No Fund Circles Yet</string>
+    <string name="hub_empty_subtitle">Create your first circle or wait for an invitation to join one.</string>
+    <string name="hub_btn_create_first">Create Fund Circle</string>
+    <string name="hub_limit_reached_toast">You have reached the maximum limit of 5 circles.</string>
+    <string name="hub_user_avatar_content_description">User Avatar</string>
+    <string name="hub_circle_card_content_description">%1$s circle card, balance %2$s</string>
+    <string name="hub_refresh_content_description">Refresh circles</string>
+    <string name="hub_offline_warning">Viewing Offline Cache</string>
+    <string name="hub_error_loading">Failed to load circles. Please check your connection.</string>
+
+    <!-- Create Circle (Screen 03) -->
+    <string name="create_circle_title">Create Fund Circle</string>
+    <string name="create_circle_subtitle">Set up an isolated ledger for your investment group.</string>
+    <string name="create_circle_name_label">Circle Name *</string>
+    <string name="create_circle_name_placeholder">e.g., Green Valley Property Pool</string>
+    <string name="create_circle_name_error">Circle name must be between 3 and 50 characters.</string>
+    <string name="create_circle_currency_label">Primary Currency *</string>
+    <string name="create_circle_currency_helper">Locked permanently after first transaction</string>
+    <string name="create_circle_currency_lock_title">Permanent Currency Lock</string>
+    <string name="create_circle_currency_lock_warning">Base currency cannot be changed once transactions exist. All deposits and expenses will be recorded in this currency.</string>
+    <string name="create_circle_description_label">Description / Purpose (Optional)</string>
+    <string name="create_circle_description_placeholder">e.g., Joint land acquisition and development pool.</string>
+    <string name="create_circle_description_error">Description cannot exceed 250 characters.</string>
+    <string name="create_circle_btn_submit">Create Fund Circle</string>
+    <string name="create_circle_loading">Creating circle…</string>
+    <string name="create_circle_close_content_description">Close create circle</string>
+    <string name="create_circle_char_count_format">%1$d/%2$d</string>
+
+    <!-- Error Messages -->
+    <string name="circle_error_limit_reached">You have reached the maximum limit of 5 active circles.</string>
+    <string name="circle_error_currency_locked">Base currency is permanently locked once transactions exist.</string>
+    <string name="circle_error_generic">Failed to create circle. Please try again.</string>
+    <string name="circle_error_not_found">The requested circle could not be found.</string>
 </resources>
