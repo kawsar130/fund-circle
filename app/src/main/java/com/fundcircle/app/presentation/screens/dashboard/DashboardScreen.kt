@@ -402,6 +402,7 @@ fun DashboardScreen(
                 if (state.recentTransactions.isEmpty()) {
                     item(key = "empty_transactions") {
                         EmptyTransactionsCard(
+                            isAdmin = state.isAdmin,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8)
@@ -734,6 +735,7 @@ fun TransactionItemCard(
  */
 @Composable
 fun EmptyTransactionsCard(
+    isAdmin: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -763,8 +765,13 @@ fun EmptyTransactionsCard(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+            val subtitleRes = if (isAdmin) {
+                R.string.dashboard_empty_transactions_subtitle_admin
+            } else {
+                R.string.dashboard_empty_transactions_subtitle_member
+            }
             Text(
-                text = stringResource(R.string.dashboard_empty_transactions_subtitle),
+                text = stringResource(subtitleRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -880,7 +887,7 @@ private fun DashboardScreenOfflinePreview() {
     }
 }
 
-@Preview(name = "Dashboard Empty State", showBackground = true)
+@Preview(name = "Dashboard Empty State Admin", showBackground = true)
 @Composable
 private fun DashboardScreenEmptyPreview() {
     FundCircleTheme(darkTheme = false) {
@@ -890,6 +897,23 @@ private fun DashboardScreenEmptyPreview() {
                 circle = previewCircle,
                 recentTransactions = emptyList(),
                 isAdmin = true,
+                isOffline = false
+            ),
+            onAction = {}
+        )
+    }
+}
+
+@Preview(name = "Dashboard Empty State Member", showBackground = true)
+@Composable
+private fun DashboardScreenEmptyMemberPreview() {
+    FundCircleTheme(darkTheme = false) {
+        DashboardScreen(
+            state = DashboardUiState(
+                isLoading = false,
+                circle = previewCircle,
+                recentTransactions = emptyList(),
+                isAdmin = false,
                 isOffline = false
             ),
             onAction = {}

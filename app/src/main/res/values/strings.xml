@@ -97,6 +97,8 @@
     <string name="dashboard_btn_view_all">View All</string>
     <string name="dashboard_empty_transactions_title">No Transactions Yet</string>
     <string name="dashboard_empty_transactions_subtitle">Record the first deposit to initialize your circle\'s financial pool.</string>
+    <string name="dashboard_empty_transactions_subtitle_admin">Record the first deposit to initialize your circle\'s financial pool.</string>
+    <string name="dashboard_empty_transactions_subtitle_member">When the circle administrator records transactions, they will appear here.</string>
     <string name="dashboard_btn_record_transaction">Record Transaction</string>
     <string name="dashboard_offline_warning">Viewing Offline Cache</string>
     <string name="viewing_offline_cache">Viewing Offline Cache</string>
