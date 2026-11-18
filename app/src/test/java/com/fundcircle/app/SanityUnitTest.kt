@@ -4,8 +4,11 @@ import androidx.compose.ui.unit.dp
 import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.core.common.UiText
 import com.fundcircle.app.domain.model.FundCircleError
+import com.fundcircle.app.presentation.navigation.ScreenRoute
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.google.common.truth.Truth.assertThat
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.junit.Test
 
 class SanityUnitTest {
@@ -65,5 +68,15 @@ class SanityUnitTest {
 
         val voided: FundCircleError = FundCircleError.Conflict.TransactionAlreadyVoided("tx-123")
         assertThat(voided.message).contains("tx-123")
+    }
+
+    @Test
+    fun screenRoute_kotlinxSerialization_serializesCorrectly() {
+        val route: ScreenRoute = ScreenRoute.Dashboard(fundId = "fund-abc-123")
+        val json = Json.encodeToString(route)
+        assertThat(json).contains("fund-abc-123")
+
+        val deserialized = Json.decodeFromString<ScreenRoute>(json)
+        assertThat(deserialized).isEqualTo(route)
     }
 }

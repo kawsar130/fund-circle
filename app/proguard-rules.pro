@@ -1,6 +1,9 @@
 # Fund Circle Proguard / R8 Keep Rules
-# Preserve domain models for serialization
--keepclassmembers class com.fundcircle.app.domain.model.** { *; }
+
+# Preserve domain models & DTOs for serialization and reflection
+-keep class com.fundcircle.app.domain.model.** { *; }
+-keep class com.fundcircle.app.data.dto.** { *; }
+-keep class com.fundcircle.app.presentation.navigation.** { *; }
 
 # Kotlinx Serialization
 -keepattributes *Annotation*,InnerClasses
