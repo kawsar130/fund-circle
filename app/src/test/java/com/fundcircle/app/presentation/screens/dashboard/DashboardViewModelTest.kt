@@ -278,4 +278,39 @@ class DashboardViewModelTest {
         assertThat(state.isLoading).isFalse()
         assertThat(state.errorMessage).isNotNull()
     }
+
+    @Test
+    fun launch_persistsActiveCircleId() = runTest {
+        createViewModel()
+        advanceUntilIdle()
+
+        io.mockk.coVerify(exactly = 1) { authRepository.setActiveCircleId(testFundId) }
+    }
+
+    @Test
+    fun dismissError_clearsErrorMessage() = runTest {
+        every { observeCircleUseCase(testFundId) } returns flow { throw RuntimeException("Stream failed") }
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.errorMessage).isNotNull()
+
+        viewModel.onAction(DashboardUiAction.DismissError)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.errorMessage).isNull()
+    }
+
+    @Test
+    fun refresh_reloadsDashboardData() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onAction(DashboardUiAction.Refresh)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.isLoading).isFalse()
+        assertThat(state.circle).isEqualTo(sampleCircle)
+    }
 }

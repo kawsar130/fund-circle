@@ -110,4 +110,8 @@
     <string name="dashboard_expense_prefix">-</string>
     <string name="dashboard_deposit_type_badge">DEP</string>
     <string name="dashboard_expense_type_badge">EXP</string>
+    <string name="dashboard_deposit_default_title">Member Deposit</string>
+    <string name="dashboard_expense_default_title">Operating Expense</string>
+    <string name="dashboard_retry_btn">Retry</string>
+    <string name="dashboard_error_title">Unable to load circle</string>
 </resources>

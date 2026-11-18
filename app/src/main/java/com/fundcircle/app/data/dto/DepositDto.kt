@@ -36,7 +36,7 @@ fun DepositDto.toTransactionItem(): TransactionItem {
     val method = PaymentMethod.fromString(paymentMethod)
     val effectiveTimestamp = if (depositDate > 0L) depositDate else createdAt
     val formattedDate = DateUtils.formatDisplayDate(effectiveTimestamp)
-    val displayTitle = memberName.ifBlank { memberEmail.ifBlank { "Member Deposit" } }
+    val displayTitle = memberName.ifBlank { memberEmail }
     val displaySubtitle = "$formattedDate • ${method.displayName}"
 
     return TransactionItem(

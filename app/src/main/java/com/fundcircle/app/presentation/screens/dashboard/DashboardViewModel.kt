@@ -37,6 +37,11 @@ class DashboardViewModel @Inject constructor(
     init {
         observeNetworkState()
         observeDashboardData()
+        if (fundId.isNotBlank()) {
+            viewModelScope.launch {
+                authRepository.setActiveCircleId(fundId)
+            }
+        }
     }
 
     private fun observeNetworkState() {

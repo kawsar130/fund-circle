@@ -5,11 +5,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -35,6 +33,7 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -109,6 +108,13 @@ fun DashboardRoute(
                     snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
             }
+        }
+    }
+
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { error ->
+            snackbarHostState.showSnackbar(error.asString(context))
+            viewModel.onAction(DashboardUiAction.DismissError)
         }
     }
 
@@ -254,6 +260,48 @@ fun DashboardScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(48.dp)
                 )
+            }
+        } else if (state.circle == null && state.errorMessage != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(DesignTokens.Spacing24)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CloudOff,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
+                    Text(
+                        text = stringResource(R.string.dashboard_error_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                    Text(
+                        text = state.errorMessage.asString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
+                    Button(
+                        onClick = { onAction(DashboardUiAction.Refresh) },
+                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.dashboard_retry_btn),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
             }
         } else {
             LazyColumn(
@@ -438,7 +486,7 @@ fun HeroBalanceCard(
 
             // Main Balance Amount (32sp Bold, Tabular Digits)
             val formattedBalance = remember(circle.recordedBalance) {
-                NumberFormat.getNumberInstance(Locale.US).format(circle.recordedBalance)
+                NumberFormat.getIntegerInstance(Locale.US).format(circle.recordedBalance)
             }
             Text(
                 text = stringResource(
@@ -468,7 +516,7 @@ fun HeroBalanceCard(
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
                     val formattedDeposits = remember(circle.totalDeposits) {
-                        NumberFormat.getNumberInstance(Locale.US).format(circle.totalDeposits)
+                        NumberFormat.getIntegerInstance(Locale.US).format(circle.totalDeposits)
                     }
                     Text(
                         text = stringResource(
@@ -493,7 +541,7 @@ fun HeroBalanceCard(
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
                     val formattedExpenses = remember(circle.totalExpenses) {
-                        NumberFormat.getNumberInstance(Locale.US).format(circle.totalExpenses)
+                        NumberFormat.getIntegerInstance(Locale.US).format(circle.totalExpenses)
                     }
                     Text(
                         text = stringResource(
@@ -525,20 +573,28 @@ fun TransactionItemCard(
     modifier: Modifier = Modifier
 ) {
     val formattedAmount = remember(item.amount) {
-        NumberFormat.getNumberInstance(Locale.US).format(item.amount)
+        NumberFormat.getIntegerInstance(Locale.US).format(item.amount)
+    }
+
+    val displayTitle = item.title.ifBlank {
+        if (item.isExpense) {
+            stringResource(R.string.dashboard_expense_default_title)
+        } else {
+            stringResource(R.string.dashboard_deposit_default_title)
+        }
     }
 
     val cd = stringResource(
         R.string.dashboard_tx_card_cd,
-        item.title,
+        displayTitle,
         currency.symbol,
         formattedAmount
     )
 
     Card(
+        onClick = onClick,
         modifier = modifier
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-            .clickable(onClick = onClick)
             .semantics { contentDescription = cd },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
@@ -581,12 +637,12 @@ fun TransactionItemCard(
 
             Spacer(modifier = Modifier.width(DesignTokens.Spacing12))
 
-            // Details: Title + Subtitle (Date • Payment Method)
+            // Details: Title + Subtitle (Date • Payment Method localized)
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = item.title,
+                    text = displayTitle,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -597,7 +653,7 @@ fun TransactionItemCard(
                 val subtitleText = stringResource(
                     R.string.dashboard_tx_subtitle,
                     DateUtils.formatDisplayDate(item.timestamp),
-                    item.paymentMethod.displayName
+                    item.paymentMethod.asUiText().asString()
                 )
                 Text(
                     text = subtitleText,
@@ -645,6 +701,7 @@ fun TransactionItemCard(
                         Text(
                             text = stringResource(R.string.dashboard_badge_reversed),
                             style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
