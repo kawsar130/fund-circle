@@ -8,18 +8,32 @@ import androidx.compose.ui.res.stringResource
 /**
  * Invariant 6: Zero Hardcoded Strings / ViewModel Decoupling.
  * ViewModels emit typed UiText instead of raw strings or referencing Android Context.
+ * Implements structural equality to prevent redundant Jetpack Compose recompositions.
  */
 sealed interface UiText {
     data class DynamicString(val value: String) : UiText
-    class StringResource(
+
+    data class StringResource(
         @StringRes val resId: Int,
-        vararg val args: Any
-    ) : UiText
+        val args: List<Any> = emptyList()
+    ) : UiText {
+        constructor(@StringRes resId: Int, vararg args: Any) : this(resId, args.toList())
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is StringResource) return false
+            return resId == other.resId && args == other.args
+        }
+
+        override fun hashCode(): Int {
+            return 31 * resId + args.hashCode()
+        }
+    }
 
     fun asString(context: Context): String {
         return when (this) {
             is DynamicString -> value
-            is StringResource -> context.getString(resId, *args)
+            is StringResource -> context.getString(resId, *args.toTypedArray())
         }
     }
 
@@ -27,7 +41,7 @@ sealed interface UiText {
     fun asString(): String {
         return when (this) {
             is DynamicString -> value
-            is StringResource -> stringResource(resId, *args)
+            is StringResource -> stringResource(resId, *args.toTypedArray())
         }
     }
 }
