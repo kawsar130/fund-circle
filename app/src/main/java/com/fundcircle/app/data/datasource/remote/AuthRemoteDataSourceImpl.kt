@@ -45,17 +45,22 @@ class AuthRemoteDataSourceImpl @Inject constructor(
             idToken
         }
 
+        val email = user.email ?: ""
+        val displayName = user.displayName?.takeIf { it.isNotBlank() }
+            ?: email.substringBefore("@").replaceFirstChar { it.uppercase() }
+            .ifBlank { "Member" }
+
         val userSession = UserSession(
             uid = user.uid,
-            email = user.email ?: "",
-            displayName = user.displayName ?: "",
+            email = email,
+            displayName = displayName,
             photoUrl = user.photoUrl?.toString(),
             idToken = firebaseAuthToken,
             activeCircleId = null
         )
 
         // Sync to root /users/{userId} per API Spec § 4.8 and CUJ-01
-        syncUserProfile(user.uid, user.email ?: "", user.displayName ?: "", user.photoUrl?.toString())
+        syncUserProfile(user.uid, email, displayName, user.photoUrl?.toString())
 
         return userSession
     }
@@ -97,7 +102,20 @@ class AuthRemoteDataSourceImpl @Inject constructor(
                 userDocRef.set(updateData, SetOptions.merge()).await()
             }
         } catch (_: Exception) {
-            // Best effort sync: local writes will queue in 100MB Firestore cache
+            // Best effort sync: if get() threw (e.g. offline), queue an optimistic merge write into 100MB Firestore cache
+            try {
+                val now = System.currentTimeMillis()
+                val fallbackData = mapOf(
+                    "userId" to uid,
+                    "email" to email,
+                    "displayName" to displayName,
+                    "photoUrl" to photoUrl,
+                    "lastActiveAt" to now
+                )
+                firestore.collection("users").document(uid).set(fallbackData, SetOptions.merge())
+            } catch (_: Exception) {
+                // Secondary best-effort guard
+            }
         }
     }
 }

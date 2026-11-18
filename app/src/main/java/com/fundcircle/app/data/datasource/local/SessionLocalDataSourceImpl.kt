@@ -26,7 +26,12 @@ class SessionLocalDataSourceImpl @Inject constructor(
             .putString(SessionKeys.KEY_USER_UID, session.uid)
             .putString(SessionKeys.KEY_USER_EMAIL, session.email)
             .putString(SessionKeys.KEY_DISPLAY_NAME, session.displayName)
-            .putString(SessionKeys.KEY_PHOTO_URL, session.photoUrl)
+
+        if (session.photoUrl != null) {
+            editor.putString(SessionKeys.KEY_PHOTO_URL, session.photoUrl)
+        } else {
+            editor.remove(SessionKeys.KEY_PHOTO_URL)
+        }
 
         if (session.activeCircleId != null) {
             editor.putString(SessionKeys.KEY_ACTIVE_CIRCLE_ID, session.activeCircleId)

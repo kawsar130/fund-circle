@@ -103,6 +103,25 @@ class SessionLocalDataSourceTest {
     }
 
     @Test
+    fun saveUserSession_withNullPhotoUrl_removesPhotoUrlKeyFromStorage() {
+        storage[SessionKeys.KEY_PHOTO_URL] = "https://example.com/old.png"
+
+        val sessionWithoutPhoto = UserSession(
+            uid = "uid-123",
+            email = "karim@fundcircle.app",
+            displayName = "Karim Khan",
+            photoUrl = null,
+            idToken = "token-abc",
+            activeCircleId = null
+        )
+
+        dataSource.saveUserSession(sessionWithoutPhoto)
+
+        assertThat(dataSource.getUserSession()?.photoUrl).isNull()
+        assertThat(storage.containsKey(SessionKeys.KEY_PHOTO_URL)).isFalse()
+    }
+
+    @Test
     fun clearSession_clearsAllStorageAndEmitsNull() {
         val session = UserSession(
             uid = "uid-123",

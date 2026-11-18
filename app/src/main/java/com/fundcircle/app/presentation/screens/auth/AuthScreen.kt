@@ -100,9 +100,7 @@ fun AuthScreen(
                         }
                         is GoogleSignInResult.Failure -> {
                             viewModel.onAction(
-                                AuthUiAction.GoogleSignInFailed(
-                                    UiText.DynamicString(result.message)
-                                )
+                                AuthUiAction.GoogleSignInFailed(result.error)
                             )
                         }
                     }
@@ -263,11 +261,22 @@ fun AuthScreenContent(
                             )
                         ) {
                             if (uiState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.5.dp
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.5.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = stringResource(R.string.auth_loading_signing_in),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             } else {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,

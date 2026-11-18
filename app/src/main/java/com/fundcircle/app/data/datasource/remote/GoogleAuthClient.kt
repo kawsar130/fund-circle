@@ -11,6 +11,8 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.fundcircle.app.BuildConfig
+import com.fundcircle.app.R
+import com.fundcircle.app.core.common.UiText
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.security.MessageDigest
@@ -24,7 +26,7 @@ import javax.inject.Singleton
 sealed interface GoogleSignInResult {
     data class Success(val idToken: String) : GoogleSignInResult
     data object Cancelled : GoogleSignInResult
-    data class Failure(val message: String, val cause: Throwable? = null) : GoogleSignInResult
+    data class Failure(val error: UiText, val cause: Throwable? = null) : GoogleSignInResult
 }
 
 /**
@@ -39,12 +41,14 @@ class GoogleAuthClient @Inject constructor(
             val serverClientId = BuildConfig.WEB_CLIENT_ID.trim()
             if (serverClientId.isBlank()) {
                 return GoogleSignInResult.Failure(
-                    message = "Google Web Client ID is not configured. Please configure WEB_CLIENT_ID."
+                    error = UiText.StringResource(R.string.auth_error_sign_in_failed)
                 )
             }
 
             val activity = context.findActivity()
-                ?: return GoogleSignInResult.Failure("Activity context required for Credential Manager UI.")
+                ?: return GoogleSignInResult.Failure(
+                    error = UiText.StringResource(R.string.auth_error_sign_in_failed)
+                )
 
             val rawNonce = UUID.randomUUID().toString()
             val md = MessageDigest.getInstance("SHA-256")
@@ -72,23 +76,27 @@ class GoogleAuthClient @Inject constructor(
                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                 GoogleSignInResult.Success(googleIdTokenCredential.idToken)
             } else {
-                GoogleSignInResult.Failure("Unsupported credential type received from Credential Manager.")
+                GoogleSignInResult.Failure(
+                    error = UiText.StringResource(R.string.auth_error_sign_in_failed)
+                )
             }
         } catch (e: GetCredentialCancellationException) {
             GoogleSignInResult.Cancelled
         } catch (e: NoCredentialException) {
             GoogleSignInResult.Failure(
-                message = "No Google accounts available on this device.",
+                error = UiText.StringResource(R.string.auth_error_no_accounts),
                 cause = e
             )
         } catch (e: GetCredentialException) {
             GoogleSignInResult.Failure(
-                message = e.message ?: "Credential Manager authentication error.",
+                error = e.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }
+                    ?: UiText.StringResource(R.string.auth_error_sign_in_failed),
                 cause = e
             )
         } catch (e: Exception) {
             GoogleSignInResult.Failure(
-                message = e.message ?: "Unexpected authentication error.",
+                error = e.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }
+                    ?: UiText.StringResource(R.string.auth_error_sign_in_failed),
                 cause = e
             )
         }
