@@ -22,6 +22,7 @@ data class DashboardUiState(
 
 sealed interface DashboardUiAction : UiAction {
     data object Refresh : DashboardUiAction
+    data object OpenNotifications : DashboardUiAction
     data object NavigateToLedger : DashboardUiAction
     data class NavigateToTransactionDetail(val txId: String, val isExpense: Boolean) : DashboardUiAction
     data object NavigateToRecordTransaction : DashboardUiAction

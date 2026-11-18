@@ -31,8 +31,6 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -175,35 +173,37 @@ fun DashboardScreen(
                             MaterialTheme.colorScheme.onSecondaryContainer
                         }
 
-                        AssistChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    text = badgeLabel,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            },
-                            leadingIcon = {
+                        Surface(
+                            shape = RoundedCornerShape(100.dp),
+                            color = badgeContainerColor,
+                            contentColor = badgeTextColor,
+                            modifier = Modifier.semantics {
+                                contentDescription = badgeLabel
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Icon(
                                     imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.Check,
                                     contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(12.dp)
                                 )
-                            },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = badgeContainerColor,
-                                labelColor = badgeTextColor,
-                                leadingIconContentColor = badgeTextColor
-                            ),
-                            border = null,
-                            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.CompactTouchTarget)
-                        )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = badgeLabel,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.width(DesignTokens.Spacing4))
                     }
 
                     // Notification Action
                     IconButton(
-                        onClick = { },
+                        onClick = { onAction(DashboardUiAction.OpenNotifications) },
                         modifier = Modifier.size(DesignTokens.MinTouchTarget)
                     ) {
                         Icon(

@@ -106,6 +106,9 @@ class DashboardViewModel @Inject constructor(
     override fun onAction(action: DashboardUiAction) {
         when (action) {
             DashboardUiAction.Refresh -> observeDashboardData()
+            DashboardUiAction.OpenNotifications -> {
+                sendEffect(DashboardUiEffect.ShowSnackbar(UiText.StringResource(R.string.dashboard_notifications_empty)))
+            }
             DashboardUiAction.NavigateToLedger -> {
                 if (fundId.isNotBlank()) {
                     sendEffect(DashboardUiEffect.NavigateToLedger(fundId))

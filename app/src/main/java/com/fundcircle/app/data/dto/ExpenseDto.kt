@@ -4,6 +4,7 @@ import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.TransactionItem
+import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
 import kotlinx.serialization.Serializable
 
@@ -13,6 +14,7 @@ import kotlinx.serialization.Serializable
  * Invariant 1: Amount is a 64-bit Long integer >= 1.
  * Invariant 4: isVoid marks reversed transactions without physical deletion.
  */
+@IgnoreExtraProperties
 @Serializable
 data class ExpenseDto(
     val expenseId: String = "",

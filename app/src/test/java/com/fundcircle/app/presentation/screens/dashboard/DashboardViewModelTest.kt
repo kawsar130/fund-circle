@@ -259,6 +259,24 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun openNotifications_emitsShowSnackbarEffect() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.uiEffect.test {
+            viewModel.onAction(DashboardUiAction.OpenNotifications)
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(
+                DashboardUiEffect.ShowSnackbar(
+                    com.fundcircle.app.core.common.UiText.StringResource(
+                        com.fundcircle.app.R.string.dashboard_notifications_empty
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
     fun blankFundId_setsNotFoundError() = runTest {
         val viewModel = createViewModel(fundId = "")
         advanceUntilIdle()
