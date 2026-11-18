@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Scoped strictly to internal cacheDir/exports and reports (RFC 4180 CSV exports) -->
+    <cache-path name="csv_exports" path="exports/" />
     <cache-path name="reports" path="reports/" />
 </paths>

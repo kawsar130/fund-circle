@@ -14,10 +14,10 @@ echo -e "${BLUE}======================================================${NC}"
 echo -e "${BLUE}  Fund Circle Pre-Flight Verification & Quality Gates ${NC}"
 echo -e "${BLUE}======================================================${NC}\n"
 
-# 1. Invariant 1: Whole-Integer Money (No Float or Double in financial entities)
+# 1. Invariant 1: Whole-Integer Money (No Float or Double in financial entities/parameters/functions)
 echo -e "🔍 [1/3] Checking Architectural Invariant 1 (64-bit Long monetary model)..."
-if [ -d "app/src" ]; then
-    FORBIDDEN_MONEY=$(grep -rnE '(val|var)\s+[a-zA-Z0-9_]*(amount|balance|deposit|expense|target|total)[a-zA-Z0-9_]*\s*:\s*(Double|Float)' app/src/ || true)
+if [ -d "app/src/main" ]; then
+    FORBIDDEN_MONEY=$(grep -rnE '\b[a-zA-Z0-9_]*(amount|balance|deposit|expense|target|total)[a-zA-Z0-9_]*\s*:\s*(Double|Float)' app/src/main/ || true)
     if [ -n "$FORBIDDEN_MONEY" ]; then
         echo -e "${RED}❌ FAILED: Invariant 1 Violation! Found forbidden Double or Float monetary declarations:${NC}"
         echo "$FORBIDDEN_MONEY"
@@ -25,22 +25,22 @@ if [ -d "app/src" ]; then
     fi
     echo -e "${GREEN}✓ Monetary invariant satisfied (Zero Double/Float in financial fields).${NC}"
 else
-    echo -e "${YELLOW}ℹ app/src directory not present yet. Skipping source scan.${NC}"
+    echo -e "${YELLOW}ℹ app/src/main directory not present yet. Skipping source scan.${NC}"
 fi
 
-# 2. Invariant 4: Zero Hard Deletes (Verify no delete() on transaction collections)
+# 2. Invariant 4: Zero Hard Deletes (Verify no delete() on transaction collections/batches/tx)
 echo -e "\n🔍 [2/3] Checking Architectural Invariant 4 (Immutable Ledger / No Hard Deletes)..."
-if [ -d "app/src" ]; then
-    FORBIDDEN_DELETE=$(grep -rnE '(deposits|expenses)\.document\([^)]+\)\.delete\(\)' app/src/ || true)
+if [ -d "app/src/main" ]; then
+    FORBIDDEN_DELETE=$(grep -rnE '(\.delete\(|(batch|tx|transaction)\.delete\()' app/src/main/ || true)
     if [ -n "$FORBIDDEN_DELETE" ]; then
-        echo -e "${RED}❌ FAILED: Invariant 4 Violation! Found physical document delete() on transactions:${NC}"
+        echo -e "${RED}❌ FAILED: Invariant 4 Violation! Found physical document or batch delete() on transactions:${NC}"
         echo "$FORBIDDEN_DELETE"
         echo -e "${YELLOW}Transactions must use the Transaction Reversal Protocol (isVoid = true, FieldValue.increment(-amount)).${NC}"
         exit 1
     fi
     echo -e "${GREEN}✓ Ledger immutability satisfied.${NC}"
 else
-    echo -e "${YELLOW}ℹ app/src directory not present yet. Skipping source scan.${NC}"
+    echo -e "${YELLOW}ℹ app/src/main directory not present yet. Skipping source scan.${NC}"
 fi
 
 # 3. Gradle Quality Gates (Unit Tests & Lint)
@@ -55,7 +55,7 @@ if [ -f "./gradlew" ]; then
     
     echo -e "${GREEN}✓ All Gradle unit tests and lint checks passed.${NC}"
 else
-    echo -e "${YELLOW}ℹ gradlew not found yet. Scaffolding is next step.${NC}"
+    echo -e "${YELLOW}ℹ gradlew not found yet.${NC}"
 fi
 
 echo -e "\n${GREEN}======================================================${NC}"
