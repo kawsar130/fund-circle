@@ -1,6 +1,8 @@
 package com.fundcircle.app.data.datasource.remote
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -34,12 +36,15 @@ class GoogleAuthClient @Inject constructor(
 ) {
     suspend fun getGoogleIdToken(context: Context): GoogleSignInResult {
         return try {
-            val serverClientId = BuildConfig.WEB_CLIENT_ID
+            val serverClientId = BuildConfig.WEB_CLIENT_ID.trim()
             if (serverClientId.isBlank()) {
                 return GoogleSignInResult.Failure(
                     message = "Google Web Client ID is not configured. Please configure WEB_CLIENT_ID."
                 )
             }
+
+            val activity = context.findActivity()
+                ?: return GoogleSignInResult.Failure("Activity context required for Credential Manager UI.")
 
             val rawNonce = UUID.randomUUID().toString()
             val md = MessageDigest.getInstance("SHA-256")
@@ -59,7 +64,7 @@ class GoogleAuthClient @Inject constructor(
 
             val response = credentialManager.getCredential(
                 request = request,
-                context = context
+                context = activity
             )
 
             val credential = response.credential
@@ -96,4 +101,13 @@ class GoogleAuthClient @Inject constructor(
             // Ignore failure when clearing credential state
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var current = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
 }

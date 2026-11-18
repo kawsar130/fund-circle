@@ -37,8 +37,6 @@ fun GoogleIcon(
     ) {
         val w = this.size.width
         val h = this.size.height
-        val cx = w / 2f
-        val cy = h / 2f
 
         // Scaled coordinates based on standard 48x48 Google G path
         val scaleX = w / 48f

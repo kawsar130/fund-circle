@@ -10,6 +10,7 @@ import com.fundcircle.app.domain.usecase.ObserveAuthStateUseCase
 import com.fundcircle.app.domain.usecase.SignInWithGoogleUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -30,11 +31,23 @@ class AuthViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        observeAuthStateUseCase()
-            .onEach { session ->
-                setState { copy(currentUser = session) }
+        viewModelScope.launch {
+            val initialSession = observeAuthStateUseCase().first()
+            setState { copy(currentUser = initialSession) }
+            if (initialSession != null) {
+                val activeCircleId = initialSession.activeCircleId ?: getActiveCircleUseCase()
+                if (!activeCircleId.isNullOrBlank()) {
+                    sendEffect(AuthUiEffect.NavigateToDashboard(activeCircleId))
+                } else {
+                    sendEffect(AuthUiEffect.NavigateToHub)
+                }
             }
-            .launchIn(viewModelScope)
+
+            observeAuthStateUseCase()
+                .collect { session ->
+                    setState { copy(currentUser = session) }
+                }
+        }
     }
 
     override fun onAction(action: AuthUiAction) {

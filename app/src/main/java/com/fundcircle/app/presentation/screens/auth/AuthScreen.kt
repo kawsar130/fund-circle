@@ -75,7 +75,6 @@ fun AuthScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     val authClient = remember(googleAuthClient, context) {
         googleAuthClient ?: GoogleAuthClient(CredentialManager.create(context))
@@ -85,21 +84,19 @@ fun AuthScreen(
         viewModel.uiEffect.collectLatest { effect ->
             when (effect) {
                 is AuthUiEffect.LaunchGoogleSignIn -> {
-                    coroutineScope.launch {
-                        when (val result = authClient.getGoogleIdToken(context)) {
-                            is GoogleSignInResult.Success -> {
-                                viewModel.onAction(AuthUiAction.GoogleTokenReceived(result.idToken))
-                            }
-                            is GoogleSignInResult.Cancelled -> {
-                                viewModel.onAction(AuthUiAction.GoogleSignInCancelled)
-                            }
-                            is GoogleSignInResult.Failure -> {
-                                viewModel.onAction(
-                                    AuthUiAction.GoogleSignInFailed(
-                                        UiText.DynamicString(result.message)
-                                    )
+                    when (val result = authClient.getGoogleIdToken(context)) {
+                        is GoogleSignInResult.Success -> {
+                            viewModel.onAction(AuthUiAction.GoogleTokenReceived(result.idToken))
+                        }
+                        is GoogleSignInResult.Cancelled -> {
+                            viewModel.onAction(AuthUiAction.GoogleSignInCancelled)
+                        }
+                        is GoogleSignInResult.Failure -> {
+                            viewModel.onAction(
+                                AuthUiAction.GoogleSignInFailed(
+                                    UiText.DynamicString(result.message)
                                 )
-                            }
+                            )
                         }
                     }
                 }
@@ -137,15 +134,27 @@ fun AuthScreenContent(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+        if (uiState.currentUser != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 3.dp
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Offline Banner (Animated)
             AnimatedVisibility(
                 visible = uiState.isOffline,
@@ -275,6 +284,7 @@ fun AuthScreenContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
 }
 
 @Composable

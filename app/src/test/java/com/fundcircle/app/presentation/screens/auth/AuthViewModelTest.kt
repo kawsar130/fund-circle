@@ -206,4 +206,51 @@ class AuthViewModelTest {
 
         assertThat(viewModel.uiState.value.errorMessage).isNull()
     }
+
+    @Test
+    fun coldLaunch_whenSessionAlreadyExists_automaticallyNavigatesToHub() = runTest {
+        val existingSessionFlow = MutableStateFlow<UserSession?>(sampleSession)
+        val testObserveAuth = mockk<ObserveAuthStateUseCase>()
+        every { testObserveAuth() } returns existingSessionFlow
+
+        val testVm = AuthViewModel(
+            signInWithGoogleUseCase = signInWithGoogleUseCase,
+            observeAuthStateUseCase = testObserveAuth,
+            getActiveCircleUseCase = getActiveCircleUseCase,
+            networkMonitor = networkMonitor
+        )
+
+        testVm.uiEffect.test {
+            testDispatcher.scheduler.advanceUntilIdle()
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(AuthUiEffect.NavigateToHub)
+            expectNoEvents()
+        }
+
+        assertThat(testVm.uiState.value.currentUser).isEqualTo(sampleSession)
+    }
+
+    @Test
+    fun coldLaunch_whenSessionExistsWithActiveCircle_automaticallyNavigatesToDashboard() = runTest {
+        val sessionWithCircle = sampleSession.copy(activeCircleId = "fund-active-999")
+        val existingSessionFlow = MutableStateFlow<UserSession?>(sessionWithCircle)
+        val testObserveAuth = mockk<ObserveAuthStateUseCase>()
+        every { testObserveAuth() } returns existingSessionFlow
+
+        val testVm = AuthViewModel(
+            signInWithGoogleUseCase = signInWithGoogleUseCase,
+            observeAuthStateUseCase = testObserveAuth,
+            getActiveCircleUseCase = getActiveCircleUseCase,
+            networkMonitor = networkMonitor
+        )
+
+        testVm.uiEffect.test {
+            testDispatcher.scheduler.advanceUntilIdle()
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(AuthUiEffect.NavigateToDashboard("fund-active-999"))
+            expectNoEvents()
+        }
+
+        assertThat(testVm.uiState.value.currentUser).isEqualTo(sessionWithCircle)
+    }
 }

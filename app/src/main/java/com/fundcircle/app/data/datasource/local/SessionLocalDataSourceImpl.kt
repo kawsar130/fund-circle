@@ -30,6 +30,8 @@ class SessionLocalDataSourceImpl @Inject constructor(
 
         if (session.activeCircleId != null) {
             editor.putString(SessionKeys.KEY_ACTIVE_CIRCLE_ID, session.activeCircleId)
+        } else {
+            editor.remove(SessionKeys.KEY_ACTIVE_CIRCLE_ID)
         }
         editor.apply()
 

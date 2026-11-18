@@ -39,12 +39,18 @@ class AuthRemoteDataSourceImpl @Inject constructor(
         val user = authResult.user
             ?: throw FundCircleError.Authorization.AuthenticationFailed("Firebase user is null after sign in.")
 
+        val firebaseAuthToken = try {
+            user.getIdToken(false).await()?.token ?: idToken
+        } catch (_: Exception) {
+            idToken
+        }
+
         val userSession = UserSession(
             uid = user.uid,
             email = user.email ?: "",
             displayName = user.displayName ?: "",
             photoUrl = user.photoUrl?.toString(),
-            idToken = idToken,
+            idToken = firebaseAuthToken,
             activeCircleId = null
         )
 
