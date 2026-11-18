@@ -5,8 +5,19 @@
 
 ---
 
+## 🔒 Session Start Protocol (Trunk-Based Development Gate)
+> **MANDATORY FOR ALL CHATS:** Never commit directly to `main`. Every chat implementing a slice MUST start by syncing `main` and checking out a dedicated feature branch:
+> ```bash
+> git checkout main && git pull origin main
+> git checkout -b feat/slice-<N>-<feature-name>
+> ```
+> Direct commits to `main` are mechanically rejected by `.githooks/pre-commit`.
+
+---
+
 ## 🎯 Slice 0: Project Scaffold & Core Platform Baseline
 **Status:** Completed ✅  
+**Branch:** `feat/slice-0-scaffold-baseline`  
 **Estimated Scope:** Medium (Scaffolding, Build Catalog, Core Theme, Invariant Verification)
 
 - [x] Task 0.1: Initialize Gradle Version Catalog (`gradle/libs.versions.toml`), `settings.gradle.kts`, `build.gradle.kts`, and Gradle wrapper (8.11.1).
@@ -20,11 +31,13 @@
 - [x] Invariant 4 verified (zero hard delete calls).
 - [x] Gradle build succeeds and unit test suite passes.
 - [x] Android Lint passes with 0 errors (`./gradlew lintDebug`).
+- [x] Full APK build succeeds (`./gradlew assembleDebug`).
 
 ---
 
 ## 🎯 Slice 1: Authentication & User Session (CUJ-01, Screen 01)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-1-auth-welcome`  
 **Estimated Scope:** Medium (Credential Manager One-Tap, EncryptedPrefs, AuthViewModel)
 - [ ] Task 1.1: Domain layer: `AuthRepository` interface, `UserSession` model, `SignInWithGoogleUseCase`, `ObserveAuthStateUseCase`.
 - [ ] Task 1.2: Data layer: Google One-Tap Credential Manager integration, `SessionLocalDataSource` with `EncryptedSharedPreferences`.
@@ -39,6 +52,7 @@
 
 ## 🎯 Slice 2: Circle Hub & Creation Wizard (CUJ-02 & CUJ-03, Screens 02 & 03)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-2-circle-hub`  
 **Estimated Scope:** Medium (Circle creation, locked currency, subcollection isolation)
 - [ ] Task 2.1: Domain layer: `Fund` entity, `FundRepository` interface, `CreateFundUseCase`, `GetUserFundsUseCase`.
 - [ ] Task 2.2: Data layer: Firestore `/funds/{fundId}` creation, currency lock validation (`BDT`, `USD`, `EUR`).
@@ -49,6 +63,7 @@
 
 ## 🎯 Slice 3: Circle Home Dashboard & $O(1)$ Aggregates (CUJ-04, Screen 04)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-3-dashboard`  
 **Estimated Scope:** Medium ($O(1)$ single-read aggregates, offline persistent cache, network banner)
 - [ ] Task 3.1: Domain layer: `GetCircleDashboardUseCase`, `NetworkMonitor` integration.
 - [ ] Task 3.2: Data layer: Firestore persistent cache (100MB) settings, single document read of `recordedBalance`, `totalDeposits`, `totalExpenses`.
@@ -59,6 +74,7 @@
 
 ## 🎯 Slice 4: Transactions Ledger & Add Transaction (CUJ-05, Screens 05 & 07)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-4-ledger`  
 **Estimated Scope:** Large (UUIDv4 idempotency, atomic parent increment, segmented tabs)
 - [ ] Task 4.1: Domain layer: `Transaction` models, `RecordDepositUseCase`, `RecordExpenseUseCase`.
 - [ ] Task 4.2: Data layer: Batch write to `/funds/{fundId}/deposits` and atomic `FieldValue.increment()` on `/funds/{fundId}`.
@@ -69,6 +85,7 @@
 
 ## 🎯 Slice 5: Transaction Details & Reversal Protocol (CUJ-06, Screens 06 & 14)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-5-reversals`  
 **Estimated Scope:** Medium (Immutable audit trail, isVoid, reverse aggregate increment)
 - [ ] Task 5.1: Domain layer: `VoidTransactionUseCase` asserting mandatory reason ($\ge 5$ chars) and admin role.
 - [ ] Task 5.2: Data layer: Firestore transaction updating `isVoid = true`, `voidReason`, `voidedAt`, `voidedBy` and atomically decrementing parent balance.
@@ -79,6 +96,7 @@
 
 ## 🎯 Slice 6: Stakeholder Roster & Member Details (CUJ-07, Screens 08–11)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-6-members`  
 **Estimated Scope:** Large (Sequential FC-ID, member invitation, self-service KYC mask)
 - [ ] Task 6.1: Domain layer: `Member` entity, `AddMemberUseCase`, `GetMemberLedgerUseCase`, `UpdateProfileUseCase`.
 - [ ] Task 6.2: Data layer: Firestore subcollection `/funds/{fundId}/members`, sequential FC-ID preview, parent `memberEmails` update.
@@ -89,6 +107,7 @@
 
 ## 🎯 Slice 7: On-Device CSV Reporting & Settings (CUJ-08, Screens 12 & 13)
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-7-reports`  
 **Estimated Scope:** Medium (Pure Kotlin CSV generator, FileProvider, governance)
 - [ ] Task 7.1: Domain/Data layer: `LedgerCsvGenerator.kt` streaming directly to cache without Apache POI.
 - [ ] Task 7.2: Presentation layer: Android `FileProvider` share sheet (`Intent.ACTION_SEND`), `ReportsScreen` (Screen 12), `SettingsScreen` (Screen 13).
@@ -98,6 +117,7 @@
 
 ## 🎯 Slice 8: Production Hardening & Play Store Verification
 **Status:** Pending  
+**Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-8-hardening`  
 **Estimated Scope:** Medium (Firestore security rules, R8 optimization, Play compliance)
 - [ ] Task 8.1: Firestore security rules validation in Firebase emulator.
 - [ ] Task 8.2: ProGuard / R8 keep rules optimization.

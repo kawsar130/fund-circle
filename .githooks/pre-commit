@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Git Pre-Commit Hook — Enforce Trunk-Based Development (No Direct Commits to Main)
+# ==============================================================================
+set -euo pipefail
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$CURRENT_BRANCH" = "main" ]; then
+    echo -e "\033[0;31m========================================================================\033[0m"
+    echo -e "\033[0;31m❌ COMMIT REJECTED: Direct commits to 'main' are strictly forbidden!\033[0m"
+    echo -e "\033[0;31m========================================================================\033[0m"
+    echo -e "\033[1;33mFund Circle enforces Trunk-Based Development with PR reviews.\033[0m"
+    echo -e "\033[1;33mPlease create and switch to a dedicated feature branch first:\033[0m\n"
+    echo -e "  git checkout -b feat/slice-<N>-<feature-name>\n"
+    exit 1
+fi
