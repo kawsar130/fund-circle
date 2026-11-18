@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">Fund Circle</string>
+    <string name="auth_subtitle">Transparent Capital Management</string>
+    <string name="auth_feature_1">Multi-tenant investment syndicates</string>
+    <string name="auth_feature_2">Immutable, versioned financial audit trail</string>
+    <string name="auth_feature_3">Real-time shared deposits and expenses</string>
+    <string name="auth_feature_4">Instant on-device CSV ledger export</string>
+    <string name="auth_btn_continue_google">Continue with Google</string>
+    <string name="auth_terms_notice">By continuing, you agree to the Terms of Service &amp; Privacy Policy</string>
+    <string name="auth_error_sign_in_failed">Google Sign-In failed. Please try again.</string>
+    <string name="auth_error_cancelled">Sign-in was cancelled.</string>
+    <string name="auth_error_network">Network connection unavailable. Please check your internet connection.</string>
+    <string name="auth_error_session_expired">Your session has expired. Please sign in again.</string>
+    <string name="auth_error_no_accounts">No Google accounts found on this device.</string>
+    <string name="auth_loading_signing_in">Signing in…</string>
+    <string name="auth_logo_content_description">Fund Circle Logo</string>
+    <string name="auth_google_icon_content_description">Google Logo</string>
+    <string name="auth_offline_cache_warning">Viewing Offline Cache</string>
 </resources>

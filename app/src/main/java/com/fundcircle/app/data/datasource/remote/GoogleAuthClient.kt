@@ -1,0 +1,99 @@
+package com.fundcircle.app.data.datasource.remote
+
+import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
+import com.fundcircle.app.BuildConfig
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import java.security.MessageDigest
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Result abstraction for Google Identity One-Tap Sign-In.
+ */
+sealed interface GoogleSignInResult {
+    data class Success(val idToken: String) : GoogleSignInResult
+    data object Cancelled : GoogleSignInResult
+    data class Failure(val message: String, val cause: Throwable? = null) : GoogleSignInResult
+}
+
+/**
+ * Client wrapper around Android Credential Manager for Google Identity One-Tap.
+ */
+@Singleton
+class GoogleAuthClient @Inject constructor(
+    private val credentialManager: CredentialManager
+) {
+    suspend fun getGoogleIdToken(context: Context): GoogleSignInResult {
+        return try {
+            val serverClientId = BuildConfig.WEB_CLIENT_ID
+            if (serverClientId.isBlank()) {
+                return GoogleSignInResult.Failure(
+                    message = "Google Web Client ID is not configured. Please configure WEB_CLIENT_ID."
+                )
+            }
+
+            val rawNonce = UUID.randomUUID().toString()
+            val md = MessageDigest.getInstance("SHA-256")
+            val digest = md.digest(rawNonce.toByteArray())
+            val hashedNonce = digest.fold("") { str, it -> str + "%02x".format(it) }
+
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(serverClientId)
+                .setAutoSelectEnabled(true)
+                .setNonce(hashedNonce)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            val response = credentialManager.getCredential(
+                request = request,
+                context = context
+            )
+
+            val credential = response.credential
+            if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                GoogleSignInResult.Success(googleIdTokenCredential.idToken)
+            } else {
+                GoogleSignInResult.Failure("Unsupported credential type received from Credential Manager.")
+            }
+        } catch (e: GetCredentialCancellationException) {
+            GoogleSignInResult.Cancelled
+        } catch (e: NoCredentialException) {
+            GoogleSignInResult.Failure(
+                message = "No Google accounts available on this device.",
+                cause = e
+            )
+        } catch (e: GetCredentialException) {
+            GoogleSignInResult.Failure(
+                message = e.message ?: "Credential Manager authentication error.",
+                cause = e
+            )
+        } catch (e: Exception) {
+            GoogleSignInResult.Failure(
+                message = e.message ?: "Unexpected authentication error.",
+                cause = e
+            )
+        }
+    }
+
+    suspend fun clearCredentialState() {
+        try {
+            credentialManager.clearCredentialState(ClearCredentialStateRequest())
+        } catch (_: Exception) {
+            // Ignore failure when clearing credential state
+        }
+    }
+}
