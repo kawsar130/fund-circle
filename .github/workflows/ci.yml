@@ -1,4 +1,4 @@
-name: CI & Invariant Guardrails
+name: "CI & Invariant Guardrails"
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Audit Financial Primitives (Invariant 1: No Double/Float in money fields)
+      - name: "Audit Financial Primitives (Invariant 1: No Double/Float in money fields)"
         run: |
           echo "Scanning for forbidden Double/Float declarations in financial domain models..."
           if [ -d "app/src" ]; then
@@ -32,7 +32,7 @@ jobs:
           fi
           echo "No forbidden monetary primitives detected."
 
-      - name: Audit Localization (Invariant 6: Strings in strings.xml)
+      - name: "Audit Localization (Invariant 6: Strings in strings.xml)"
         run: |
           echo "Localization pre-check ready."
 
