@@ -34,7 +34,15 @@ This document establishes the non-negotiable engineering constraints, numerical 
 
 ---
 
-## 3. Automated Quality Gates
+## 3. Trunk-Based Development & Git Workflow Gates
+
+- **Protected Main:** Direct commits to `main` are strictly forbidden. All development must occur on dedicated short-lived feature branches (`feat/slice-<N>-<feature>`).
+- **PR Merge Discipline:** `main` is updated exclusively via squash-merge or rebase-merge of approved Pull Requests.
+- **Atomic Commits:** Each commit represents a single logical increment with descriptive conventional commit messages.
+
+---
+
+## 4. Automated Quality Gates
 
 Every slice execution MUST satisfy:
 ```bash
