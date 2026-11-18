@@ -66,6 +66,12 @@ class SanityUnitTest {
         val notMember: FundCircleError = FundCircleError.Authorization.NotCircleMember
         assertThat(notMember.message).contains("not an active member")
 
+        val authFailed: FundCircleError = FundCircleError.Authorization.AuthenticationFailed("Invalid ID token")
+        assertThat(authFailed.message).isEqualTo("Invalid ID token")
+
+        val cancelled: FundCircleError = FundCircleError.Authorization.SignInCancelled
+        assertThat(cancelled.message).contains("cancelled")
+
         val voided: FundCircleError = FundCircleError.Conflict.TransactionAlreadyVoided("tx-123")
         assertThat(voided.message).contains("tx-123")
     }

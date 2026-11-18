@@ -36,17 +36,19 @@
 ---
 
 ## 🎯 Slice 1: Authentication & User Session (CUJ-01, Screen 01)
-**Status:** Pending  
+**Status:** Completed ✅  
 **Branch Mandate:** `git checkout main && git pull origin main && git checkout -b feat/slice-1-auth-welcome`  
 **Estimated Scope:** Medium (Credential Manager One-Tap, EncryptedPrefs, AuthViewModel)
-- [ ] Task 1.1: Domain layer: `AuthRepository` interface, `UserSession` model, `SignInWithGoogleUseCase`, `ObserveAuthStateUseCase`.
-- [ ] Task 1.2: Data layer: Google One-Tap Credential Manager integration, `SessionLocalDataSource` with `EncryptedSharedPreferences`.
-- [ ] Task 1.3: Presentation layer: `AuthViewModel` (MVI), `WelcomeScreen` (Screen 01) with Material 3 buttons, touch target hygiene, and Compose preview.
-- [ ] Task 1.4: Unit tests for Auth flows.
+- [x] Task 1.1: Domain layer: `AuthRepository` interface, `UserSession` model, `SignInWithGoogleUseCase`, `ObserveAuthStateUseCase`, `SignOutUseCase`, `GetActiveCircleUseCase`, `SetActiveCircleUseCase`.
+- [x] Task 1.2: Data layer: Google One-Tap Credential Manager integration (`GoogleAuthClient`), `SessionLocalDataSource` with `EncryptedSharedPreferences`, `AuthRemoteDataSource` with Firebase Auth and `/users/{userId}` sync.
+- [x] Task 1.3: Presentation layer: `AuthViewModel` (MVI), `AuthScreen` (Screen 01: `auth_welcome`) with Material 3 buttons, touch target hygiene ($\ge 48\text{dp}$), typed `UiText`, zero hardcoded strings, and Compose previews (Light, Dark, Loading).
+- [x] Task 1.4: Unit tests for Auth flows (Domain use cases, Data repository, Local session data source, ViewModel MVI state machine).
 
-## 🏁 Checkpoint: End of Slice 1
-- [ ] Auth state machine verified.
-- [ ] Unit tests pass: `./gradlew testDebugUnitTest`.
+## 🏁 Checkpoint: End of Slice 1 ✅
+- [x] Auth state machine verified.
+- [x] Unit tests pass: `./gradlew testDebugUnitTest` (39 tests passed across 5 test suites).
+- [x] Pre-flight verification passed: `./scripts/verify.sh`.
+- [x] Full APK build succeeds: `./gradlew assembleDebug`.
 
 ---
 

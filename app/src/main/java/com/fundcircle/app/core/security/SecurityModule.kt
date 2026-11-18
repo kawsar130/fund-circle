@@ -2,6 +2,7 @@ package com.fundcircle.app.core.security
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.credentials.CredentialManager
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.Module
@@ -31,5 +32,13 @@ object SecurityModule {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCredentialManager(
+        @ApplicationContext context: Context
+    ): CredentialManager {
+        return CredentialManager.create(context)
     }
 }
