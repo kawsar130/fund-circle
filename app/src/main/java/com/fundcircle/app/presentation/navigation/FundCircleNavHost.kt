@@ -12,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.fundcircle.app.presentation.screens.auth.AuthScreen
+import com.fundcircle.app.presentation.screens.create.CreateCircleRoute
+import com.fundcircle.app.presentation.screens.hub.CircleHubRoute
 
 /**
  * Type-safe navigation host for Fund Circle.
@@ -42,9 +44,27 @@ fun FundCircleNavHost(
         }
 
         composable<ScreenRoute.CircleHub> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Circle Hub (Slice 2)")
-            }
+            CircleHubRoute(
+                onNavigateToDashboard = { fundId ->
+                    navController.navigate(ScreenRoute.Dashboard(fundId = fundId))
+                },
+                onNavigateToCreateCircle = {
+                    navController.navigate(ScreenRoute.CreateCircle)
+                }
+            )
+        }
+
+        composable<ScreenRoute.CreateCircle> {
+            CreateCircleRoute(
+                onNavigateToDashboard = { fundId ->
+                    navController.navigate(ScreenRoute.Dashboard(fundId = fundId)) {
+                        popUpTo(ScreenRoute.CircleHub) { inclusive = false }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable<ScreenRoute.Dashboard> { backStackEntry ->
