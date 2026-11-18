@@ -46,7 +46,7 @@
 
 ## 🏁 Checkpoint: End of Slice 1 ✅
 - [x] Auth state machine verified.
-- [x] Unit tests pass: `./gradlew testDebugUnitTest` (35 tests passed).
+- [x] Unit tests pass: `./gradlew testDebugUnitTest` (38 tests passed across 5 test suites).
 - [x] Pre-flight verification passed: `./scripts/verify.sh`.
 - [x] Full APK build succeeds: `./gradlew assembleDebug`.
 
