@@ -6,6 +6,7 @@ import androidx.navigation.toRoute
 import com.fundcircle.app.R
 import com.fundcircle.app.core.common.UiText
 import com.fundcircle.app.core.network.NetworkMonitor
+import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveRecentTransactionsUseCase
@@ -75,8 +76,13 @@ class DashboardViewModel @Inject constructor(
                 val isAdmin = currentUserId.isNotBlank() && circle.adminId == currentUserId
                 Triple(circle, transactions, isAdmin)
             }.catch { error ->
-                val errorUiText = error.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }
-                    ?: UiText.StringResource(R.string.dashboard_error_loading)
+                val errorUiText = when (error) {
+                    is FundCircleError.Authorization -> UiText.StringResource(R.string.error_not_authorized)
+                    is FundCircleError.NotFound -> UiText.StringResource(R.string.circle_error_not_found)
+                    is FundCircleError.Network -> UiText.StringResource(R.string.dashboard_error_loading)
+                    else -> error.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }
+                        ?: UiText.StringResource(R.string.dashboard_error_loading)
+                }
                 setState {
                     copy(
                         isLoading = false,

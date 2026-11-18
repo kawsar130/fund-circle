@@ -28,7 +28,10 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                 }
                 val deposits = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(DepositDto::class.java)?.let { dto ->
-                        if (dto.depositId.isBlank()) dto.copy(depositId = doc.id) else dto
+                        dto.copy(
+                            depositId = if (dto.depositId.isBlank()) doc.id else dto.depositId,
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                        )
                     }
                 }.orEmpty()
                 trySend(deposits)
@@ -52,7 +55,10 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                 }
                 val expenses = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(ExpenseDto::class.java)?.let { dto ->
-                        if (dto.expenseId.isBlank()) dto.copy(expenseId = doc.id) else dto
+                        dto.copy(
+                            expenseId = if (dto.expenseId.isBlank()) doc.id else dto.expenseId,
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                        )
                     }
                 }.orEmpty()
                 trySend(expenses)

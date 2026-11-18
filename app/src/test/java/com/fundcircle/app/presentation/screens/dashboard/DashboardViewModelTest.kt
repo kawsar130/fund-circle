@@ -280,6 +280,19 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun authorizationError_setsLocalizedNotAuthorizedMessage() = runTest {
+        every { observeCircleUseCase(testFundId) } returns flow {
+            throw com.fundcircle.app.domain.model.FundCircleError.Authorization.NotCircleMember
+        }
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.isLoading).isFalse()
+        assertThat(state.errorMessage).isEqualTo(com.fundcircle.app.core.common.UiText.StringResource(com.fundcircle.app.R.string.error_not_authorized))
+    }
+
+    @Test
     fun launch_persistsActiveCircleId() = runTest {
         createViewModel()
         advanceUntilIdle()

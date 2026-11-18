@@ -114,4 +114,6 @@
     <string name="dashboard_expense_default_title">Operating Expense</string>
     <string name="dashboard_retry_btn">Retry</string>
     <string name="dashboard_error_title">Unable to load circle</string>
+    <string name="dashboard_top_bar_active_circle_label">Active Circle</string>
+    <string name="error_not_authorized">You do not have permission to access this circle.</string>
 </resources>
