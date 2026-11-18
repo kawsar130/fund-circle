@@ -36,13 +36,13 @@ For documentation, presentations, and design reviews, all 14 screens + Design To
 | **05** | [`05_Transactions_Ledger_ledger_transactions.png`](screens/05_Transactions_Ledger_ledger_transactions.png) | `ledger_transactions` (`LedgerScreen.kt`) | Chronological audit ledger, Filter chips, REVERSED ↩ badges |
 | **06** | [`06_Transaction_Detail_Audit_Card.png`](screens/06_Transaction_Detail_Audit_Card.png) | `tx_detail/{id}` (`TxDetailScreen.kt`) | Verified deposit, Admin Reverse action trigger, Transparency disclosure |
 | **07** | [`07_Add_Transaction_Modal_modal_add_tx.png`](screens/07_Add_Transaction_Modal_modal_add_tx.png) | `modal_add_tx` (`RecordTxSheet.kt`) | Capital Inflow / Pool Expense toggle, 8 M3 Category chips |
-| **07b**| [`07b_Reverse_Confirmation_Dialog_dialog_reverse_tx.png`](screens/07b_Reverse_Confirmation_Dialog_dialog_reverse_tx.png)| `dialog_reverse_tx` (`ReverseConfirmDialog.kt`) | Zero hard deletes, Mandatory reason (&ge; 5 chars), Balance reversal |
 | **08** | [`08_Stakeholders_Roster_members_roster.png`](screens/08_Stakeholders_Roster_members_roster.png) | `members_roster` (`MembersRosterScreen.kt`) | **Strict 2 Roles** (`ADMIN 🛡️` & `STAKEHOLDER 👤`), Zero Co-Admin |
 | **09** | [`09_Member_Detail_Ledger_member_detail.png`](screens/09_Member_Detail_Ledger_member_detail.png) | `member_detail/{id}` (`MemberDetailScreen.kt`) | Member contribution history (৳ 450,000), KYC info |
 | **10** | [`10_Add_Stakeholder_Modal_modal_add_member.png`](screens/10_Add_Stakeholder_Modal_modal_add_member.png) | `modal_add_member` (`InviteMemberSheet.kt`) | Member ID auto-allocation (`FC-005`), Stakeholder role only |
 | **11** | [`11_Edit_My_Profile_Self_Service.png`](screens/11_Edit_My_Profile_Self_Service.png) | `profile_edit` (`ProfileEditScreen.kt`) | Self-service name & phone updates, Role locked |
 | **12** | [`12_Reports_and_CSV_Export_reports_export.png`](screens/12_Reports_and_CSV_Export_reports_export.png) | `reports_export` (`ReportsScreen.kt`) | Opening ৳ 1M + ৳ 500K - ৳ 50K = ৳ 1.45M, On-device CSV |
 | **13** | [`13_Settings_and_Governance_settings_admin.png`](screens/13_Settings_and_Governance_settings_admin.png) | `settings_admin` (`SettingsScreen.kt`) | Governance rules, Archive & Leave circle flows, Cache quota |
+| **14** | [`07b_Reverse_Confirmation_Dialog_dialog_reverse_tx.png`](screens/07b_Reverse_Confirmation_Dialog_dialog_reverse_tx.png)| `dialog_reverse_tx` (`ReverseConfirmDialog.kt`) | Zero hard deletes, Mandatory reason (&ge; 5 chars), Balance reversal |
 
 ---
 

@@ -200,7 +200,7 @@ Generates an RFC 4180-compliant CSV export directly on the Android device in pur
 
 #### CSV Structure (RFC 4180 Compliant)
 ```csv
-Transaction ID,Date,Type,Category/Method,Member Name,Member ID,Amount (Whole Integer),Is Void,Void Reason,Recorded By
+Transaction ID,Date,Type,Category/Method,Member Name,Member ID,Amount (Whole Integer),Is Reversed,Reversal Reason,Recorded By
 tx_01a8b9c2,2026-11-13,DEPOSIT,Bank Transfer,Rahim Chowdhury,FC-002,50000,FALSE,,kawsar@example.com
 tx_02c3d4e5,2026-11-14,EXPENSE,Legal & Documentation,,,12000,FALSE,,kawsar@example.com
 tx_03f6g7h8,2026-11-15,EXPENSE,Office & Administration,,,8500,TRUE,Duplicate vendor invoice,kawsar@example.com
@@ -211,14 +211,14 @@ tx_03f6g7h8,2026-11-15,EXPENSE,Office & Administration,,,8500,TRUE,Duplicate ven
 ### 3.4 Direct Snapshot State Listeners & In-App Alerts
 
 Instead of server-side Cloud Function triggers, transaction and administrative events are observed client-side via active Firestore snapshot listeners (`Flow<List<Transaction>>`):
-- New transactions and void notices are processed reactively on the client.
+- New transactions and reversal notices are processed reactively on the client.
 - Offline persistence ensures that updates made offline automatically reflect in the UI with a pending-sync indicator and sync when network connectivity resumes.
 
 ---
 
-### 3.5 Client-Side Reversals & Void Audit Protocol
+### 3.5 Client-Side Reversals & Audit Protocol
 
-Financial document deletion is strictly prohibited (`allow delete: if false;`). Voiding is performed directly via a client-executed Firestore Transaction:
+Financial document deletion is strictly prohibited (`allow delete: if false;`). Transaction reversal is performed directly via a client-executed Firestore Transaction:
 1. Verifies `isVoid == false`.
 2. Marks `isVoid = true`, records mandatory `voidReason` (5–250 chars), `voidedBy = auth.token.email`, `voidedAt = currentTimeMillis`.
 3. Atomically increments parent balance on `/funds/{fundId}` by `-originalAmount`.
@@ -435,9 +435,9 @@ OPERATION: WriteBatch
 
 ---
 
-### 4.6 Void Transaction Protocol (Atomic Transaction Reversal)
+### 4.6 Transaction Reversal Protocol (Atomic Ledger Reversal)
 
-Deleting financial documents is strictly prohibited. When an administrative correction is required, the transaction is **voided** using a **Firestore Transaction**:
+Deleting financial documents is strictly prohibited. When an administrative correction is required, the transaction is **reversed** using a **Firestore Transaction**:
 
 ```
 OPERATION: Firestore.runTransaction
@@ -450,10 +450,10 @@ OPERATION: Firestore.runTransaction
 │      ├── voidedBy    = adminEmail
 │      └── voidedAt    = System.currentTimeMillis()
 └── 3. UPDATE /funds/{fundId}
-       └── If voiding DEPOSIT:
+       └── If reversing DEPOSIT:
            ├── totalDeposits   += (-originalAmount)
            └── recordedBalance += (-originalAmount)
-       └── If voiding EXPENSE:
+       └── If reversing EXPENSE:
            ├── totalExpenses   += (-originalAmount)
            └── recordedBalance += (+originalAmount)
 ```
@@ -617,7 +617,7 @@ interface TransactionRepository {
     /** Executes atomic batch insertion of an expense */
     suspend fun recordExpense(fundId: String, expense: Expense): Result<Unit>
 
-    /** Executes atomic transactional reversal and void recording */
+    /** Executes atomic transactional reversal and reversal audit recording */
     suspend fun voidTransaction(
         fundId: String,
         isExpense: Boolean,
@@ -697,7 +697,7 @@ data class PagedResult<T>(
     val hasMore: Boolean
 )
 
-/** Immutable metadata recorded upon transaction voiding */
+/** Immutable metadata recorded upon transaction reversal */
 data class VoidMetadata(
     val reason: String,
     val voidedAt: Long,
@@ -1236,7 +1236,7 @@ data class MonthlyFinancialSummary(
 data class CategoryBreakdownItem(
     val category: ExpenseCategory,
     val totalAmount: Long,
-    val percentage: Float, // 0.0f - 100.0f
+    val percentage: Int, // Whole integer percentage 0..100 (for UI progress indicators)
     val expenseCount: Int
 )
 ```
@@ -1368,7 +1368,7 @@ All push notifications use high-priority data messages to ensure background deli
 }
 ```
 
-#### 2. Transaction Voided Notification Payload
+#### 2. Transaction Reversed Notification Payload
 ```json
 {
   "message": {

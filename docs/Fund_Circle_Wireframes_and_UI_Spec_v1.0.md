@@ -73,14 +73,14 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
                        │   Fund Circle — Screen Architecture (14)     │
                        └──────────────────────┬───────────────────────┘
                                               │
-         ┌───────────────────┬────────────────┼───────────────────┬───────────────────┐
-         │                   │                │                   │                   │
-    [Package A]         [Package B]      [Package C]         [Package D]         [Package E]
-    Platform & Hub      Circle Home      Transactions        Membership          Reports & Settings
-    - Screen 01: Login  - Screen 04: Home- Screen 05: Ledger - Screen 08: Roster - Screen 12: Reports
-    - Screen 02: Hub                     - Screen 06: Details- Screen 09: Details- Screen 13: Settings
-    - Screen 03: Create                  - Screen 07: Add Txn- Screen 10: Add Mem- Screen 14: Reverse Txn
-                                                             - Screen 11: Profile
+          ┌─────────────────────┬─────────────────────┬─────────────────────┐
+          │                     │                     │                     │
+     [Package A]           [Package B]           [Package C]           [Package D]
+     Platform & Hub        Home & Ledgers        Membership & KYC      Reports, Settings & Reversals
+     - Screen 01: Login    - Screen 04: Home     - Screen 08: Roster   - Screen 12: Reports
+     - Screen 02: Hub      - Screen 05: Ledger   - Screen 09: Details  - Screen 13: Settings
+     - Screen 03: Create   - Screen 06: Details  - Screen 10: Add Mem  - Screen 14: Reverse Txn
+                           - Screen 07: Add Txn  - Screen 11: Profile
 ```
 
 ---
@@ -545,7 +545,7 @@ All financial numbers and currency amounts strictly use **Tabular Digits** (`Fon
 
 ---
 
-## Package D: Reports, Governance & Settings
+## Package D: Reports, Settings & Reversals
 
 ### Screen 12: Reports Screen & Live Preview
 *   **Purpose:** Filter reports by period, review live on-screen, and export formatted CSV ledger files via Android Share Sheet.

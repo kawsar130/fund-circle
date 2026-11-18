@@ -16,13 +16,13 @@
 | `onSecondary` | `#FFFFFF` | `#001944` | Text/icon on secondary color |
 | `secondaryContainer` | `#D9E2FF` | `#1A3358` | Admin card containers, secondary surface blocks |
 | `onSecondaryContainer`| `#001944` | `#D9E2FF` | Text on secondary container |
-| `tertiary` | `#7D5700` | `#FABC3C` | Amber Gold, pending invitation alert, currency symbol, void notice |
+| `tertiary` | `#7D5700` | `#FABC3C` | Amber Gold, pending invitation alert, currency symbol, reversal notice |
 | `onTertiary` | `#FFFFFF` | `#422C00` | Text/icon on tertiary color |
 | `tertiaryContainer` | `#FFDE9C` | `#5C3F00` | Pending invite card background, warning banner fill |
 | `onTertiaryContainer`| `#261900` | `#FFDE9C` | Text on tertiary container |
 | `error` | `#BA1A1A` | `#FFB4AB` | Negative balance, expense amounts, destructive buttons |
 | `onError` | `#FFFFFF` | `#690005` | Text/icon on error color |
-| `errorContainer` | `#FFDAD6` | `#93000A` | Expense badges, void dialog confirmation container |
+| `errorContainer` | `#FFDAD6` | `#93000A` | Expense badges, reverse dialog confirmation container |
 | `onErrorContainer` | `#410002` | `#FFDAD6` | Text on error container |
 | `background` | `#FCFDF7` | `#111412` | Root window background |
 | `onBackground` | `#191C1A` | `#E2E3DE` | Default high-contrast body text |
@@ -36,7 +36,7 @@
 ### Dedicated Financial Semantic Colors
 - **Deposit Credit:** Light `#006D4D` / Dark `#00DF9A`
 - **Expense Debit:** Light `#BA1A1A` / Dark `#FFB4AB`
-- **Voided Strikethrough:** Light `#707973` / Dark `#8A938C` (with Amber `#7D5700` badge)
+- **Reversed Strikethrough:** Light `#707973` / Dark `#8A938C` (with Amber `#7D5700` [REVERSED ↩] badge)
 
 > [!NOTE]
 > **Dynamic Color Policy:** Dynamic wallpaper-based theming (`dynamicColor`) is **strictly disabled** (`dynamicColor = false`). In financial applications, color encodes semantic meaning (Emerald `#006D4D` for positive balance/deposits, Error `#BA1A1A` for expenses). Allowing wallpaper palettes would distort financial status, and attempting dynamic colors on Android < 12 (API 26–30) causes runtime crashes.

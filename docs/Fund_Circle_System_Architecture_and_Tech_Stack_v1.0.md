@@ -81,7 +81,7 @@ Multi-tenancy is structured using **Firestore Subcollections**. Each Fund Circle
 /funds/{fundId}                                <--- Circle Document (Root Tenant: Totals & memberEmails vector)
    ├── /members/{userId}                       <--- Member Directory Subcollection (Roles, Status & sequential memberId)
    │       └── /kyc/identity                   <--- Strictly Admin-Scoped PII Subcollection (NID & Nominee)
-   ├── /deposits/{depositId}                   <--- Deposits Ledger Subcollection (Whole-integer Long, void metadata)
+   ├── /deposits/{depositId}                   <--- Deposits Ledger Subcollection (Whole-integer Long, reversal audit metadata)
    ├── /expenses/{expenseId}                   <--- Expenses Ledger Subcollection (8 categories, whole-integer Long)
    └── /audit_logs/{logId}                     <--- Immutable Circle Audit Trail Subcollection
 
@@ -123,7 +123,7 @@ suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<Unit> {
 ```
 
 ```kotlin
-// Android Client Architecture: Atomic Void Transaction Execution
+// Android Client Architecture: Atomic Transaction Reversal Execution
 suspend fun voidTransaction(
     fundId: String,
     collection: String, // "deposits" or "expenses"
@@ -141,7 +141,7 @@ suspend fun voidTransaction(
             val isVoid = snapshot.getBoolean("isVoid") ?: false
             if (isVoid) throw IllegalStateException("Transaction already voided.")
 
-            // 1. Mark transaction as void with audit metadata
+            // 1. Mark transaction as reversed with audit metadata
             tx.update(
                 txRef,
                 mapOf(
@@ -241,9 +241,10 @@ com.fundcircle.app/
             ├── auth/                          <--- AuthViewModel, AuthScreen
             ├── hub/                           <--- CircleHubViewModel, CircleHubScreen
             ├── dashboard/                     <--- DashboardViewModel, DashboardScreen
-            ├── ledgers/                       <--- DepositsViewModel, ExpensesViewModel
+            ├── ledger/                        <--- LedgerViewModel, LedgerScreen
             ├── members/                       <--- MembersViewModel, MemberDetailSheet
-            ├── analytics/                     <--- AnalyticsViewModel, AnalyticsScreen
+            ├── profile/                       <--- ProfileViewModel, ProfileScreen
+            ├── reports/                       <--- ReportsViewModel, ReportsScreen
             └── settings/                      <--- SettingsViewModel, SettingsScreen
 ```
 
@@ -327,12 +328,12 @@ sealed interface ScreenRoute {
     @Serializable data object CircleHub : ScreenRoute
     @Serializable data object CreateCircle : ScreenRoute
     @Serializable data class Dashboard(val fundId: String) : ScreenRoute
-    @Serializable data class DepositsLedger(val fundId: String) : ScreenRoute
-    @Serializable data class ExpensesLedger(val fundId: String) : ScreenRoute
+    @Serializable data class TransactionsLedger(val fundId: String) : ScreenRoute
     @Serializable data class TransactionDetail(val fundId: String, val txId: String, val isExpense: Boolean) : ScreenRoute
-    @Serializable data class MemberDirectory(val fundId: String) : ScreenRoute
+    @Serializable data class MembersRoster(val fundId: String) : ScreenRoute
     @Serializable data class MemberDetail(val fundId: String, val memberId: String) : ScreenRoute
-    @Serializable data class Analytics(val fundId: String) : ScreenRoute
+    @Serializable data object ProfileEdit : ScreenRoute
+    @Serializable data class Reports(val fundId: String) : ScreenRoute
     @Serializable data class Settings(val fundId: String) : ScreenRoute
 }
 ```
@@ -908,7 +909,7 @@ service cloud.firestore {
                       && request.resource.data.depositDate <= request.time.toMillis();
         allow update: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data)
                       && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
-        allow delete: if false; // Financial records are immutable; void only
+        allow delete: if false; // Financial records are immutable; reversal protocol only
       }
 
       // Expenses subcollection
@@ -920,7 +921,7 @@ service cloud.firestore {
                       && request.resource.data.expenseDate <= request.time.toMillis();
         allow update: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data)
                       && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
-        allow delete: if false; // Financial records are immutable; void only
+        allow delete: if false; // Financial records are immutable; reversal protocol only
       }
 
       // Audit logs
@@ -1084,8 +1085,8 @@ The engineering workflow enforces a **70 / 20 / 10** testing pyramid:
 
 ### 6.1 Unit Testing Suite (Domain & Presentation)
 - **ViewModel MVI State Tests:** Evaluated using CashApp `Turbine` to verify state emissions and one-shot effects.
-- **Use Case Business Logic Tests:** Validating whole-integer constraints, future date rejections, and void reason enforcement.
-- **Formatting Utilities Tests:** Validating `CurrencyText` whole-integer output (`৳ 4,850,000`, zero poisha) and `PrivacyMaskUtils` NID masking (`•••• •••• 9821`).
+- **Use Case Business Logic Tests:** Validating whole-integer constraints, future date rejections, and reversal reason enforcement.
+- **Formatting Utilities Tests:** Validating `CurrencyText` whole-integer output (`৳ 1,450,000`, zero poisha) and `PrivacyMaskUtils` NID masking (`•••• •••• 9821`).
 
 ### 6.2 Firebase Local Emulator Suite Integration Tests
 - Integration tests run against the local **Firebase Emulator Suite** (`localhost:8080` Firestore, `localhost:9099` Auth).

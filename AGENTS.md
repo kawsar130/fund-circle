@@ -133,9 +133,10 @@ com.fundcircle.app/
             ├── auth/                          <--- AuthViewModel, AuthScreen
             ├── hub/                           <--- CircleHubViewModel, CircleHubScreen
             ├── dashboard/                     <--- DashboardViewModel, DashboardScreen
-            ├── ledgers/                       <--- DepositsViewModel, ExpensesViewModel
+            ├── ledger/                        <--- LedgerViewModel, LedgerScreen
             ├── members/                       <--- MembersViewModel, MemberDetailSheet
-            ├── analytics/                     <--- AnalyticsViewModel, AnalyticsScreen
+            ├── profile/                       <--- ProfileViewModel, ProfileScreen
+            ├── reports/                       <--- ReportsViewModel, ReportsScreen
             └── settings/                      <--- SettingsViewModel, SettingsScreen
 ```
 
