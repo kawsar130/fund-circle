@@ -12,6 +12,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -93,6 +94,13 @@ class AuthRepositoryImplTest {
         assertThat(result.isFailure).isTrue()
         val error = result.exceptionOrNull()
         assertThat(error).isInstanceOf(FundCircleError.Authorization.AuthenticationFailed::class.java)
+    }
+
+    @Test(expected = CancellationException::class)
+    fun signInWithGoogle_cancellationException_rethrowsWithoutWrapping() = runTest {
+        coEvery { authRemoteDataSource.signInWithGoogleCredential(any()) } throws CancellationException("Job was cancelled")
+
+        repository.signInWithGoogle("token-123")
     }
 
     @Test
