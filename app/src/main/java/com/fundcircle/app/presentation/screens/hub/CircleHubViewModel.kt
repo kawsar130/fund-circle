@@ -9,6 +9,7 @@ import com.fundcircle.app.domain.usecase.ObserveUserCirclesUseCase
 import com.fundcircle.app.domain.usecase.SetActiveCircleUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -22,6 +23,8 @@ class CircleHubViewModel @Inject constructor(
     private val setActiveCircleUseCase: SetActiveCircleUseCase,
     private val networkMonitor: NetworkMonitor
 ) : BaseViewModel<CircleHubUiState, CircleHubUiAction, CircleHubUiEffect>(CircleHubUiState()) {
+
+    private var observeJob: Job? = null
 
     init {
         observeNetworkState()
@@ -37,7 +40,9 @@ class CircleHubViewModel @Inject constructor(
     }
 
     private fun observeCirclesAndSession() {
-        viewModelScope.launch {
+        observeJob?.cancel()
+        observeJob = viewModelScope.launch {
+            setState { copy(isLoading = true, errorMessage = null) }
             combine(
                 observeUserCirclesUseCase(),
                 sessionLocalDataSource.observeUserSession()

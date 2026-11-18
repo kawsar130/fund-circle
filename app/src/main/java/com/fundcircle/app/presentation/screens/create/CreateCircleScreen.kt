@@ -203,7 +203,8 @@ fun CreateCircleScreen(
                         Text(
                             text = state.nameError?.asString(context).orEmpty(),
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                         Text(
                             text = stringResource(
@@ -252,7 +253,11 @@ fun CreateCircleScreen(
                         onClick = { onAction(CreateCircleUiAction.CurrencySelected(currency)) },
                         label = {
                             Text(
-                                text = "${currency.symbol} ${currency.name}",
+                                text = stringResource(
+                                    R.string.create_circle_currency_option,
+                                    currency.symbol,
+                                    currency.name
+                                ),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         },
@@ -333,7 +338,8 @@ fun CreateCircleScreen(
                         Text(
                             text = state.descriptionError?.asString(context).orEmpty(),
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                         Text(
                             text = stringResource(

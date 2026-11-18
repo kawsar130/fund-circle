@@ -30,6 +30,7 @@
     <string name="hub_members_count">%1$d Members</string>
     <string name="hub_currency_and_members">%1$s • %2$s</string>
     <string name="hub_balance_label">Balance:</string>
+    <string name="hub_balance_format">%1$s %2$s</string>
     <string name="hub_btn_new_circle">New Circle</string>
     <string name="hub_empty_title">No Fund Circles Yet</string>
     <string name="hub_empty_subtitle">Create your first circle or wait for an invitation to join one.</string>
@@ -49,6 +50,7 @@
     <string name="create_circle_name_error">Circle name must be between 3 and 50 characters.</string>
     <string name="create_circle_currency_label">Primary Currency *</string>
     <string name="create_circle_currency_helper">Locked permanently after first transaction</string>
+    <string name="create_circle_currency_option">%1$s %2$s</string>
     <string name="create_circle_currency_lock_title">Permanent Currency Lock</string>
     <string name="create_circle_currency_lock_warning">Base currency cannot be changed once transactions exist. All deposits and expenses will be recorded in this currency.</string>
     <string name="create_circle_description_label">Description / Purpose (Optional)</string>

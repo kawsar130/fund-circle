@@ -166,7 +166,9 @@ fun CircleHubScreen(
                             }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            val initial = state.currentUser?.displayName?.firstOrNull()?.uppercase() ?: "U"
+                            val initial = state.currentUser?.displayName?.takeIf { it.isNotBlank() }?.firstOrNull()?.uppercase()
+                                ?: state.currentUser?.email?.takeIf { it.isNotBlank() }?.firstOrNull()?.uppercase()
+                                ?: "U"
                             Text(
                                 text = initial,
                                 style = MaterialTheme.typography.labelMedium,
@@ -345,7 +347,11 @@ fun CircleCard(
     val formattedBalance = remember(circle.recordedBalance) {
         NumberFormat.getIntegerInstance(Locale.US).format(circle.recordedBalance)
     }
-    val balanceLabel = "${circle.currency.symbol} $formattedBalance"
+    val balanceLabel = stringResource(
+        R.string.hub_balance_format,
+        circle.currency.symbol,
+        formattedBalance
+    )
     val cardContentDescription = stringResource(
         R.string.hub_circle_card_content_description,
         circle.name,
