@@ -11,8 +11,7 @@
 **Authors:** Senior Principal UX/UI Engineer & Android Architect  
 **Traceability Reference:** `docs/archive/Investment_Firm_App_PRD_v2.md` (v3.0), `docs/archive/Investment_Firm_App_FSD_SRS_v1.md` (v2.1), `docs/archive/Investment_Firm_App_User_Stories_Use_Cases_v1.md` (v2.0), `Fund_Circle_User_Flowcharts_v1.0.md` (v1.0), `Fund_Circle_Wireframes_and_UI_Spec_v1.0.md` (v1.2)  
 **Live Figma Assets:**
-- **Master Figma Design File:** [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)
-- **Interactive Code Layer Preview:** [Fund Circle Interactive Canvas (Node 27:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=27-3&autoplay-code-preview=27-3)
+- **Figma Interactive Prototype:** [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3) (Node `42:3`)
 - **Master Flowchart (FigJam):** [Fund Circle — Master User Flow Architecture](https://www.figma.com/board/dxkTCpjsDBnEQp2zJRphAI)
 - **Local Design Prototype:** [docs/design_preview/index.html](file:///Users/kawsar/Desktop/projects/personal/Android/fund-circle/docs/design_preview/index.html)
 

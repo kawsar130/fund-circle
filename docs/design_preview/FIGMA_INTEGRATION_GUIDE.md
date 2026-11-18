@@ -1,10 +1,8 @@
 # 🎨 Figma Architecture & Interactive Prototype Guide
 
 > **Project:** Fund Circle — Enterprise Collective Capital & Pooled Fund Management for Android  
-> **Master Figma File:** [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)  
-> **Canonical Page in Figma:** `Interactive Prototype Sandbox`  
-> **Interactive Cloud Preview:** [Fund Circle Interactive Canvas (Node 42:3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3)  
-> **Visual Presentation Gallery:** [`docs/design_preview/gallery.html`](gallery.html)  
+> **Figma Interactive Prototype:** [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3) (Page: `Interactive Prototype Sandbox`, Node `42:3`)  
+> **Visual Presentation Gallery:** [`docs/design_preview/gallery.html`](gallery.html) (2x Retina)  
 > **Standalone Local Prototype:** [`docs/design_preview/index.html`](index.html)  
 
 ---
@@ -20,7 +18,7 @@ To ensure 100% consistency, zero clutter, and flawless presentation fidelity, th
   - Strict 2-role governance model (`ADMIN 🛡️` & `STAKEHOLDER 👤`), zero "Co-Admin".
   - Whole-integer monetary precision (`Long` $\ge 1$, BDT `৳`, USD `$`, EUR `€`), zero decimals/poisha.
   - $O(1)$ single-read parent aggregates (`Green Valley Property Pool`, `৳ 1,450,000` balance).
-  - Immutable Voiding Protocol (`isVoid = true`, `voidReason`, atomic balance reversal).
+  - Immutable Transaction Reversal Protocol (`isVoid = true`, `voidReason`, atomic balance reversal).
 
 ---
 

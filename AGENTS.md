@@ -8,7 +8,8 @@
 > - API Specification & Data Contracts: [`docs/Fund_Circle_API_Specification_v1.0.md`](docs/Fund_Circle_API_Specification_v1.0.md)
 > - Design Tokens (Semantic Styling): [`docs/Design_Tokens.md`](docs/Design_Tokens.md)
 > - Wireframes & UI Specification: [`docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md`](docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md)
-> - Master Figma Design File: [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ)
+> - Figma Interactive Prototype: [Fund Circle — Mobile App (Android M3)](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3)
+> - Visual Screen Gallery (2x Retina): [`docs/design_preview/gallery.html`](docs/design_preview/gallery.html)
 
 ---
 
@@ -19,7 +20,7 @@ To avoid context drift, hallucinations, and conflicting directives, agents must 
 1. **Level 1 (Highest Authority):** `AGENTS.md` (The 7 Invariants and architectural guardrails).
 2. **Level 2 (Data Contracts & Wire Boundary):** [`docs/Fund_Circle_API_Specification_v1.0.md`](docs/Fund_Circle_API_Specification_v1.0.md) (Wire protocols, DTOs, repository interfaces, UUID idempotency, and error taxonomy).
 3. **Level 3 (Architecture & Infrastructure):** [`docs/Fund_Circle_System_Architecture_and_Tech_Stack_v1.0.md`](docs/Fund_Circle_System_Architecture_and_Tech_Stack_v1.0.md) (Clean architecture boundaries, Firestore security rules, composite indexes, and Gradle versions).
-4. **Level 4 (UI Layouts & Components):** [`docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md`](docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md) & [Figma Design](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ) (14-screen specs, layout anatomy, and state definitions).
+4. **Level 4 (UI Layouts & Components):** [`docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md`](docs/Fund_Circle_Wireframes_and_UI_Spec_v1.0.md), [Figma Prototype](https://www.figma.com/design/44Gqq8dDY62FfKf28yxXuJ?node-id=42-3&autoplay-code-preview=42-3), and [Visual Screen Gallery](docs/design_preview/gallery.html) (14-screen specs, layout anatomy, and state definitions).
 5. **Level 5 (Tokens & Styling):** [`docs/Design_Tokens.md`](docs/Design_Tokens.md) (Material 3 semantic tokens, tabular typography scale, spacing and touch targets).
 6. **Level 6 (Interaction Flows):** [`docs/Fund_Circle_User_Flowcharts_v1.0.md`](docs/Fund_Circle_User_Flowcharts_v1.0.md) (Branching logic and user journeys).
 7. **Level 7 (Modular Features):** `docs/features/*.md` (Self-contained feature slices for v1.1+ extensions).
