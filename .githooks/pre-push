@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Git Pre-Push Hook — Runs Local Fast-Verification before push
+# ==============================================================================
+echo "Running pre-push quality gate verification..."
+./scripts/verify.sh
