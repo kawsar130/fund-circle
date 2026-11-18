@@ -105,6 +105,7 @@
     <string name="dashboard_top_bar_notifications_cd">Notifications</string>
     <string name="dashboard_record_fab_cd">Record Transaction</string>
     <string name="dashboard_tx_card_cd">%1$s, %2$s %3$s</string>
+    <string name="dashboard_tx_card_reversed_cd">Reversed, %1$s, %2$s %3$s</string>
     <string name="dashboard_tx_subtitle">%1$s • %2$s</string>
     <string name="dashboard_deposit_prefix">+</string>
     <string name="dashboard_expense_prefix">-</string>

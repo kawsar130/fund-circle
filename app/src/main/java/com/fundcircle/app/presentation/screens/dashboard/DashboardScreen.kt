@@ -592,12 +592,21 @@ fun TransactionItemCard(
         }
     }
 
-    val cd = stringResource(
-        R.string.dashboard_tx_card_cd,
-        displayTitle,
-        currency.symbol,
-        formattedAmount
-    )
+    val cd = if (item.isVoid) {
+        stringResource(
+            R.string.dashboard_tx_card_reversed_cd,
+            displayTitle,
+            currency.symbol,
+            formattedAmount
+        )
+    } else {
+        stringResource(
+            R.string.dashboard_tx_card_cd,
+            displayTitle,
+            currency.symbol,
+            formattedAmount
+        )
+    }
 
     Card(
         onClick = onClick,
