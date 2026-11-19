@@ -14,6 +14,12 @@ sealed class FundCircleError(override val message: String) : Exception(message) 
         data class DescriptionTooLong(val length: Int) : Validation("Description cannot exceed 250 characters.")
         data object MemberRequired : Validation("Contributing member must be selected.")
         data class VoidReasonRequired(val length: Int) : Validation("A void reason of at least 5 characters is mandatory.")
+        data class InvalidNid(val detail: String = "NID must be 10, 13, or 17 numeric digits.") : Validation(detail)
+        data class InvalidPhone(val detail: String = "Phone number must be a valid 11-digit mobile number.") : Validation(detail)
+        data class InvalidEmail(val detail: String = "Please enter a valid email address.") : Validation(detail)
+        data class InvalidNomineeName(val length: Int) : Validation("Nominee name must be between 3 and 100 characters.")
+        data class InvalidNomineeRelation(val detail: String = "Nominee relationship is required.") : Validation(detail)
+        data class MemberNameRequired(val detail: String = "Full name must be between 2 and 100 characters.") : Validation(detail)
     }
 
     sealed class Authorization(override val message: String) : FundCircleError(message) {

@@ -16,7 +16,7 @@ sealed interface ScreenRoute {
     @Serializable data class TransactionDetail(val fundId: String, val txId: String, val isExpense: Boolean) : ScreenRoute
     @Serializable data class MembersRoster(val fundId: String) : ScreenRoute
     @Serializable data class MemberDetail(val fundId: String, val memberId: String) : ScreenRoute
-    @Serializable data object ProfileEdit : ScreenRoute
+    @Serializable data class ProfileEdit(val fundId: String = "") : ScreenRoute
     @Serializable data class Reports(val fundId: String) : ScreenRoute
     @Serializable data class Settings(val fundId: String) : ScreenRoute
 }

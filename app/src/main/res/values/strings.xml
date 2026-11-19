@@ -247,4 +247,112 @@
     <string name="dialog_reverse_btn_keep">Keep Entry</string>
     <string name="dialog_reverse_btn_confirm">Confirm &amp; Reverse Balance</string>
     <string name="dialog_reverse_reversing">Reversing transaction…</string>
+
+    <!-- Package C: Membership & Profiles -->
+
+    <!-- Screen 08: Stakeholders Roster -->
+    <string name="members_roster_title">Stakeholders Roster (%1$d)</string>
+    <string name="members_roster_back_cd">Navigate back</string>
+    <string name="members_roster_search_placeholder">Search by name, phone, or Member ID…</string>
+    <string name="members_roster_search_cd">Search stakeholders</string>
+    <string name="members_roster_clear_search_cd">Clear search query</string>
+    <string name="members_roster_profile_action_cd">Edit My Profile</string>
+    <string name="members_roster_badge_admin">ADMIN</string>
+    <string name="members_roster_badge_member">MEMBER</string>
+    <string name="members_roster_badge_active">ACTIVE</string>
+    <string name="members_roster_badge_inactive">INACTIVE</string>
+    <string name="members_roster_badge_left">LEFT</string>
+    <string name="members_roster_deposits_format">Deposits: %1$s %2$s</string>
+    <string name="members_roster_deposits_count_singular">• 1 Transaction</string>
+    <string name="members_roster_deposits_count_plural">• %1$d Transactions</string>
+    <string name="members_roster_fab_add_member">+ Add Member</string>
+    <string name="members_roster_fab_add_member_cd">Add new stakeholder</string>
+    <string name="members_roster_empty_title">No stakeholders found</string>
+    <string name="members_roster_empty_subtitle">Try searching with a different name, phone number, or Member ID.</string>
+    <string name="members_roster_empty_roster_title">No members in this circle</string>
+    <string name="members_roster_empty_roster_subtitle">As an admin, you can invite stakeholders to start pooling capital.</string>
+    <string name="members_roster_offline_warning">Viewing Offline Cache</string>
+    <string name="members_roster_error_loading">Failed to load circle members.</string>
+    <string name="members_roster_member_item_cd">Member %1$s, Member ID %2$s, status %3$s</string>
+
+    <!-- Screen 09: Member Details & Individual Ledger -->
+    <string name="member_detail_title">Member Profile</string>
+    <string name="member_detail_back_cd">Navigate back</string>
+    <string name="member_detail_badge_admin">Admin</string>
+    <string name="member_detail_id_format">Member ID: %1$s</string>
+    <string name="member_detail_status_joined_format">Status: %1$s • Joined: %2$s</string>
+    <string name="member_detail_status_format">Status: %1$s</string>
+    <string name="member_detail_joined_format">Joined: %1$s</string>
+    <string name="member_detail_phone_label">Phone Number</string>
+    <string name="member_detail_email_label">Email Address</string>
+    <string name="member_detail_cumulative_deposits_label">Cumulative Deposits</string>
+    <string name="member_detail_transactions_count_label">Transactions Count</string>
+    <string name="member_detail_deposit_count_singular">1 Deposit</string>
+    <string name="member_detail_deposit_count_plural">%1$d Deposits</string>
+    <string name="member_detail_section_deposits">Deposit History</string>
+    <string name="member_detail_empty_deposits_title">No deposits recorded</string>
+    <string name="member_detail_empty_deposits_subtitle">This member has not contributed any deposits yet.</string>
+    <string name="member_detail_deposit_date_method_format">%1$s • %2$s</string>
+    <string name="member_detail_deposit_amount_format">+ %1$s %2$s</string>
+    <string name="member_detail_deposit_note_format">Note: %1$s</string>
+    <string name="member_detail_btn_deactivate">Deactivate Member</string>
+    <string name="member_detail_btn_reactivate">Reactivate Member</string>
+    <string name="member_detail_btn_mark_left">Mark as Left</string>
+    <string name="member_detail_dialog_deactivate_title">Deactivate Member?</string>
+    <string name="member_detail_dialog_deactivate_body">Deactivating %1$s will prevent them from recording further activity in this circle. Historical records remain permanently in the ledger.</string>
+    <string name="member_detail_dialog_reactivate_title">Reactivate Member?</string>
+    <string name="member_detail_dialog_reactivate_body">This will set %1$s status back to ACTIVE.</string>
+    <string name="member_detail_dialog_mark_left_title">Mark Member as Left?</string>
+    <string name="member_detail_dialog_mark_left_body">Marking %1$s as LEFT preserves their historical deposits in the ledger while indicating they have departed from the pool.</string>
+    <string name="member_detail_dialog_confirm_btn">Confirm</string>
+    <string name="member_detail_dialog_cancel_btn">Cancel</string>
+    <string name="member_detail_status_change_success">Member status updated successfully.</string>
+    <string name="member_detail_error_not_found">Member not found.</string>
+    <string name="member_detail_error_loading">Failed to load member profile.</string>
+
+    <!-- Screen 10: Add Stakeholder Modal Bottom Sheet -->
+    <string name="add_member_sheet_title">Add New Stakeholder</string>
+    <string name="add_member_sheet_close_cd">Close add member sheet</string>
+    <string name="add_member_sheet_id_preview_format">System will allocate Member ID: %1$s</string>
+    <string name="add_member_sheet_name_label">Full Name *</string>
+    <string name="add_member_sheet_name_placeholder">e.g. Tariqul Islam</string>
+    <string name="add_member_sheet_name_error">Full name must be between 2 and 100 characters.</string>
+    <string name="add_member_sheet_phone_label">Mobile Phone Number * (11 digits)</string>
+    <string name="add_member_sheet_phone_placeholder">e.g. 01712345678</string>
+    <string name="add_member_sheet_phone_error">Please enter a valid 11-digit mobile phone number.</string>
+    <string name="add_member_sheet_email_label">Stakeholder Gmail Address * (Used for Google Sign-In)</string>
+    <string name="add_member_sheet_email_placeholder">e.g. tariqul.invest@gmail.com</string>
+    <string name="add_member_sheet_email_error">Please enter a valid email address.</string>
+    <string name="add_member_sheet_explanation">An in-app invitation will be associated with this Google account.</string>
+    <string name="add_member_sheet_submit_btn">Send Invitation / Add Member</string>
+    <string name="add_member_sheet_submitting">Adding member…</string>
+    <string name="add_member_sheet_success">Member %1$s added successfully as %2$s.</string>
+
+    <!-- Screen 11: Edit My Profile / Self-Service KYC -->
+    <string name="profile_edit_title">Edit My Profile</string>
+    <string name="profile_edit_back_cd">Navigate back</string>
+    <string name="profile_edit_save_btn">Save</string>
+    <string name="profile_edit_saving">Saving…</string>
+    <string name="profile_edit_circle_info_format">Circle: %1$s (%2$s)</string>
+    <string name="profile_edit_privacy_notice">Private identity and nominee fields are strictly isolated to this circle.</string>
+    <string name="profile_edit_section_personal">PERSONAL INFORMATION</string>
+    <string name="profile_edit_name_label">Full Name</string>
+    <string name="profile_edit_nid_label">National Identity Number (NID) *</string>
+    <string name="profile_edit_nid_placeholder">10, 13, or 17 numeric digits</string>
+    <string name="profile_edit_nid_helper">Enter 10, 13, or 17 numeric digits.</string>
+    <string name="profile_edit_nid_error">NID must be 10, 13, or 17 numeric digits.</string>
+    <string name="profile_edit_masked_nid_label">Current Masked NID: %1$s</string>
+    <string name="profile_edit_section_nominee">BENEFICIARY / NOMINEE INFORMATION</string>
+    <string name="profile_edit_nominee_name_label">Nominee Full Name *</string>
+    <string name="profile_edit_nominee_name_placeholder">e.g. Nasrin Akter</string>
+    <string name="profile_edit_nominee_name_error">Nominee name must be between 3 and 100 characters.</string>
+    <string name="profile_edit_relation_label">Relationship *</string>
+    <string name="profile_edit_relation_placeholder">e.g. Spouse, Child, Parent, Sibling, Other</string>
+    <string name="profile_edit_relation_error">Nominee relationship is required.</string>
+    <string name="profile_edit_nominee_phone_label">Nominee Contact Phone *</string>
+    <string name="profile_edit_nominee_phone_placeholder">e.g. 01812345678</string>
+    <string name="profile_edit_nominee_phone_error">Please enter a valid 11-digit mobile phone number.</string>
+    <string name="profile_edit_save_success">Profile and KYC details saved successfully.</string>
+    <string name="profile_edit_error_loading">Failed to load profile KYC data.</string>
+    <string name="profile_edit_error_general">Failed to save profile. Please check the fields and try again.</string>
 </resources>

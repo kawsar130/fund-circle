@@ -1,8 +1,10 @@
 package com.fundcircle.app.data.mapper
 
+import com.fundcircle.app.core.security.PrivacyMaskUtils
 import com.fundcircle.app.data.dto.CircleMemberDto
 import com.fundcircle.app.data.dto.DepositDto
 import com.fundcircle.app.data.dto.ExpenseDto
+import com.fundcircle.app.data.dto.MemberKycDto
 import com.fundcircle.app.data.dto.toDomain
 import com.fundcircle.app.data.dto.toDto
 import com.fundcircle.app.data.dto.toTransactionItem
@@ -255,5 +257,40 @@ class TransactionDtoMapperTest {
         assertThat(mappedBackDto.userId).isEqualTo(dto.userId)
         assertThat(mappedBackDto.role).isEqualTo("ADMIN")
         assertThat(mappedBackDto.status).isEqualTo("ACTIVE")
+    }
+
+    @Test
+    fun memberKycDto_toDomain_and_toDto_bidirectionalMapping() {
+        val dto = MemberKycDto(
+            userId = "usr-1",
+            nidNumber = "19882692015000123",
+            nomineeName = "Nasrin Akter",
+            nomineePhone = "01812345678",
+            nomineeRelation = "Spouse",
+            verifiedByAdmin = true,
+            updatedAt = 5_000L
+        )
+
+        val domain = dto.toDomain()
+        assertThat(domain.userId).isEqualTo("usr-1")
+        assertThat(domain.nidNumber).isEqualTo("19882692015000123")
+        assertThat(domain.maskedNid).isEqualTo("•••• •••• 0123")
+        assertThat(domain.nomineeName).isEqualTo("Nasrin Akter")
+        assertThat(domain.nomineePhone).isEqualTo("01812345678")
+        assertThat(domain.nomineeRelation).isEqualTo("Spouse")
+        assertThat(domain.verifiedByAdmin).isTrue()
+        assertThat(domain.updatedAt).isEqualTo(5_000L)
+
+        val mappedBackDto = domain.toDto()
+        assertThat(mappedBackDto.userId).isEqualTo(dto.userId)
+        assertThat(mappedBackDto.nidNumber).isEqualTo(dto.nidNumber)
+        assertThat(mappedBackDto.nomineeName).isEqualTo(dto.nomineeName)
+        assertThat(mappedBackDto.verifiedByAdmin).isTrue()
+    }
+
+    @Test
+    fun privacyMaskUtils_masksProperly() {
+        assertThat(PrivacyMaskUtils.maskNid("1234567890")).isEqualTo("•••• •••• 7890")
+        assertThat(PrivacyMaskUtils.maskNid("123")).isEqualTo("•••• •••• ••••")
     }
 }
