@@ -160,9 +160,25 @@ class MemberDetailViewModelTest {
         val state = viewModel.uiState.value
         assertThat(state.isLoading).isFalse()
         assertThat(state.member?.name).isEqualTo("Rahim Uddin")
+        assertThat(state.member?.totalContributed).isEqualTo(250_000L)
         assertThat(state.deposits).hasSize(2)
         assertThat(state.isAdmin).isTrue()
         assertThat(state.isSelf).isFalse()
+    }
+
+    @Test
+    fun loadDeposits_whenDepositIsVoid_updatesTotalContributedToActiveSumOnly() = runTest {
+        val depositsWithVoid = listOf(
+            sampleDeposits[0], // 150_000 active
+            sampleDeposits[1].copy(isVoid = true) // 100_000 voided
+        )
+        every { getMemberDepositsUseCase(any(), any(), any()) } returns flowOf(depositsWithVoid)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.member?.totalContributed).isEqualTo(150_000L)
     }
 
     @Test

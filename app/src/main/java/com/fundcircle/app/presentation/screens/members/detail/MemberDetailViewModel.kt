@@ -156,7 +156,17 @@ class MemberDetailViewModel @Inject constructor(
             getMemberDepositsUseCase(fundId, memberUserId, memberEmail)
                 .catch { /* ignore, empty list */ }
                 .collect { depositList ->
-                    setState { copy(deposits = depositList) }
+                    val activeSum = depositList.filter { !it.isVoid }.sumOf { it.amount }
+                    setState {
+                        copy(
+                            deposits = depositList,
+                            member = if (member != null && depositList.isNotEmpty()) {
+                                member.copy(totalContributed = activeSum)
+                            } else {
+                                member
+                            }
+                        )
+                    }
                 }
         }
     }

@@ -103,20 +103,32 @@ class MembersRosterViewModel @Inject constructor(
                         circle.adminEmail.equals(currentEmail, ignoreCase = true) ||
                         members.any { it.userId == currentUid && it.role == MemberRole.ADMIN }
 
-                val counts = members.associate { member ->
+                val updatedMembers = members.map { member ->
+                    val memberDeposits = deposits.filter { dep ->
+                        dep.memberId == member.userId || dep.memberEmail.equals(member.email, ignoreCase = true)
+                    }
+                    if (memberDeposits.isNotEmpty()) {
+                        val activeSum = memberDeposits.filter { !it.isVoid }.sumOf { it.amount }
+                        member.copy(totalContributed = activeSum)
+                    } else {
+                        member
+                    }
+                }
+
+                val counts = updatedMembers.associate { member ->
                     val count = deposits.count { dep ->
                         !dep.isVoid && (dep.memberId == member.userId || dep.memberEmail.equals(member.email, ignoreCase = true))
                     }
                     member.userId to count
                 }
 
-                val filtered = filterMembers(members, uiState.value.searchQuery)
+                val filtered = filterMembers(updatedMembers, uiState.value.searchQuery)
 
                 setState {
                     copy(
                         isLoading = false,
                         circle = circle,
-                        members = members,
+                        members = updatedMembers,
                         filteredMembers = filtered,
                         depositCounts = counts,
                         isAdmin = isAdmin,
