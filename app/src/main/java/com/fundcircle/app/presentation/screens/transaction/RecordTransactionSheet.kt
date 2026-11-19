@@ -86,6 +86,7 @@ fun RecordTransactionSheet(
     fundId: String,
     onDismiss: () -> Unit,
     onTransactionSaved: () -> Unit = {},
+    onShowSnackbar: ((com.fundcircle.app.core.common.UiText) -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: RecordTransactionViewModel = hiltViewModel()
 ) {
@@ -103,7 +104,7 @@ fun RecordTransactionSheet(
                     onDismiss()
                 }
                 is RecordTransactionUiEffect.ShowSnackbar -> {
-                    // Snackbar handled at parent or can be logged
+                    onShowSnackbar?.invoke(effect.message)
                 }
             }
         }
@@ -267,10 +268,10 @@ fun RecordTransactionContent(
     // M3 DatePickerDialog
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = state.dateEpochMs,
+            initialSelectedDateMillis = DateUtils.localEpochToDatePickerUtc(state.dateEpochMs),
             selectableDates = object : SelectableDates {
                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    return utcTimeMillis <= System.currentTimeMillis()
+                    return DateUtils.isDatePickerDateSelectable(utcTimeMillis)
                 }
             }
         )
@@ -280,8 +281,9 @@ fun RecordTransactionContent(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        datePickerState.selectedDateMillis?.let {
-                            onAction(RecordTransactionUiAction.UpdateDate(it))
+                        datePickerState.selectedDateMillis?.let { pickedUtc ->
+                            val effectiveEpochMs = DateUtils.datePickerUtcToLocalEpoch(pickedUtc)
+                            onAction(RecordTransactionUiAction.UpdateDate(effectiveEpochMs))
                         }
                         showDatePicker = false
                     },
@@ -342,28 +344,43 @@ private fun DepositForm(
                 expanded = memberDropdownExpanded,
                 onDismissRequest = { memberDropdownExpanded = false }
             ) {
-                state.members.forEach { member ->
+                if (state.members.isEmpty()) {
                     DropdownMenuItem(
                         text = {
-                            Column {
-                                Text(
-                                    text = member.name,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "${member.memberId} • ${member.email}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            Text(
+                                text = stringResource(R.string.modal_add_tx_select_stakeholder_placeholder),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         },
-                        onClick = {
-                            onAction(RecordTransactionUiAction.SelectMember(member))
-                            memberDropdownExpanded = false
-                        },
+                        onClick = { memberDropdownExpanded = false },
+                        enabled = false,
                         modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
                     )
+                } else {
+                    state.members.forEach { member ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(
+                                        text = member.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "${member.memberId} • ${member.email}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onAction(RecordTransactionUiAction.SelectMember(member))
+                                memberDropdownExpanded = false
+                            },
+                            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                        )
+                    }
                 }
             }
         }
@@ -398,6 +415,9 @@ private fun DepositForm(
                 }
             },
             isError = state.amountError != null,
+            textStyle = MaterialTheme.typography.titleLarge.copy(
+                fontFeatureSettings = "tnum"
+            ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next
@@ -477,7 +497,9 @@ private fun DepositForm(
             onValueChange = { onAction(RecordTransactionUiAction.UpdateNote(it)) },
             label = { Text(stringResource(R.string.modal_add_tx_note_label)) },
             placeholder = { Text(stringResource(R.string.modal_add_tx_note_placeholder)) },
-            supportingText = { Text("${state.note.length}/250") },
+            supportingText = {
+                Text(stringResource(R.string.char_counter_format, state.note.length, 250))
+            },
             maxLines = 3,
             modifier = Modifier.fillMaxWidth()
         )
@@ -583,6 +605,9 @@ private fun ExpenseForm(
                 }
             },
             isError = state.amountError != null,
+            textStyle = MaterialTheme.typography.titleLarge.copy(
+                fontFeatureSettings = "tnum"
+            ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next
@@ -640,7 +665,7 @@ private fun ExpenseForm(
                 if (err != null) {
                     Text(text = err.asString(), color = MaterialTheme.colorScheme.error)
                 } else {
-                    Text("${state.description.length}/250")
+                    Text(stringResource(R.string.char_counter_format, state.description.length, 250))
                 }
             },
             isError = state.descriptionError != null,

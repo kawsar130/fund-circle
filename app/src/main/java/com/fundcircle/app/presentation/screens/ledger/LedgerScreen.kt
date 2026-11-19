@@ -9,6 +9,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -326,6 +327,7 @@ fun TransactionsLedgerScreen(
         },
         floatingActionButton = {
             if (state.isAdmin) {
+                val fabCd = stringResource(R.string.ledger_fab_record_cd)
                 ExtendedFloatingActionButton(
                     onClick = { onAction(LedgerUiAction.ClickAddTransaction) },
                     icon = {
@@ -340,7 +342,7 @@ fun TransactionsLedgerScreen(
                     modifier = Modifier
                         .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
                         .semantics {
-                            contentDescription = "Record transaction"
+                            contentDescription = fabCd
                         }
                 )
             }
@@ -511,6 +513,7 @@ private fun DepositItemCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     val formattedAmount = remember(deposit.amount) {
         NumberFormat.getIntegerInstance(Locale.US).format(deposit.amount)
     }
@@ -518,6 +521,11 @@ private fun DepositItemCard(
         DateUtils.formatDisplayDate(deposit.depositDate)
     }
     val subtitleText = "$formattedDate • ${deposit.paymentMethod.displayName}"
+    val a11yDesc = if (deposit.isVoid) {
+        stringResource(R.string.dashboard_tx_card_reversed_cd, deposit.memberName, currency.symbol, formattedAmount)
+    } else {
+        stringResource(R.string.dashboard_tx_card_cd, deposit.memberName, currency.symbol, formattedAmount)
+    }
 
     Card(
         onClick = onClick,
@@ -528,6 +536,9 @@ private fun DepositItemCard(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+            .semantics {
+                contentDescription = a11yDesc
+            }
     ) {
         Column(
             modifier = Modifier
@@ -564,9 +575,9 @@ private fun DepositItemCard(
                     horizontalAlignment = Alignment.End
                 ) {
                     val amountColor = if (deposit.isVoid) {
-                        DesignTokens.ReversedStrikethroughLight
+                        if (isDark) DesignTokens.ReversedStrikethroughDark else DesignTokens.ReversedStrikethroughLight
                     } else {
-                        DesignTokens.DepositCreditLight
+                        if (isDark) DesignTokens.DepositCreditDark else DesignTokens.DepositCreditLight
                     }
 
                     Text(
@@ -616,14 +627,20 @@ private fun ExpenseItemCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     val formattedAmount = remember(expense.amount) {
         NumberFormat.getIntegerInstance(Locale.US).format(expense.amount)
     }
     val formattedDate = remember(expense.expenseDate) {
         DateUtils.formatDisplayDate(expense.expenseDate)
     }
-    val subtitleText = "$formattedDate • ${expense.paymentMethod.displayName}"
+    val subtitleText = "$formattedDate • ${expense.paymentMethod.displayName} • ${expense.category.displayName}"
     val displayTitle = expense.description.ifBlank { expense.category.displayName }
+    val a11yDesc = if (expense.isVoid) {
+        stringResource(R.string.dashboard_tx_card_reversed_cd, displayTitle, currency.symbol, formattedAmount)
+    } else {
+        stringResource(R.string.dashboard_tx_card_cd, displayTitle, currency.symbol, formattedAmount)
+    }
 
     Card(
         onClick = onClick,
@@ -634,6 +651,9 @@ private fun ExpenseItemCard(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+            .semantics {
+                contentDescription = a11yDesc
+            }
     ) {
         Column(
             modifier = Modifier
@@ -670,9 +690,9 @@ private fun ExpenseItemCard(
                     horizontalAlignment = Alignment.End
                 ) {
                     val amountColor = if (expense.isVoid) {
-                        DesignTokens.ReversedStrikethroughLight
+                        if (isDark) DesignTokens.ReversedStrikethroughDark else DesignTokens.ReversedStrikethroughLight
                     } else {
-                        DesignTokens.ExpenseDebitLight
+                        if (isDark) DesignTokens.ExpenseDebitDark else DesignTokens.ExpenseDebitLight
                     }
 
                     Text(
@@ -717,11 +737,12 @@ private fun ExpenseItemCard(
 
 @Composable
 private fun ReversedBadge(modifier: Modifier = Modifier) {
+    val a11yDesc = stringResource(R.string.ledger_reversed_badge_cd)
     Surface(
         color = MaterialTheme.colorScheme.errorContainer,
         shape = RoundedCornerShape(4.dp),
         modifier = modifier.semantics {
-            contentDescription = "Reversed transaction"
+            contentDescription = a11yDesc
         }
     ) {
         Text(

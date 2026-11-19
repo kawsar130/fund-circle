@@ -81,10 +81,13 @@ class LedgerViewModel @Inject constructor(
             }
             is LedgerUiAction.ToggleSearch -> {
                 val newActive = !uiState.value.isSearchActive
-                if (!newActive) {
+                val updatedQuery = if (!newActive) {
                     searchQuery.value = ""
+                    ""
+                } else {
+                    searchQuery.value
                 }
-                setState { copy(isSearchActive = newActive, searchQuery = if (!newActive) "" else searchQuery) }
+                setState { copy(isSearchActive = newActive, searchQuery = updatedQuery) }
             }
             is LedgerUiAction.DismissError -> {
                 setState { copy(errorMessage = null) }
@@ -184,7 +187,7 @@ class LedgerViewModel @Inject constructor(
                         dep.memberEmail.contains(trimmedQuery, ignoreCase = true) ||
                         dep.note?.contains(trimmedQuery, ignoreCase = true) == true
                     matchesMethod && matchesQuery
-                }
+                }.sortedByDescending { it.depositDate }
 
                 val filteredExpenses = expenses.filter { exp ->
                     val matchesMethod = method == null || exp.paymentMethod == method
@@ -193,7 +196,7 @@ class LedgerViewModel @Inject constructor(
                         exp.paidBy.contains(trimmedQuery, ignoreCase = true) ||
                         exp.category.displayName.contains(trimmedQuery, ignoreCase = true)
                     matchesMethod && matchesQuery
-                }
+                }.sortedByDescending { it.expenseDate }
 
                 Pair(filteredDeposits, filteredExpenses)
             }.collectLatest { (filteredDeposits, filteredExpenses) ->

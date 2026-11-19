@@ -86,9 +86,14 @@ class RecordTransactionViewModel @Inject constructor(
             is RecordTransactionUiAction.UpdateAmount -> {
                 // Invariant 1: Restrict to digits only, rejecting decimals and non-digits
                 val filteredDigits = action.amount.filter { it.isDigit() }
+                val cleanDigits = if (filteredDigits.length > 1 && filteredDigits.startsWith("0")) {
+                    filteredDigits.trimStart('0').ifEmpty { "0" }
+                } else {
+                    filteredDigits
+                }.take(15) // Max 15 digits per API Spec § 1.2
                 setState {
                     copy(
-                        amountInput = filteredDigits,
+                        amountInput = cleanDigits,
                         amountError = null
                     )
                 }
@@ -207,12 +212,17 @@ class RecordTransactionViewModel @Inject constructor(
             when (currentState.mode) {
                 RecordTransactionMode.DEPOSIT -> {
                     val member = checkNotNull(currentState.selectedMember)
+                    val memberDisplayName = if (member.memberId.isNotBlank() && !member.name.contains("(")) {
+                        "${member.name} (${member.memberId})"
+                    } else {
+                        member.name
+                    }
                     val deposit = Deposit(
                         id = UUID.randomUUID().toString(),
                         fundId = fundId,
                         memberId = member.userId,
                         memberEmail = member.email,
-                        memberName = member.name,
+                        memberName = memberDisplayName,
                         amount = nonNullAmount,
                         depositDate = currentState.dateEpochMs,
                         paymentMethod = currentState.paymentMethod,
