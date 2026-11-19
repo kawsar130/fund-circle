@@ -13,6 +13,16 @@ interface TransactionRemoteDataSource {
     fun observeRecentExpenses(fundId: String, limit: Int = 5): Flow<List<ExpenseDto>>
     fun observeDeposits(fundId: String): Flow<List<DepositDto>>
     fun observeExpenses(fundId: String): Flow<List<ExpenseDto>>
+    fun observeDeposit(fundId: String, depositId: String): Flow<DepositDto?>
+    fun observeExpense(fundId: String, expenseId: String): Flow<ExpenseDto?>
     suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<Unit>
     suspend fun recordExpense(fundId: String, expense: ExpenseDto): Result<Unit>
+    suspend fun voidTransaction(
+        fundId: String,
+        isExpense: Boolean,
+        transactionId: String,
+        originalAmount: Long,
+        voidReason: String,
+        adminEmail: String
+    ): Result<Unit>
 }

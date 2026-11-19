@@ -6,8 +6,10 @@ import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Transaction
 import com.google.firebase.firestore.WriteBatch
 import io.mockk.every
 import io.mockk.mockk
@@ -127,5 +129,160 @@ class TransactionRemoteDataSourceImplTest {
 
         // 3. Verify batch commit
         verify { batch.commit() }
+    }
+
+    @Test
+    fun voidTransaction_reversingDeposit_updatesChildMetadataAndParentAggregates() = runTest {
+        val firestoreTx: Transaction = mockk(relaxed = true)
+        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
+
+        every { firestore.runTransaction<Any>(any()) } answers {
+            val function = firstArg<Transaction.Function<Any>>()
+            val res = function.apply(firestoreTx)
+            Tasks.forResult(res)
+        }
+
+        every { firestoreTx.get(itemDoc) } returns txSnapshot
+        every { txSnapshot.exists() } returns true
+        every { txSnapshot.getBoolean("isVoid") } returns false
+        val decDepositValue: FieldValue = mockk()
+        val decBalanceValue: FieldValue = mockk()
+        every { txSnapshot.getLong("amount") } returns 100_000L
+        every { FieldValue.increment(-100_000L) } returns decDepositValue andThen decBalanceValue
+
+        val childUpdateSlot = slot<Map<String, Any>>()
+        val parentUpdateSlot = slot<Map<String, Any>>()
+        every { firestoreTx.update(itemDoc, capture(childUpdateSlot)) } returns firestoreTx
+        every { firestoreTx.update(fundDoc, capture(parentUpdateSlot)) } returns firestoreTx
+
+        val result = dataSource.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-100",
+            originalAmount = 100_000L,
+            voidReason = "Reversing accidental duplicate",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isSuccess).isTrue()
+
+        // 1. Verify child document updates
+        val childUpdates = childUpdateSlot.captured
+        assertThat(childUpdates["isVoid"]).isEqualTo(true)
+        assertThat(childUpdates["voidReason"]).isEqualTo("Reversing accidental duplicate")
+        assertThat(childUpdates["voidedBy"]).isEqualTo("admin@example.com")
+        assertThat(childUpdates).containsKey("voidedAt")
+
+        // 2. Verify parent document updates
+        val parentUpdates = parentUpdateSlot.captured
+        assertThat(parentUpdates).containsKey("totalDeposits")
+        assertThat(parentUpdates).containsKey("recordedBalance")
+        assertThat(parentUpdates).containsKey("updatedAt")
+    }
+
+    @Test
+    fun voidTransaction_reversingExpense_updatesChildMetadataAndParentAggregates() = runTest {
+        val firestoreTx: Transaction = mockk(relaxed = true)
+        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
+
+        every { firestore.runTransaction<Any>(any()) } answers {
+            val function = firstArg<Transaction.Function<Any>>()
+            val res = function.apply(firestoreTx)
+            Tasks.forResult(res)
+        }
+
+        every { firestoreTx.get(itemDoc) } returns txSnapshot
+        every { txSnapshot.exists() } returns true
+        every { txSnapshot.getBoolean("isVoid") } returns false
+        every { txSnapshot.getLong("amount") } returns 25_000L
+
+        val decExpenseValue: FieldValue = mockk()
+        val incBalanceValue: FieldValue = mockk()
+        every { FieldValue.increment(-25_000L) } returns decExpenseValue
+        every { FieldValue.increment(25_000L) } returns incBalanceValue
+
+        val childUpdateSlot = slot<Map<String, Any>>()
+        val parentUpdateSlot = slot<Map<String, Any>>()
+        every { firestoreTx.update(itemDoc, capture(childUpdateSlot)) } returns firestoreTx
+        every { firestoreTx.update(fundDoc, capture(parentUpdateSlot)) } returns firestoreTx
+
+        val result = dataSource.voidTransaction(
+            fundId = fundId,
+            isExpense = true,
+            transactionId = "exp-200",
+            originalAmount = 25_000L,
+            voidReason = "Wrong vendor billed",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isSuccess).isTrue()
+
+        // 1. Verify child document updates
+        val childUpdates = childUpdateSlot.captured
+        assertThat(childUpdates["isVoid"]).isEqualTo(true)
+        assertThat(childUpdates["voidReason"]).isEqualTo("Wrong vendor billed")
+        assertThat(childUpdates["voidedBy"]).isEqualTo("admin@example.com")
+
+        // 2. Verify parent document updates
+        val parentUpdates = parentUpdateSlot.captured
+        assertThat(parentUpdates).containsKey("totalExpenses")
+        assertThat(parentUpdates).containsKey("recordedBalance")
+        assertThat(parentUpdates).containsKey("updatedAt")
+    }
+
+    @Test
+    fun voidTransaction_whenAlreadyVoided_returnsFailureWithIllegalStateException() = runTest {
+        val firestoreTx: Transaction = mockk(relaxed = true)
+        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
+
+        every { firestore.runTransaction<Any>(any()) } answers {
+            val function = firstArg<Transaction.Function<Any>>()
+            val res = function.apply(firestoreTx)
+            Tasks.forResult(res)
+        }
+
+        every { firestoreTx.get(itemDoc) } returns txSnapshot
+        every { txSnapshot.exists() } returns true
+        every { txSnapshot.getBoolean("isVoid") } returns true
+
+        val result = dataSource.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-100",
+            originalAmount = 100_000L,
+            voidReason = "Reversing duplicate",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
+        assertThat(result.exceptionOrNull()?.message).contains("already reversed")
+    }
+
+    @Test
+    fun voidTransaction_whenDocumentNotFound_returnsFailureWithNoSuchElementException() = runTest {
+        val firestoreTx: Transaction = mockk(relaxed = true)
+        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
+
+        every { firestore.runTransaction<Any>(any()) } answers {
+            val function = firstArg<Transaction.Function<Any>>()
+            val res = function.apply(firestoreTx)
+            Tasks.forResult(res)
+        }
+
+        every { firestoreTx.get(itemDoc) } returns txSnapshot
+        every { txSnapshot.exists() } returns false
+
+        val result = dataSource.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-missing",
+            originalAmount = 100_000L,
+            voidReason = "Reversing missing",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
     }
 }
