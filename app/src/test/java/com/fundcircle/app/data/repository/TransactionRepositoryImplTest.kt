@@ -160,6 +160,32 @@ class TransactionRepositoryImplTest {
     }
 
     @Test
+    fun observeRecentTransactions_breaksTiesByDescendingIdWhenTimestampsAreEqual() = runTest(testDispatcher) {
+        val sameTimestamp = 2_000L
+        val depositA = DepositDto(
+            depositId = "dep-a",
+            fundId = fundId,
+            amount = 10_000L,
+            depositDate = sameTimestamp,
+            paymentMethod = "Cash"
+        )
+        val depositZ = DepositDto(
+            depositId = "dep-z",
+            fundId = fundId,
+            amount = 20_000L,
+            depositDate = sameTimestamp,
+            paymentMethod = "Cash"
+        )
+
+        every { remoteDataSource.observeRecentDeposits(fundId, 5) } returns flowOf(listOf(depositA, depositZ))
+        every { remoteDataSource.observeRecentExpenses(fundId, 5) } returns flowOf(emptyList())
+
+        val result = repository.observeRecentTransactions(fundId, 5).first()
+
+        assertThat(result.map { it.id }).containsExactly("dep-z", "dep-a").inOrder()
+    }
+
+    @Test
     fun observeRecentTransactions_retainsReversedTransactionsWithOriginalAmount() = runTest(testDispatcher) {
         val voidedDeposit = DepositDto(
             depositId = "dep-voided",

@@ -38,7 +38,7 @@ class TransactionRepositoryImpl @Inject constructor(
             val depositItems = deposits.map { it.toTransactionItem() }
             val expenseItems = expenses.map { it.toTransactionItem() }
             (depositItems + expenseItems)
-                .sortedByDescending { it.timestamp }
+                .sortedWith(compareByDescending<TransactionItem> { it.timestamp }.thenByDescending { it.id })
                 .take(limit)
         }.catch { e ->
             throw e.toDomainError()

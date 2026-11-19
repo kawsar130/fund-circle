@@ -236,6 +236,7 @@ fun DashboardScreen(
         floatingActionButton = {
             // Admin Floating Action Button: Visible only if isAdmin == true and circle is not locked
             if (state.isAdmin && state.circle?.isLocked == false) {
+                val fabCd = stringResource(R.string.dashboard_record_fab_cd)
                 ExtendedFloatingActionButton(
                     onClick = { onAction(DashboardUiAction.NavigateToRecordTransaction) },
                     icon = {
@@ -255,6 +256,9 @@ fun DashboardScreen(
                     modifier = Modifier
                         .defaultMinSize(minHeight = DesignTokens.MinTouchTarget, minWidth = DesignTokens.MinTouchTarget)
                         .padding(bottom = DesignTokens.Spacing8)
+                        .semantics {
+                            contentDescription = fabCd
+                        }
                 )
             }
         }
