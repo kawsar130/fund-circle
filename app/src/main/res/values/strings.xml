@@ -66,4 +66,59 @@
     <string name="circle_error_currency_locked">Base currency is permanently locked once transactions exist.</string>
     <string name="circle_error_generic">Failed to create circle. Please try again.</string>
     <string name="circle_error_not_found">The requested circle could not be found.</string>
+
+    <!-- Payment Methods -->
+    <string name="payment_method_cash">Cash</string>
+    <string name="payment_method_bank_transfer">Bank Transfer</string>
+    <string name="payment_method_mobile_banking">Mobile Banking</string>
+
+    <!-- Expense Categories -->
+    <string name="expense_category_office_and_administration">Office &amp; Administration</string>
+    <string name="expense_category_travel_and_transportation">Travel &amp; Transportation</string>
+    <string name="expense_category_bank_and_transaction_charges">Bank &amp; Transaction Charges</string>
+    <string name="expense_category_legal_and_documentation">Legal &amp; Documentation</string>
+    <string name="expense_category_meetings_and_events">Meetings &amp; Events</string>
+    <string name="expense_category_utilities_and_communication">Utilities &amp; Communication</string>
+    <string name="expense_category_rent_and_maintenance">Rent &amp; Maintenance</string>
+    <string name="expense_category_others">Others</string>
+
+    <!-- Circle Home Dashboard (Screen 04) -->
+    <string name="dashboard_hero_balance_label">OVERALL RECORDED BALANCE</string>
+    <string name="dashboard_badge_live">LIVE</string>
+    <string name="dashboard_total_deposits_label">Total Deposits (O(1))</string>
+    <string name="dashboard_total_expenses_label">Total Expenses (O(1))</string>
+    <string name="dashboard_deposit_amount_format">+ %1$s %2$s</string>
+    <string name="dashboard_expense_amount_format">- %1$s %2$s</string>
+    <string name="dashboard_balance_format">%1$s %2$s</string>
+    <string name="dashboard_badge_reversed">REVERSED ↩</string>
+    <string name="dashboard_badge_active">ACTIVE</string>
+    <string name="dashboard_badge_locked">LOCKED</string>
+    <string name="dashboard_recent_transactions_header">Recent Transactions</string>
+    <string name="dashboard_btn_view_all">View All</string>
+    <string name="dashboard_empty_transactions_title">No Transactions Yet</string>
+    <string name="dashboard_empty_transactions_subtitle">Record the first deposit to initialize your circle\'s financial pool.</string>
+    <string name="dashboard_empty_transactions_subtitle_admin">Record the first deposit to initialize your circle\'s financial pool.</string>
+    <string name="dashboard_empty_transactions_subtitle_member">When the circle administrator records transactions, they will appear here.</string>
+    <string name="dashboard_btn_record_transaction">Record Transaction</string>
+    <string name="dashboard_offline_warning">Viewing Offline Cache</string>
+    <string name="viewing_offline_cache">Viewing Offline Cache</string>
+    <string name="dashboard_error_loading">Failed to load circle data. Please try again.</string>
+    <string name="dashboard_top_bar_settings_cd">Circle Settings</string>
+    <string name="dashboard_top_bar_notifications_cd">Notifications</string>
+    <string name="dashboard_record_fab_cd">Record Transaction</string>
+    <string name="dashboard_tx_card_cd">%1$s, %2$s %3$s</string>
+    <string name="dashboard_tx_card_reversed_cd">Reversed, %1$s, %2$s %3$s</string>
+    <string name="dashboard_tx_subtitle">%1$s • %2$s</string>
+    <string name="dashboard_tx_subtitle_with_category">%1$s • %2$s • %3$s</string>
+    <string name="dashboard_deposit_prefix">+</string>
+    <string name="dashboard_expense_prefix">-</string>
+    <string name="dashboard_deposit_type_badge">DEP</string>
+    <string name="dashboard_expense_type_badge">EXP</string>
+    <string name="dashboard_deposit_default_title">Member Deposit</string>
+    <string name="dashboard_expense_default_title">Operating Expense</string>
+    <string name="dashboard_retry_btn">Retry</string>
+    <string name="dashboard_error_title">Unable to load circle</string>
+    <string name="dashboard_top_bar_active_circle_label">Active Circle</string>
+    <string name="dashboard_notifications_empty">No new notifications</string>
+    <string name="error_not_authorized">You do not have permission to access this circle.</string>
 </resources>

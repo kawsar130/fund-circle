@@ -1,0 +1,202 @@
+package com.fundcircle.app.data.repository
+
+import com.fundcircle.app.data.datasource.remote.TransactionRemoteDataSource
+import com.fundcircle.app.data.dto.DepositDto
+import com.fundcircle.app.data.dto.ExpenseDto
+import com.fundcircle.app.domain.model.ExpenseCategory
+import com.fundcircle.app.domain.model.FundCircleError
+import com.fundcircle.app.domain.model.PaymentMethod
+import com.google.common.truth.Truth.assertThat
+import com.google.firebase.firestore.FirebaseFirestoreException
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Test
+
+class TransactionRepositoryImplTest {
+
+    private val remoteDataSource: TransactionRemoteDataSource = mockk(relaxed = true)
+    private val testDispatcher = UnconfinedTestDispatcher()
+
+    private lateinit var repository: TransactionRepositoryImpl
+
+    private val fundId = "fund-test-123"
+
+    @Before
+    fun setUp() {
+        repository = TransactionRepositoryImpl(
+            transactionRemoteDataSource = remoteDataSource,
+            ioDispatcher = testDispatcher
+        )
+    }
+
+    @Test
+    fun observeRecentTransactions_combinesDepositsAndExpensesChronologicallyDescending() = runTest(testDispatcher) {
+        val deposit1 = DepositDto(
+            depositId = "dep-1",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberEmail = "alice@example.com",
+            memberName = "Alice",
+            amount = 100_000L,
+            depositDate = 1_000L,
+            paymentMethod = "Cash",
+            isVoid = false
+        )
+        val deposit2 = DepositDto(
+            depositId = "dep-2",
+            fundId = fundId,
+            memberId = "mem-2",
+            memberEmail = "bob@example.com",
+            memberName = "Bob",
+            amount = 200_000L,
+            depositDate = 3_000L,
+            paymentMethod = "Bank Transfer",
+            isVoid = false
+        )
+
+        val expense1 = ExpenseDto(
+            expenseId = "exp-1",
+            fundId = fundId,
+            amount = 50_000L,
+            expenseDate = 2_000L,
+            category = "Office & Administration",
+            description = "Stationery",
+            paymentMethod = "Mobile Banking",
+            isVoid = false
+        )
+        val expense2 = ExpenseDto(
+            expenseId = "exp-2",
+            fundId = fundId,
+            amount = 30_000L,
+            expenseDate = 4_000L,
+            category = "Others",
+            description = "Supplies",
+            paymentMethod = "Cash",
+            isVoid = false
+        )
+
+        every { remoteDataSource.observeRecentDeposits(fundId, 5) } returns flowOf(listOf(deposit2, deposit1))
+        every { remoteDataSource.observeRecentExpenses(fundId, 5) } returns flowOf(listOf(expense2, expense1))
+
+        val result = repository.observeRecentTransactions(fundId, 5).first()
+
+        assertThat(result).hasSize(4)
+        // Ordering should be: exp-2 (4000) -> dep-2 (3000) -> exp-1 (2000) -> dep-1 (1000)
+        assertThat(result[0].id).isEqualTo("exp-2")
+        assertThat(result[0].timestamp).isEqualTo(4_000L)
+        assertThat(result[0].isExpense).isTrue()
+        assertThat(result[0].amount).isEqualTo(30_000L)
+        assertThat(result[0].paymentMethod).isEqualTo(PaymentMethod.CASH)
+        assertThat(result[0].category).isEqualTo(ExpenseCategory.OTHERS)
+
+        assertThat(result[1].id).isEqualTo("dep-2")
+        assertThat(result[1].timestamp).isEqualTo(3_000L)
+        assertThat(result[1].isExpense).isFalse()
+        assertThat(result[1].amount).isEqualTo(200_000L)
+        assertThat(result[1].paymentMethod).isEqualTo(PaymentMethod.BANK_TRANSFER)
+
+        assertThat(result[2].id).isEqualTo("exp-1")
+        assertThat(result[2].timestamp).isEqualTo(2_000L)
+        assertThat(result[2].isExpense).isTrue()
+        assertThat(result[2].category).isEqualTo(ExpenseCategory.OFFICE_AND_ADMINISTRATION)
+
+        assertThat(result[3].id).isEqualTo("dep-1")
+        assertThat(result[3].timestamp).isEqualTo(1_000L)
+        assertThat(result[3].isExpense).isFalse()
+    }
+
+    @Test
+    fun observeRecentTransactions_respectsLimit() = runTest(testDispatcher) {
+        val deposits = (1..4).map { i ->
+            DepositDto(
+                depositId = "dep-$i",
+                fundId = fundId,
+                amount = 10_000L * i,
+                depositDate = 1_000L * i,
+                paymentMethod = "Cash"
+            )
+        }
+        val expenses = (1..4).map { i ->
+            ExpenseDto(
+                expenseId = "exp-$i",
+                fundId = fundId,
+                amount = 5_000L * i,
+                expenseDate = 1_000L * i + 500L,
+                category = "Others",
+                description = "Expense $i",
+                paymentMethod = "Cash"
+            )
+        }
+
+        every { remoteDataSource.observeRecentDeposits(fundId, 5) } returns flowOf(deposits)
+        every { remoteDataSource.observeRecentExpenses(fundId, 5) } returns flowOf(expenses)
+
+        val result = repository.observeRecentTransactions(fundId, 5).first()
+
+        assertThat(result).hasSize(5)
+        // 8 total transactions, top 5 timestamps: exp-4 (4500), dep-4 (4000), exp-3 (3500), dep-3 (3000), exp-2 (2500)
+        assertThat(result.map { it.id }).containsExactly("exp-4", "dep-4", "exp-3", "dep-3", "exp-2").inOrder()
+    }
+
+    @Test
+    fun observeRecentTransactions_handlesEmptySubcollectionsGracefully() = runTest(testDispatcher) {
+        every { remoteDataSource.observeRecentDeposits(fundId, 5) } returns flowOf(emptyList())
+        every { remoteDataSource.observeRecentExpenses(fundId, 5) } returns flowOf(emptyList())
+
+        val result = repository.observeRecentTransactions(fundId, 5).first()
+
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun observeRecentTransactions_retainsReversedTransactionsWithOriginalAmount() = runTest(testDispatcher) {
+        val voidedDeposit = DepositDto(
+            depositId = "dep-voided",
+            fundId = fundId,
+            memberName = "Sajjad",
+            amount = 50_000L,
+            depositDate = 5_000L,
+            paymentMethod = "Cash",
+            isVoid = true,
+            voidReason = "Entered wrong amount",
+            voidedAt = 5_500L,
+            voidedBy = "admin@example.com"
+        )
+
+        every { remoteDataSource.observeRecentDeposits(fundId, 5) } returns flowOf(listOf(voidedDeposit))
+        every { remoteDataSource.observeRecentExpenses(fundId, 5) } returns flowOf(emptyList())
+
+        val result = repository.observeRecentTransactions(fundId, 5).first()
+
+        assertThat(result).hasSize(1)
+        val item = result[0]
+        assertThat(item.id).isEqualTo("dep-voided")
+        // Invariant 4: isVoid is true, amount is preserved as original positive integer
+        assertThat(item.isVoid).isTrue()
+        assertThat(item.amount).isEqualTo(50_000L)
+    }
+
+    @Test
+    fun observeRecentTransactions_whenFirestoreError_mapsToDomainError() = runTest(testDispatcher) {
+        val exception = FirebaseFirestoreException(
+            "Access denied",
+            FirebaseFirestoreException.Code.PERMISSION_DENIED
+        )
+
+        every { remoteDataSource.observeRecentDeposits(fundId, 5) } returns flow { throw exception }
+        every { remoteDataSource.observeRecentExpenses(fundId, 5) } returns flowOf(emptyList())
+
+        try {
+            repository.observeRecentTransactions(fundId, 5).first()
+            assert(false) { "Expected FundCircleError.Authorization.NotAuthorized" }
+        } catch (e: Throwable) {
+            assertThat(e).isInstanceOf(FundCircleError.Authorization.NotAuthorized::class.java)
+        }
+    }
+}

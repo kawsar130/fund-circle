@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.fundcircle.app.presentation.screens.auth.AuthScreen
 import com.fundcircle.app.presentation.screens.create.CreateCircleRoute
+import com.fundcircle.app.presentation.screens.dashboard.DashboardRoute
 import com.fundcircle.app.presentation.screens.hub.CircleHubRoute
 
 /**
@@ -67,10 +68,53 @@ fun FundCircleNavHost(
             )
         }
 
-        composable<ScreenRoute.Dashboard> { backStackEntry ->
-            val dashboard = backStackEntry.toRoute<ScreenRoute.Dashboard>()
+        composable<ScreenRoute.Dashboard> {
+            DashboardRoute(
+                onNavigateToLedger = { fundId ->
+                    navController.navigate(ScreenRoute.TransactionsLedger(fundId = fundId))
+                },
+                onNavigateToTransactionDetail = { fundId, txId, isExpense ->
+                    navController.navigate(
+                        ScreenRoute.TransactionDetail(fundId = fundId, txId = txId, isExpense = isExpense)
+                    )
+                },
+                onNavigateToRecordTransaction = { fundId ->
+                    // Slice 4: Record Transaction modal
+                },
+                onNavigateToSettings = { fundId ->
+                    navController.navigate(ScreenRoute.Settings(fundId = fundId))
+                },
+                onNavigateToMembers = { fundId ->
+                    navController.navigate(ScreenRoute.MembersRoster(fundId = fundId))
+                }
+            )
+        }
+
+        composable<ScreenRoute.TransactionsLedger> { backStackEntry ->
+            val ledger = backStackEntry.toRoute<ScreenRoute.TransactionsLedger>()
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Dashboard: ${dashboard.fundId} (Slice 3)")
+                Text(text = "Transactions Ledger: ${ledger.fundId} (Slice 4)")
+            }
+        }
+
+        composable<ScreenRoute.TransactionDetail> { backStackEntry ->
+            val detail = backStackEntry.toRoute<ScreenRoute.TransactionDetail>()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "Transaction Detail: ${detail.txId} (Slice 4)")
+            }
+        }
+
+        composable<ScreenRoute.Settings> { backStackEntry ->
+            val settings = backStackEntry.toRoute<ScreenRoute.Settings>()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "Settings: ${settings.fundId} (Slice 5)")
+            }
+        }
+
+        composable<ScreenRoute.MembersRoster> { backStackEntry ->
+            val members = backStackEntry.toRoute<ScreenRoute.MembersRoster>()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "Members: ${members.fundId} (Slice 6)")
             }
         }
     }
