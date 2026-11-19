@@ -60,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -164,6 +165,11 @@ fun DashboardScreen(
                         } else {
                             stringResource(R.string.dashboard_badge_active)
                         }
+                        val badgeCd = if (isLocked) {
+                            stringResource(R.string.dashboard_status_badge_locked_cd)
+                        } else {
+                            stringResource(R.string.dashboard_status_badge_active_cd)
+                        }
                         val badgeContainerColor = if (isLocked) {
                             MaterialTheme.colorScheme.errorContainer
                         } else {
@@ -180,7 +186,7 @@ fun DashboardScreen(
                             color = badgeContainerColor,
                             contentColor = badgeTextColor,
                             modifier = Modifier.semantics {
-                                contentDescription = badgeLabel
+                                contentDescription = badgeCd
                             }
                         ) {
                             Row(
@@ -297,13 +303,15 @@ fun DashboardScreen(
                         text = stringResource(R.string.dashboard_error_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                     Text(
                         text = state.errorMessage.asString(),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
                     Button(
@@ -353,6 +361,39 @@ fun DashboardScreen(
                                     text = stringResource(R.string.viewing_offline_cache),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Locked Circle Notice (Screen 13 Archive / Lock status)
+                if (state.circle?.isLocked == true) {
+                    item(key = "locked_circle_notice") {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing4)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = DesignTokens.Spacing12, vertical = DesignTokens.Spacing8),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+                                Text(
+                                    text = stringResource(R.string.dashboard_locked_notice),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
                                 )
                             }
                         }
@@ -459,7 +500,7 @@ fun HeroBalanceCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -500,17 +541,33 @@ fun HeroBalanceCard(
             Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
             // Main Balance Amount (32sp Bold, Tabular Digits)
-            val formattedBalance = remember(circle.recordedBalance) {
-                NumberFormat.getIntegerInstance(Locale.US).format(circle.recordedBalance)
+            val isNegative = circle.recordedBalance < 0L
+            val absBalance = if (isNegative) -circle.recordedBalance else circle.recordedBalance
+            val formattedBalance = remember(absBalance) {
+                NumberFormat.getIntegerInstance(Locale.US).format(absBalance)
             }
-            Text(
-                text = stringResource(
+            val balanceText = if (isNegative) {
+                stringResource(
+                    R.string.dashboard_negative_balance_format,
+                    circle.currency.symbol,
+                    formattedBalance
+                )
+            } else {
+                stringResource(
                     R.string.dashboard_balance_format,
                     circle.currency.symbol,
                     formattedBalance
-                ),
+                )
+            }
+            val balanceColor = if (isNegative) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            }
+            Text(
+                text = balanceText,
                 style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = balanceColor
             )
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
@@ -632,13 +689,17 @@ fun TransactionItemCard(
                 .padding(DesignTokens.Spacing12),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Indicator Icon (+ green for Deposit, - red for Expense)
-            val indicatorBg = if (item.isExpense) {
+            // Indicator Icon (+ green for Deposit, - red for Expense, muted outline if Voided)
+            val indicatorBg = if (item.isVoid) {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            } else if (item.isExpense) {
                 MaterialTheme.colorScheme.errorContainer
             } else {
                 MaterialTheme.colorScheme.primaryContainer
             }
-            val indicatorTint = if (item.isExpense) {
+            val indicatorTint = if (item.isVoid) {
+                MaterialTheme.colorScheme.outline
+            } else if (item.isExpense) {
                 MaterialTheme.colorScheme.onErrorContainer
             } else {
                 MaterialTheme.colorScheme.onPrimaryContainer
@@ -777,7 +838,8 @@ fun EmptyTransactionsCard(
                 text = stringResource(R.string.dashboard_empty_transactions_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
             val subtitleRes = if (isAdmin) {
@@ -788,7 +850,8 @@ fun EmptyTransactionsCard(
             Text(
                 text = stringResource(subtitleRes),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -929,6 +992,40 @@ private fun DashboardScreenEmptyMemberPreview() {
                 circle = previewCircle,
                 recentTransactions = emptyList(),
                 isAdmin = false,
+                isOffline = false
+            ),
+            onAction = {}
+        )
+    }
+}
+
+@Preview(name = "Dashboard Locked Circle", showBackground = true)
+@Composable
+private fun DashboardScreenLockedPreview() {
+    FundCircleTheme(darkTheme = false) {
+        DashboardScreen(
+            state = DashboardUiState(
+                isLoading = false,
+                circle = previewCircle.copy(isLocked = true),
+                recentTransactions = previewTransactions,
+                isAdmin = true,
+                isOffline = false
+            ),
+            onAction = {}
+        )
+    }
+}
+
+@Preview(name = "Dashboard Negative Balance", showBackground = true)
+@Composable
+private fun DashboardScreenNegativeBalancePreview() {
+    FundCircleTheme(darkTheme = false) {
+        DashboardScreen(
+            state = DashboardUiState(
+                isLoading = false,
+                circle = previewCircle.copy(recordedBalance = -150_000L),
+                recentTransactions = previewTransactions,
+                isAdmin = true,
                 isOffline = false
             ),
             onAction = {}

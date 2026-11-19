@@ -85,14 +85,18 @@
     <!-- Circle Home Dashboard (Screen 04) -->
     <string name="dashboard_hero_balance_label">OVERALL RECORDED BALANCE</string>
     <string name="dashboard_badge_live">LIVE</string>
-    <string name="dashboard_total_deposits_label">Total Deposits (O(1))</string>
-    <string name="dashboard_total_expenses_label">Total Expenses (O(1))</string>
+    <string name="dashboard_total_deposits_label">Total Deposits</string>
+    <string name="dashboard_total_expenses_label">Total Expenses</string>
     <string name="dashboard_deposit_amount_format">+ %1$s %2$s</string>
     <string name="dashboard_expense_amount_format">- %1$s %2$s</string>
     <string name="dashboard_balance_format">%1$s %2$s</string>
+    <string name="dashboard_negative_balance_format">- %1$s %2$s</string>
     <string name="dashboard_badge_reversed">REVERSED ↩</string>
     <string name="dashboard_badge_active">ACTIVE</string>
     <string name="dashboard_badge_locked">LOCKED</string>
+    <string name="dashboard_status_badge_active_cd">Circle status: Active</string>
+    <string name="dashboard_status_badge_locked_cd">Circle status: Locked</string>
+    <string name="dashboard_locked_notice">This circle is locked. New transactions cannot be recorded.</string>
     <string name="dashboard_recent_transactions_header">Recent Transactions</string>
     <string name="dashboard_btn_view_all">View All</string>
     <string name="dashboard_empty_transactions_title">No Transactions Yet</string>
