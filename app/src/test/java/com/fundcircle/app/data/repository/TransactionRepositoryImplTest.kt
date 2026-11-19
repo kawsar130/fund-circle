@@ -3,13 +3,18 @@ package com.fundcircle.app.data.repository
 import com.fundcircle.app.data.datasource.remote.TransactionRemoteDataSource
 import com.fundcircle.app.data.dto.DepositDto
 import com.fundcircle.app.data.dto.ExpenseDto
+import com.fundcircle.app.domain.model.Deposit
+import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.firestore.FirebaseFirestoreException
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -198,5 +203,138 @@ class TransactionRepositoryImplTest {
         } catch (e: Throwable) {
             assertThat(e).isInstanceOf(FundCircleError.Authorization.NotAuthorized::class.java)
         }
+    }
+
+    @Test
+    fun observeDeposits_mapsDtosToDomainEntitiesDescending() = runTest(testDispatcher) {
+        val dto1 = DepositDto(
+            depositId = "dep-1",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberName = "Rahim",
+            amount = 100_000L,
+            depositDate = 2_000L,
+            paymentMethod = "Bank Transfer"
+        )
+        val dto2 = DepositDto(
+            depositId = "dep-2",
+            fundId = fundId,
+            memberId = "mem-2",
+            memberName = "Karim",
+            amount = 50_000L,
+            depositDate = 1_000L,
+            paymentMethod = "Cash"
+        )
+
+        every { remoteDataSource.observeDeposits(fundId) } returns flowOf(listOf(dto1, dto2))
+
+        val result = repository.observeDeposits(fundId).first()
+
+        assertThat(result).hasSize(2)
+        assertThat(result[0].id).isEqualTo("dep-1")
+        assertThat(result[0].amount).isEqualTo(100_000L)
+        assertThat(result[1].id).isEqualTo("dep-2")
+        assertThat(result[1].amount).isEqualTo(50_000L)
+    }
+
+    @Test
+    fun observeExpenses_mapsDtosToDomainEntitiesDescending() = runTest(testDispatcher) {
+        val dto1 = ExpenseDto(
+            expenseId = "exp-1",
+            fundId = fundId,
+            amount = 20_000L,
+            expenseDate = 2_000L,
+            category = "Office & Administration",
+            description = "Desk",
+            paymentMethod = "Cash"
+        )
+
+        every { remoteDataSource.observeExpenses(fundId) } returns flowOf(listOf(dto1))
+
+        val result = repository.observeExpenses(fundId).first()
+
+        assertThat(result).hasSize(1)
+        assertThat(result[0].id).isEqualTo("exp-1")
+        assertThat(result[0].category).isEqualTo(ExpenseCategory.OFFICE_AND_ADMINISTRATION)
+        assertThat(result[0].amount).isEqualTo(20_000L)
+    }
+
+    @Test
+    fun recordDeposit_callsRemoteDataSource_andReturnsSuccess() = runTest(testDispatcher) {
+        val depositSlot = slot<DepositDto>()
+        coEvery { remoteDataSource.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(Unit)
+
+        val deposit = Deposit(
+            id = "uuid-dep-1",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberEmail = "member@test.com",
+            memberName = "Test Member",
+            amount = 75_000L,
+            depositDate = 1_000L,
+            paymentMethod = PaymentMethod.CASH,
+            note = "Tranche 1"
+        )
+
+        val result = repository.recordDeposit(fundId, deposit)
+
+        assertThat(result.isSuccess).isTrue()
+        val captured = depositSlot.captured
+        assertThat(captured.depositId).isEqualTo("uuid-dep-1")
+        assertThat(captured.amount).isEqualTo(75_000L)
+        assertThat(captured.fundId).isEqualTo(fundId)
+    }
+
+    @Test
+    fun recordExpense_callsRemoteDataSource_andReturnsSuccess() = runTest(testDispatcher) {
+        val expenseSlot = slot<ExpenseDto>()
+        coEvery { remoteDataSource.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(Unit)
+
+        val expense = Expense(
+            id = "uuid-exp-1",
+            fundId = fundId,
+            amount = 15_000L,
+            expenseDate = 1_000L,
+            category = ExpenseCategory.OFFICE_AND_ADMINISTRATION,
+            description = "Office Chair",
+            paymentMethod = PaymentMethod.MOBILE_BANKING,
+            paidBy = "Admin",
+            createdBy = "admin-uid",
+            creatorEmail = "admin@test.com"
+        )
+
+        val result = repository.recordExpense(fundId, expense)
+
+        assertThat(result.isSuccess).isTrue()
+        val captured = expenseSlot.captured
+        assertThat(captured.expenseId).isEqualTo("uuid-exp-1")
+        assertThat(captured.amount).isEqualTo(15_000L)
+        assertThat(captured.description).isEqualTo("Office Chair")
+    }
+
+    @Test
+    fun recordDeposit_whenError_mapsToDomainError() = runTest(testDispatcher) {
+        val exception = FirebaseFirestoreException(
+            "Permission denied",
+            FirebaseFirestoreException.Code.PERMISSION_DENIED
+        )
+        coEvery { remoteDataSource.recordDeposit(any(), any()) } returns Result.failure(exception)
+
+        val deposit = Deposit(
+            id = "dep-err",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberEmail = "m@test.com",
+            memberName = "M",
+            amount = 10_000L,
+            depositDate = 1_000L,
+            paymentMethod = PaymentMethod.CASH,
+            note = null
+        )
+
+        val result = repository.recordDeposit(fundId, deposit)
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(FundCircleError.Authorization.NotAuthorized::class.java)
     }
 }

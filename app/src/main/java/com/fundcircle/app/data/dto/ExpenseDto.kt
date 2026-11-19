@@ -57,3 +57,49 @@ fun ExpenseDto.toTransactionItem(): TransactionItem {
         category = cat
     )
 }
+
+fun ExpenseDto.toDomain(): com.fundcircle.app.domain.model.Expense {
+    require(amount >= 1L) { "Expense amount must be a positive integer >= 1" }
+    val effectiveTimestamp = if (expenseDate > 0L) expenseDate else createdAt
+    require(effectiveTimestamp > 0L) { "Expense date must be a valid epoch timestamp" }
+    require(description.length in 3..250) { "Description must be between 3 and 250 characters" }
+
+    return com.fundcircle.app.domain.model.Expense(
+        id = expenseId,
+        fundId = fundId,
+        amount = amount,
+        expenseDate = effectiveTimestamp,
+        category = ExpenseCategory.fromString(category),
+        description = description,
+        paymentMethod = PaymentMethod.fromString(paymentMethod),
+        paidBy = paidBy,
+        createdBy = createdBy,
+        creatorEmail = creatorEmail,
+        isVoid = isVoid,
+        voidMetadata = if (isVoid) {
+            com.fundcircle.app.domain.model.VoidMetadata(
+                reason = voidReason.orEmpty(),
+                voidedAt = voidedAt ?: 0L,
+                voidedBy = voidedBy.orEmpty()
+            )
+        } else null
+    )
+}
+
+fun com.fundcircle.app.domain.model.Expense.toDto(): ExpenseDto = ExpenseDto(
+    expenseId = id,
+    fundId = fundId,
+    amount = amount,
+    expenseDate = expenseDate,
+    category = category.displayName,
+    description = description,
+    paymentMethod = paymentMethod.displayName,
+    paidBy = paidBy,
+    createdBy = createdBy,
+    creatorEmail = creatorEmail,
+    isVoid = isVoid,
+    voidReason = voidMetadata?.reason,
+    voidedAt = voidMetadata?.voidedAt,
+    voidedBy = voidMetadata?.voidedBy,
+    createdAt = expenseDate
+)

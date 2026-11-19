@@ -31,4 +31,9 @@ object DateUtils {
         val sdf = SimpleDateFormat(DISPLAY_DATE_TIME_FORMAT, Locale.getDefault())
         return sdf.format(Date(timestamp))
     }
+
+    fun formatMonthYear(timestamp: Long): String {
+        val sdf = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        return sdf.format(Date(timestamp)).uppercase(Locale.getDefault())
+    }
 }

@@ -11,4 +11,8 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionRemoteDataSource {
     fun observeRecentDeposits(fundId: String, limit: Int = 5): Flow<List<DepositDto>>
     fun observeRecentExpenses(fundId: String, limit: Int = 5): Flow<List<ExpenseDto>>
+    fun observeDeposits(fundId: String): Flow<List<DepositDto>>
+    fun observeExpenses(fundId: String): Flow<List<ExpenseDto>>
+    suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<Unit>
+    suspend fun recordExpense(fundId: String, expense: ExpenseDto): Result<Unit>
 }
