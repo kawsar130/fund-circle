@@ -104,7 +104,7 @@ fun ReverseTransactionDialog(
     val recordedActor = if (isExpense) {
         expense?.creatorEmail?.takeIf { it.isNotBlank() }
     } else {
-        deposit?.memberEmail?.takeIf { it.isNotBlank() }
+        deposit?.memberName?.ifBlank { deposit.memberEmail }?.takeIf { it.isNotBlank() }
     }
 
     val summaryHeader = stringResource(

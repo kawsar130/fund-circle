@@ -105,14 +105,15 @@ class TransactionDetailViewModel @Inject constructor(
                 val currentEmail = session?.email.orEmpty()
                 val isAdmin = (currentUid.isNotBlank() && circle.adminId == currentUid) ||
                     (currentEmail.isNotBlank() && circle.adminEmail.equals(currentEmail, ignoreCase = true))
-                Triple(circle, isAdmin, currentEmail)
+                val effectiveEmail = currentEmail.ifBlank { circle.adminEmail }
+                Triple(circle, isAdmin, effectiveEmail)
             }.catch { /* Ignored, handled in transaction streams */ }
-                .collectLatest { (circle, isAdmin, currentEmail) ->
+                .collectLatest { (circle, isAdmin, effectiveEmail) ->
                     setState {
                         copy(
                             currency = circle.currency,
                             isAdmin = isAdmin,
-                            adminEmail = currentEmail,
+                            adminEmail = effectiveEmail,
                             isCircleLocked = circle.isLocked
                         )
                     }

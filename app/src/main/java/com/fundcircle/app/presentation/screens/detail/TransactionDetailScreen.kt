@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
@@ -201,13 +202,30 @@ fun TransactionDetailScreen(
                     .padding(DesignTokens.Spacing16),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = uiState.errorMessage?.asString()
-                        ?: stringResource(R.string.tx_detail_error_not_found),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing16)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = uiState.errorMessage?.asString()
+                            ?: stringResource(R.string.tx_detail_error_not_found),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = { onAction(TransactionDetailUiAction.ClickBack) },
+                        modifier = Modifier.heightIn(min = DesignTokens.MinTouchTarget)
+                    ) {
+                        Text(text = stringResource(R.string.tx_detail_back_cd))
+                    }
+                }
             }
             return@Scaffold
         }
