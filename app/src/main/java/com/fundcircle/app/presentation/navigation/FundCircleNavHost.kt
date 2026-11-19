@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -15,6 +19,8 @@ import com.fundcircle.app.presentation.screens.auth.AuthScreen
 import com.fundcircle.app.presentation.screens.create.CreateCircleRoute
 import com.fundcircle.app.presentation.screens.dashboard.DashboardRoute
 import com.fundcircle.app.presentation.screens.hub.CircleHubRoute
+import com.fundcircle.app.presentation.screens.ledger.TransactionsLedgerRoute
+import com.fundcircle.app.presentation.screens.transaction.RecordTransactionSheet
 
 /**
  * Type-safe navigation host for Fund Circle.
@@ -69,6 +75,8 @@ fun FundCircleNavHost(
         }
 
         composable<ScreenRoute.Dashboard> {
+            var recordingFundId by remember { mutableStateOf<String?>(null) }
+
             DashboardRoute(
                 onNavigateToLedger = { fundId ->
                     navController.navigate(ScreenRoute.TransactionsLedger(fundId = fundId))
@@ -79,7 +87,7 @@ fun FundCircleNavHost(
                     )
                 },
                 onNavigateToRecordTransaction = { fundId ->
-                    // Slice 4: Record Transaction modal
+                    recordingFundId = fundId
                 },
                 onNavigateToSettings = { fundId ->
                     navController.navigate(ScreenRoute.Settings(fundId = fundId))
@@ -88,12 +96,38 @@ fun FundCircleNavHost(
                     navController.navigate(ScreenRoute.MembersRoster(fundId = fundId))
                 }
             )
+
+            recordingFundId?.let { fundId ->
+                RecordTransactionSheet(
+                    fundId = fundId,
+                    onDismiss = { recordingFundId = null }
+                )
+            }
         }
 
         composable<ScreenRoute.TransactionsLedger> { backStackEntry ->
             val ledger = backStackEntry.toRoute<ScreenRoute.TransactionsLedger>()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Transactions Ledger: ${ledger.fundId} (Slice 4)")
+            var showRecordSheet by remember { mutableStateOf(false) }
+
+            TransactionsLedgerRoute(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToTransactionDetail = { fundId, txId, isExpense ->
+                    navController.navigate(
+                        ScreenRoute.TransactionDetail(fundId = fundId, txId = txId, isExpense = isExpense)
+                    )
+                },
+                onOpenAddTransactionSheet = { _ ->
+                    showRecordSheet = true
+                }
+            )
+
+            if (showRecordSheet) {
+                RecordTransactionSheet(
+                    fundId = ledger.fundId,
+                    onDismiss = { showRecordSheet = false }
+                )
             }
         }
 

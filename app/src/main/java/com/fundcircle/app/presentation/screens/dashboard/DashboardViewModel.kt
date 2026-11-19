@@ -73,7 +73,9 @@ class DashboardViewModel @Inject constructor(
                 authRepository.userSession
             ) { circle, transactions, userSession ->
                 val currentUserId = userSession?.uid.orEmpty()
-                val isAdmin = currentUserId.isNotBlank() && circle.adminId == currentUserId
+                val userEmail = userSession?.email.orEmpty()
+                val isAdmin = (currentUserId.isNotBlank() && circle.adminId == currentUserId) ||
+                    (userEmail.isNotBlank() && circle.adminEmail.equals(userEmail, ignoreCase = true))
                 Triple(circle, transactions, isAdmin)
             }.catch { error ->
                 val errorUiText = when (error) {

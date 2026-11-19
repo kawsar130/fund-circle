@@ -85,14 +85,18 @@
     <!-- Circle Home Dashboard (Screen 04) -->
     <string name="dashboard_hero_balance_label">OVERALL RECORDED BALANCE</string>
     <string name="dashboard_badge_live">LIVE</string>
-    <string name="dashboard_total_deposits_label">Total Deposits (O(1))</string>
-    <string name="dashboard_total_expenses_label">Total Expenses (O(1))</string>
+    <string name="dashboard_total_deposits_label">Total Deposits</string>
+    <string name="dashboard_total_expenses_label">Total Expenses</string>
     <string name="dashboard_deposit_amount_format">+ %1$s %2$s</string>
     <string name="dashboard_expense_amount_format">- %1$s %2$s</string>
     <string name="dashboard_balance_format">%1$s %2$s</string>
+    <string name="dashboard_negative_balance_format">- %1$s %2$s</string>
     <string name="dashboard_badge_reversed">REVERSED ↩</string>
     <string name="dashboard_badge_active">ACTIVE</string>
     <string name="dashboard_badge_locked">LOCKED</string>
+    <string name="dashboard_status_badge_active_cd">Circle status: Active</string>
+    <string name="dashboard_status_badge_locked_cd">Circle status: Locked</string>
+    <string name="dashboard_locked_notice">This circle is locked. New transactions cannot be recorded.</string>
     <string name="dashboard_recent_transactions_header">Recent Transactions</string>
     <string name="dashboard_btn_view_all">View All</string>
     <string name="dashboard_empty_transactions_title">No Transactions Yet</string>
@@ -121,4 +125,67 @@
     <string name="dashboard_top_bar_active_circle_label">Active Circle</string>
     <string name="dashboard_notifications_empty">No new notifications</string>
     <string name="error_not_authorized">You do not have permission to access this circle.</string>
+
+    <!-- Screen 05: Transactions Ledger -->
+    <string name="ledger_title">Transactions Ledger</string>
+    <string name="ledger_tab_deposits">Deposits (%1$d)</string>
+    <string name="ledger_tab_expenses">Expenses (%1$d)</string>
+    <string name="ledger_search_placeholder">Search transactions…</string>
+    <string name="ledger_search_cd">Search transactions</string>
+    <string name="ledger_clear_search_cd">Clear search</string>
+    <string name="ledger_filter_all_methods">All Methods</string>
+    <string name="ledger_fab_record">Record</string>
+    <string name="ledger_fab_record_cd">Record transaction</string>
+    <string name="ledger_empty_deposits_title">No Deposits Found</string>
+    <string name="ledger_empty_deposits_subtitle">No deposits match the selected filter or search query.</string>
+    <string name="ledger_empty_expenses_title">No Expenses Found</string>
+    <string name="ledger_empty_expenses_subtitle">No expenses match the selected filter or search query.</string>
+    <string name="ledger_offline_warning">Viewing Offline Cache</string>
+    <string name="ledger_back_cd">Navigate back</string>
+    <string name="ledger_reversed_badge">REVERSED ↩</string>
+    <string name="ledger_reversed_badge_cd">Reversed transaction</string>
+    <string name="ledger_note_prefix">Note: %1$s</string>
+    <string name="ledger_paid_by_prefix">Paid by: %1$s</string>
+    <string name="ledger_deposit_amount_format">+ %1$s %2$s</string>
+    <string name="ledger_expense_amount_format">- %1$s %2$s</string>
+
+    <!-- Screen 07: Add Transaction Modal Sheet -->
+    <string name="modal_add_tx_title">Record Financial Transaction</string>
+    <string name="modal_add_tx_close_cd">Close modal</string>
+    <string name="modal_add_tx_tab_deposit">Deposit (Member)</string>
+    <string name="modal_add_tx_tab_expense">Expense</string>
+    <string name="modal_add_tx_stakeholder_label">Select Contributing Stakeholder *</string>
+    <string name="modal_add_tx_deposit_amount_label">Deposit Amount (%1$s) *</string>
+    <string name="modal_add_tx_expense_amount_label">Expense Amount (%1$s) *</string>
+    <string name="modal_add_tx_amount_helper">Whole integer >= 1</string>
+    <string name="modal_add_tx_deposit_date_label">Deposit Date *</string>
+    <string name="modal_add_tx_expense_date_label">Expense Date *</string>
+    <string name="modal_add_tx_date_helper">Date must be today or earlier</string>
+    <string name="modal_add_tx_payment_method_label">Payment Method *</string>
+    <string name="modal_add_tx_note_label">Note (Optional)</string>
+    <string name="modal_add_tx_note_placeholder">e.g., Monthly contribution tranche 2</string>
+    <string name="modal_add_tx_category_label">Expense Category *</string>
+    <string name="modal_add_tx_description_label">Description or Purpose *</string>
+    <string name="modal_add_tx_description_placeholder">e.g., Office supplies and report printing papers</string>
+    <string name="modal_add_tx_paid_by_label">Paid By / Vendor (Optional)</string>
+    <string name="modal_add_tx_paid_by_placeholder">e.g., Apex Properties Ltd.</string>
+    <string name="modal_add_tx_btn_post_deposit">Post Deposit to Firm Ledger</string>
+    <string name="modal_add_tx_btn_post_expense">Post Expense to Firm Ledger</string>
+    <string name="modal_add_tx_posting">Posting to Firm Ledger…</string>
+    <string name="modal_add_tx_select_date_cd">Select transaction date</string>
+    <string name="modal_add_tx_select_stakeholder_placeholder">Choose member…</string>
+
+    <!-- Transaction Validation Errors -->
+    <string name="error_amount_required">Amount must be a whole positive integer >= 1.</string>
+    <string name="error_future_date">Transaction date cannot be in the future.</string>
+    <string name="error_member_required">Please select a contributing stakeholder.</string>
+    <string name="error_description_required">Description is required.</string>
+    <string name="error_description_too_short">Description must be at least 3 characters.</string>
+    <string name="error_description_too_long">Description cannot exceed 250 characters.</string>
+    <string name="error_note_too_long">Note cannot exceed 250 characters.</string>
+    <string name="modal_add_tx_success_deposit">Deposit recorded successfully.</string>
+    <string name="modal_add_tx_success_expense">Expense recorded successfully.</string>
+    <string name="date_picker_ok">OK</string>
+    <string name="date_picker_cancel">Cancel</string>
+    <string name="char_counter_format">%1$d/%2$d</string>
 </resources>

@@ -54,3 +54,46 @@ fun DepositDto.toTransactionItem(): TransactionItem {
         category = null
     )
 }
+
+fun DepositDto.toDomain(): com.fundcircle.app.domain.model.Deposit {
+    require(amount >= 1L) { "Deposit amount must be a positive integer >= 1" }
+    val effectiveTimestamp = if (depositDate > 0L) depositDate else createdAt
+    require(effectiveTimestamp > 0L) { "Deposit date must be a valid epoch timestamp" }
+
+    return com.fundcircle.app.domain.model.Deposit(
+        id = depositId,
+        fundId = fundId,
+        memberId = memberId,
+        memberEmail = memberEmail,
+        memberName = memberName,
+        amount = amount,
+        depositDate = effectiveTimestamp,
+        paymentMethod = PaymentMethod.fromString(paymentMethod),
+        note = note?.takeIf { it.isNotBlank() },
+        isVoid = isVoid,
+        voidMetadata = if (isVoid) {
+            com.fundcircle.app.domain.model.VoidMetadata(
+                reason = voidReason.orEmpty(),
+                voidedAt = voidedAt ?: 0L,
+                voidedBy = voidedBy.orEmpty()
+            )
+        } else null
+    )
+}
+
+fun com.fundcircle.app.domain.model.Deposit.toDto(): DepositDto = DepositDto(
+    depositId = id,
+    fundId = fundId,
+    memberId = memberId,
+    memberEmail = memberEmail,
+    memberName = memberName,
+    amount = amount,
+    depositDate = depositDate,
+    paymentMethod = paymentMethod.displayName,
+    note = note,
+    isVoid = isVoid,
+    voidReason = voidMetadata?.reason,
+    voidedAt = voidMetadata?.voidedAt,
+    voidedBy = voidMetadata?.voidedBy,
+    createdAt = depositDate
+)

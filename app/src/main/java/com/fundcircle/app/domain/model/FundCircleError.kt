@@ -12,6 +12,7 @@ sealed class FundCircleError(override val message: String) : Exception(message) 
         data class InvalidName(val length: Int) : Validation("Circle name must be between 3 and 50 characters.")
         data class DescriptionTooShort(val length: Int) : Validation("Description must be between 3 and 250 characters.")
         data class DescriptionTooLong(val length: Int) : Validation("Description cannot exceed 250 characters.")
+        data object MemberRequired : Validation("Contributing member must be selected.")
         data class VoidReasonRequired(val length: Int) : Validation("A void reason of at least 5 characters is mandatory.")
     }
 

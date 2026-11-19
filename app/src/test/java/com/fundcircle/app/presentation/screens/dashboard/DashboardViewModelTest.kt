@@ -163,6 +163,17 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun adminUser_matchingAdminEmail_identifiesAsAdmin() = runTest {
+        val userWithDifferentUid = sampleAdminUser.copy(uid = "different_uid_999")
+        userSessionFlow.value = userWithDifferentUid
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.isAdmin).isTrue()
+    }
+
+    @Test
     fun networkOfflineTransition_updatesIsOfflineState() = runTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
