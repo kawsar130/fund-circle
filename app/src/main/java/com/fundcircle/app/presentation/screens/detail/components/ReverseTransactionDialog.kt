@@ -251,6 +251,9 @@ fun ReverseTransactionDialog(
             }
         },
         confirmButton = {
+            val confirmCd = stringResource(
+                if (isReversing) R.string.dialog_reverse_reversing else R.string.dialog_reverse_btn_confirm
+            )
             Button(
                 onClick = {
                     hasAttemptedSubmit = true
@@ -266,7 +269,7 @@ fun ReverseTransactionDialog(
                 modifier = Modifier
                     .heightIn(min = DesignTokens.MinTouchTarget)
                     .semantics {
-                        contentDescription = if (isReversing) "Reversing transaction" else "Confirm and reverse balance"
+                        contentDescription = confirmCd
                     }
             ) {
                 if (isReversing) {

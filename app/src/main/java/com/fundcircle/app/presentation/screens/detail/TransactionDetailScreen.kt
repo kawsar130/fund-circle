@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -128,17 +129,18 @@ fun TransactionDetailScreen(
                     )
                 },
                 navigationIcon = {
+                    val backCd = stringResource(R.string.tx_detail_back_cd)
                     IconButton(
                         onClick = { onAction(TransactionDetailUiAction.ClickBack) },
                         modifier = Modifier
                             .size(DesignTokens.MinTouchTarget)
                             .semantics {
-                                contentDescription = "Navigate back"
+                                contentDescription = backCd
                             }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.tx_detail_back_cd)
+                            contentDescription = null
                         )
                     }
                 },
@@ -288,8 +290,11 @@ fun TransactionDetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        val amountPrefix = if (uiState.isExpense) "-" else "+"
-                        val amountDisplay = "$amountPrefix ${uiState.currency.symbol} $formattedAmount"
+                        val amountDisplay = stringResource(
+                            if (uiState.isExpense) R.string.ledger_expense_amount_format else R.string.ledger_deposit_amount_format,
+                            uiState.currency.symbol,
+                            formattedAmount
+                        )
 
                         Text(
                             text = amountDisplay,
@@ -307,12 +312,13 @@ fun TransactionDetailScreen(
                         )
 
                         if (isVoid) {
+                            val reversedCd = stringResource(R.string.tx_detail_status_reversed_cd)
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
                                 color = MaterialTheme.colorScheme.errorContainer,
                                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
                                 modifier = Modifier.semantics {
-                                    contentDescription = "Status: Reversed"
+                                    contentDescription = reversedCd
                                 }
                             ) {
                                 Text(
@@ -323,12 +329,13 @@ fun TransactionDetailScreen(
                                 )
                             }
                         } else {
+                            val completedCd = stringResource(R.string.tx_detail_status_completed_cd)
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.semantics {
-                                    contentDescription = "Status: Completed and posted"
+                                    contentDescription = completedCd
                                 }
                             ) {
                                 Text(
@@ -567,6 +574,10 @@ fun TransactionDetailScreen(
                 }
             }
         }
+    }
+
+    BackHandler(enabled = uiState.showReverseDialog && !uiState.isReversing) {
+        onAction(TransactionDetailUiAction.DismissReverseDialog)
     }
 
     if (uiState.showReverseDialog) {

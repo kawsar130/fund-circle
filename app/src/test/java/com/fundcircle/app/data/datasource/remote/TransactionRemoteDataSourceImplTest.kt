@@ -145,9 +145,9 @@ class TransactionRemoteDataSourceImplTest {
         every { firestoreTx.get(itemDoc) } returns txSnapshot
         every { txSnapshot.exists() } returns true
         every { txSnapshot.getBoolean("isVoid") } returns false
-
         val decDepositValue: FieldValue = mockk()
         val decBalanceValue: FieldValue = mockk()
+        every { txSnapshot.getLong("amount") } returns 100_000L
         every { FieldValue.increment(-100_000L) } returns decDepositValue andThen decBalanceValue
 
         val childUpdateSlot = slot<Map<String, Any>>()
@@ -194,6 +194,7 @@ class TransactionRemoteDataSourceImplTest {
         every { firestoreTx.get(itemDoc) } returns txSnapshot
         every { txSnapshot.exists() } returns true
         every { txSnapshot.getBoolean("isVoid") } returns false
+        every { txSnapshot.getLong("amount") } returns 25_000L
 
         val decExpenseValue: FieldValue = mockk()
         val incBalanceValue: FieldValue = mockk()

@@ -184,7 +184,7 @@ class TransactionDetailViewModel @Inject constructor(
 
     private fun executeReversal(reason: String) {
         val currentState = uiState.value
-        if (currentState.isReversing || currentState.isVoid || !currentState.isAdmin) {
+        if (currentState.isReversing || currentState.isVoid || !currentState.isAdmin || currentState.originalAmount < 1L) {
             return
         }
 
@@ -228,7 +228,11 @@ class TransactionDetailViewModel @Inject constructor(
                         is FundCircleError.Authorization ->
                             UiText.StringResource(R.string.error_not_authorized)
                         else ->
-                            UiText.DynamicString(error.message ?: "Failed to reverse transaction.")
+                            if (!error.message.isNullOrBlank()) {
+                                UiText.DynamicString(error.message.orEmpty())
+                            } else {
+                                UiText.StringResource(R.string.circle_error_generic)
+                            }
                     }
                     setState {
                         copy(

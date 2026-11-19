@@ -249,6 +249,9 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                 throw IllegalStateException("Transaction is already reversed.")
             }
 
+            val docAmount = txSnapshot.getLong("amount")
+            val effectiveAmount = if (docAmount != null && docAmount > 0L) docAmount else originalAmount
+
             val now = System.currentTimeMillis()
             val childUpdates = mapOf<String, Any>(
                 FIELD_IS_VOID to true,
@@ -260,14 +263,14 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
 
             val parentUpdates = if (isExpense) {
                 mapOf<String, Any>(
-                    FIELD_TOTAL_EXPENSES to FieldValue.increment(-originalAmount),
-                    FIELD_RECORDED_BALANCE to FieldValue.increment(originalAmount),
+                    FIELD_TOTAL_EXPENSES to FieldValue.increment(-effectiveAmount),
+                    FIELD_RECORDED_BALANCE to FieldValue.increment(effectiveAmount),
                     FIELD_UPDATED_AT to now
                 )
             } else {
                 mapOf<String, Any>(
-                    FIELD_TOTAL_DEPOSITS to FieldValue.increment(-originalAmount),
-                    FIELD_RECORDED_BALANCE to FieldValue.increment(-originalAmount),
+                    FIELD_TOTAL_DEPOSITS to FieldValue.increment(-effectiveAmount),
+                    FIELD_RECORDED_BALANCE to FieldValue.increment(-effectiveAmount),
                     FIELD_UPDATED_AT to now
                 )
             }
