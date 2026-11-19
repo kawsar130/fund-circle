@@ -51,6 +51,20 @@ class GetMemberDepositsUseCaseTest {
         assertThat(result[0].id).isEqualTo("dep-1")
     }
 
+    @Test
+    fun invoke_filtersByDualMemberIdAndMemberEmail() = runTest {
+        val dep1 = createDeposit(id = "dep-1", memberId = "usr-1", email = "other@example.com", date = 1000L)
+        val dep2 = createDeposit(id = "dep-2", memberId = "other-id", email = "alice@example.com", date = 2000L)
+        val dep3 = createDeposit(id = "dep-3", memberId = "usr-3", email = "carol@example.com", date = 3000L)
+
+        every { transactionRepository.observeDeposits(fundId) } returns flowOf(listOf(dep1, dep2, dep3))
+
+        val result = useCase(fundId, memberIdentifier = "usr-1", memberEmail = "alice@example.com").first()
+
+        assertThat(result).hasSize(2)
+        assertThat(result.map { it.id }).containsExactly("dep-2", "dep-1").inOrder()
+    }
+
     private fun createDeposit(id: String, memberId: String, email: String, date: Long) = Deposit(
         id = id,
         fundId = fundId,

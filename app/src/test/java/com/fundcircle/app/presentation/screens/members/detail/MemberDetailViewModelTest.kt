@@ -127,6 +127,7 @@ class MemberDetailViewModelTest {
         every { authRepository.userSession } returns userSessionFlow
         every { observeCircleUseCase(fundId) } returns flowOf(sampleCircle)
         every { observeMemberUseCase(any(), any()) } returns flowOf(sampleMember)
+        every { getMemberDepositsUseCase(any(), any(), any()) } returns flowOf(sampleDeposits)
         every { getMemberDepositsUseCase(any(), any()) } returns flowOf(sampleDeposits)
         coEvery { getMemberKycUseCase(any(), any()) } returns Result.failure(FundCircleError.NotFound.ResourceNotFound)
         userSessionFlow.value = sampleAdmin

@@ -13,11 +13,16 @@ import javax.inject.Inject
 class GetMemberDepositsUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
-    operator fun invoke(fundId: String, memberIdentifier: String): Flow<List<Deposit>> {
+    operator fun invoke(
+        fundId: String,
+        memberIdentifier: String,
+        memberEmail: String? = null
+    ): Flow<List<Deposit>> {
         return transactionRepository.observeDeposits(fundId).map { deposits ->
             deposits.filter { deposit ->
                 deposit.memberId == memberIdentifier ||
-                        deposit.memberEmail.equals(memberIdentifier, ignoreCase = true)
+                        deposit.memberEmail.equals(memberIdentifier, ignoreCase = true) ||
+                        (memberEmail != null && deposit.memberEmail.equals(memberEmail, ignoreCase = true))
             }.sortedByDescending { it.depositDate }
         }
     }

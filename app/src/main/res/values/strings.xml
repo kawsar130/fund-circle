@@ -349,6 +349,7 @@
     <string name="profile_edit_privacy_notice">Private identity and nominee fields are strictly isolated to this circle.</string>
     <string name="profile_edit_section_personal">PERSONAL INFORMATION</string>
     <string name="profile_edit_name_label">Full Name</string>
+    <string name="profile_edit_name_helper">Registered stakeholder name in this circle.</string>
     <string name="profile_edit_nid_label">National Identity Number (NID) *</string>
     <string name="profile_edit_nid_placeholder">10, 13, or 17 numeric digits</string>
     <string name="profile_edit_nid_helper">Enter 10, 13, or 17 numeric digits.</string>

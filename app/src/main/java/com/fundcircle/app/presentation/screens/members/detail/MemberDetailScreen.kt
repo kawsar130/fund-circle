@@ -59,6 +59,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -100,6 +101,7 @@ fun MemberDetailRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(fundId, userId) {
         viewModel.onAction(MemberDetailUiAction.Init(fundId, userId))
@@ -118,9 +120,16 @@ fun MemberDetailRoute(
                     onNavigateBack()
                 }
                 is MemberDetailUiEffect.ShowSnackbar -> {
-                    // Show message in snackbarHost
+                    snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
             }
+        }
+    }
+
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { error ->
+            snackbarHostState.showSnackbar(error.asString(context))
+            viewModel.onAction(MemberDetailUiAction.DismissError)
         }
     }
 
@@ -442,12 +451,14 @@ fun MemberDetailScreen(
                                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                                 )
                                 Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-                                val count = state.deposits.size
+                                val activeCount = remember(state.deposits) {
+                                    state.deposits.count { !it.isVoid }
+                                }
                                 Text(
-                                    text = if (count == 1) {
+                                    text = if (activeCount == 1) {
                                         stringResource(R.string.member_detail_deposit_count_singular)
                                     } else {
-                                        stringResource(R.string.member_detail_deposit_count_plural, count)
+                                        stringResource(R.string.member_detail_deposit_count_plural, activeCount)
                                     },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,

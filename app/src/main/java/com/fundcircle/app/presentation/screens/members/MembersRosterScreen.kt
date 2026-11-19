@@ -56,9 +56,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -78,6 +80,7 @@ import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.presentation.screens.members.components.AddStakeholderSheet
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -96,6 +99,8 @@ fun MembersRosterRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(fundId) {
         viewModel.onAction(MembersRosterUiAction.Init(fundId))
@@ -114,9 +119,16 @@ fun MembersRosterRoute(
                     onNavigateBack()
                 }
                 is MembersRosterUiEffect.ShowSnackbar -> {
-                    // Show in snackbar
+                    snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
             }
+        }
+    }
+
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { error ->
+            snackbarHostState.showSnackbar(error.asString(context))
+            viewModel.onAction(MembersRosterUiAction.DismissError)
         }
     }
 
@@ -130,7 +142,14 @@ fun MembersRosterRoute(
     if (state.showAddMemberSheet) {
         AddStakeholderSheet(
             fundId = state.fundId,
-            onDismiss = { viewModel.onAction(MembersRosterUiAction.DismissAddMemberSheet) }
+            onDismiss = { viewModel.onAction(MembersRosterUiAction.DismissAddMemberSheet) },
+            onMemberAdded = { name, memberId ->
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.add_member_sheet_success, name, memberId)
+                    )
+                }
+            }
         )
     }
 }

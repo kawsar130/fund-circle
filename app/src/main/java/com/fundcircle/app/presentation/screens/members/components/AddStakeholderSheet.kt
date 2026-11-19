@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -39,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -176,6 +178,7 @@ fun AddStakeholderContent(
             onValueChange = { onAction(AddStakeholderUiAction.NameChanged(it)) },
             label = { Text(text = stringResource(R.string.add_member_sheet_name_label)) },
             placeholder = { Text(text = stringResource(R.string.add_member_sheet_name_placeholder)) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             isError = state.nameError != null,
             supportingText = state.nameError?.let { { Text(it.asString()) } },
             singleLine = true,
@@ -190,7 +193,10 @@ fun AddStakeholderContent(
             onValueChange = { onAction(AddStakeholderUiAction.PhoneChanged(it)) },
             label = { Text(text = stringResource(R.string.add_member_sheet_phone_label)) },
             placeholder = { Text(text = stringResource(R.string.add_member_sheet_phone_placeholder)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Next
+            ),
             isError = state.phoneError != null,
             supportingText = state.phoneError?.let { { Text(it.asString()) } },
             singleLine = true,
@@ -205,7 +211,13 @@ fun AddStakeholderContent(
             onValueChange = { onAction(AddStakeholderUiAction.EmailChanged(it)) },
             label = { Text(text = stringResource(R.string.add_member_sheet_email_label)) },
             placeholder = { Text(text = stringResource(R.string.add_member_sheet_email_placeholder)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { onAction(AddStakeholderUiAction.Submit) }
+            ),
             isError = state.emailError != null,
             supportingText = state.emailError?.let { { Text(it.asString()) } },
             singleLine = true,

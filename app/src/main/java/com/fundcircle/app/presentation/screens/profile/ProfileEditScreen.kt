@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -46,8 +47,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,6 +73,7 @@ fun ProfileEditRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(fundId) {
         if (fundId.isNotBlank()) {
@@ -84,7 +88,7 @@ fun ProfileEditRoute(
                     onNavigateBack()
                 }
                 is ProfileEditUiEffect.ShowSnackbar -> {
-                    // Handled in snackbarHost
+                    snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
             }
         }
@@ -225,11 +229,15 @@ fun ProfileEditScreen(
                 )
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
-                // Full Name
+                // Full Name (Read-Only from Circle Membership)
                 OutlinedTextField(
                     value = state.fullName,
-                    onValueChange = { onAction(ProfileEditUiAction.FullNameChanged(it)) },
+                    onValueChange = {},
+                    readOnly = true,
                     label = { Text(text = stringResource(R.string.profile_edit_name_label)) },
+                    supportingText = {
+                        Text(text = stringResource(R.string.profile_edit_name_helper))
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -242,7 +250,7 @@ fun ProfileEditScreen(
                     onValueChange = { onAction(ProfileEditUiAction.NidChanged(it)) },
                     label = { Text(text = stringResource(R.string.profile_edit_nid_label)) },
                     placeholder = { Text(text = stringResource(R.string.profile_edit_nid_placeholder)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                     isError = state.nidError != null,
                     supportingText = {
                         if (state.nidError != null) {
@@ -282,6 +290,7 @@ fun ProfileEditScreen(
                     onValueChange = { onAction(ProfileEditUiAction.NomineeNameChanged(it)) },
                     label = { Text(text = stringResource(R.string.profile_edit_nominee_name_label)) },
                     placeholder = { Text(text = stringResource(R.string.profile_edit_nominee_name_placeholder)) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     isError = state.nomineeNameError != null,
                     supportingText = state.nomineeNameError?.let { { Text(it.asString()) } },
                     singleLine = true,
@@ -296,6 +305,7 @@ fun ProfileEditScreen(
                     onValueChange = { onAction(ProfileEditUiAction.NomineeRelationChanged(it)) },
                     label = { Text(text = stringResource(R.string.profile_edit_relation_label)) },
                     placeholder = { Text(text = stringResource(R.string.profile_edit_relation_placeholder)) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     isError = state.nomineeRelationError != null,
                     supportingText = state.nomineeRelationError?.let { { Text(it.asString()) } },
                     singleLine = true,
@@ -310,7 +320,13 @@ fun ProfileEditScreen(
                     onValueChange = { onAction(ProfileEditUiAction.NomineePhoneChanged(it)) },
                     label = { Text(text = stringResource(R.string.profile_edit_nominee_phone_label)) },
                     placeholder = { Text(text = stringResource(R.string.profile_edit_nominee_phone_placeholder)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { onAction(ProfileEditUiAction.Save) }
+                    ),
                     isError = state.nomineePhoneError != null,
                     supportingText = state.nomineePhoneError?.let { { Text(it.asString()) } },
                     singleLine = true,

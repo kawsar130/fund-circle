@@ -126,7 +126,7 @@ class MemberDetailViewModel @Inject constructor(
                 }
 
                 if (member != null) {
-                    loadDeposits(fundId, member.userId)
+                    loadDeposits(fundId, member.userId, member.email)
                     if (isAdmin || isSelf) {
                         loadKyc(fundId, member.userId)
                     }
@@ -150,10 +150,10 @@ class MemberDetailViewModel @Inject constructor(
         }
     }
 
-    private fun loadDeposits(fundId: String, memberIdentifier: String) {
+    private fun loadDeposits(fundId: String, memberUserId: String, memberEmail: String? = null) {
         depositsJob?.cancel()
         depositsJob = viewModelScope.launch {
-            getMemberDepositsUseCase(fundId, memberIdentifier)
+            getMemberDepositsUseCase(fundId, memberUserId, memberEmail)
                 .catch { /* ignore, empty list */ }
                 .collect { depositList ->
                     setState { copy(deposits = depositList) }
