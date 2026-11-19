@@ -56,6 +56,18 @@ class TransactionRepositoryImpl @Inject constructor(
             .catch { e -> throw e.toDomainError() }
             .flowOn(ioDispatcher)
 
+    override fun observeDeposit(fundId: String, depositId: String): Flow<Deposit?> =
+        transactionRemoteDataSource.observeDeposit(fundId, depositId)
+            .map { dto -> dto?.runCatching { toDomain() }?.getOrNull() }
+            .catch { e -> throw e.toDomainError() }
+            .flowOn(ioDispatcher)
+
+    override fun observeExpense(fundId: String, expenseId: String): Flow<Expense?> =
+        transactionRemoteDataSource.observeExpense(fundId, expenseId)
+            .map { dto -> dto?.runCatching { toDomain() }?.getOrNull() }
+            .catch { e -> throw e.toDomainError() }
+            .flowOn(ioDispatcher)
+
     override suspend fun recordDeposit(fundId: String, deposit: Deposit): Result<Unit> =
         withContext(ioDispatcher) {
             transactionRemoteDataSource.recordDeposit(fundId, deposit.toDto()).fold(
@@ -71,6 +83,34 @@ class TransactionRepositoryImpl @Inject constructor(
                 onFailure = { Result.failure(it.toDomainError()) }
             )
         }
+
+    override suspend fun voidTransaction(
+        fundId: String,
+        isExpense: Boolean,
+        transactionId: String,
+        originalAmount: Long,
+        voidReason: String,
+        adminEmail: String
+    ): Result<Unit> = withContext(ioDispatcher) {
+        transactionRemoteDataSource.voidTransaction(
+            fundId = fundId,
+            isExpense = isExpense,
+            transactionId = transactionId,
+            originalAmount = originalAmount,
+            voidReason = voidReason,
+            adminEmail = adminEmail
+        ).fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { error ->
+                val domainError = when (error) {
+                    is IllegalStateException -> FundCircleError.Conflict.TransactionAlreadyVoided(transactionId)
+                    is NoSuchElementException -> FundCircleError.NotFound.ResourceNotFound
+                    else -> error.toDomainError()
+                }
+                Result.failure(domainError)
+            }
+        )
+    }
 
     private fun Throwable.toDomainError(): Throwable = when (this) {
         is CancellationException -> this

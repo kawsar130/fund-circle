@@ -18,6 +18,7 @@ import androidx.navigation.toRoute
 import com.fundcircle.app.presentation.screens.auth.AuthScreen
 import com.fundcircle.app.presentation.screens.create.CreateCircleRoute
 import com.fundcircle.app.presentation.screens.dashboard.DashboardRoute
+import com.fundcircle.app.presentation.screens.detail.TransactionDetailRoute
 import com.fundcircle.app.presentation.screens.hub.CircleHubRoute
 import com.fundcircle.app.presentation.screens.ledger.TransactionsLedgerRoute
 import com.fundcircle.app.presentation.screens.transaction.RecordTransactionSheet
@@ -131,11 +132,12 @@ fun FundCircleNavHost(
             }
         }
 
-        composable<ScreenRoute.TransactionDetail> { backStackEntry ->
-            val detail = backStackEntry.toRoute<ScreenRoute.TransactionDetail>()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Transaction Detail: ${detail.txId} (Slice 4)")
-            }
+        composable<ScreenRoute.TransactionDetail> {
+            TransactionDetailRoute(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable<ScreenRoute.Settings> { backStackEntry ->

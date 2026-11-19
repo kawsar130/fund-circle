@@ -124,6 +124,62 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         }
     }
 
+    override fun observeDeposit(fundId: String, depositId: String): Flow<DepositDto?> = callbackFlow {
+        val registration = firestore.collection(COLLECTION_FUNDS)
+            .document(fundId)
+            .collection(COLLECTION_DEPOSITS)
+            .document(depositId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val deposit = if (snapshot != null && snapshot.exists()) {
+                    snapshot.toObject(DepositDto::class.java)?.let { dto ->
+                        dto.copy(
+                            depositId = if (dto.depositId.isBlank()) snapshot.id else dto.depositId,
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                        )
+                    }
+                } else {
+                    null
+                }
+                trySend(deposit)
+            }
+
+        awaitClose {
+            registration.remove()
+        }
+    }
+
+    override fun observeExpense(fundId: String, expenseId: String): Flow<ExpenseDto?> = callbackFlow {
+        val registration = firestore.collection(COLLECTION_FUNDS)
+            .document(fundId)
+            .collection(COLLECTION_EXPENSES)
+            .document(expenseId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val expense = if (snapshot != null && snapshot.exists()) {
+                    snapshot.toObject(ExpenseDto::class.java)?.let { dto ->
+                        dto.copy(
+                            expenseId = if (dto.expenseId.isBlank()) snapshot.id else dto.expenseId,
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                        )
+                    }
+                } else {
+                    null
+                }
+                trySend(expense)
+            }
+
+        awaitClose {
+            registration.remove()
+        }
+    }
+
     override suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<Unit> = try {
         val batch = firestore.batch()
         val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
@@ -170,6 +226,61 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
+    override suspend fun voidTransaction(
+        fundId: String,
+        isExpense: Boolean,
+        transactionId: String,
+        originalAmount: Long,
+        voidReason: String,
+        adminEmail: String
+    ): Result<Unit> = try {
+        firestore.runTransaction { transaction ->
+            val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
+            val subCollectionName = if (isExpense) COLLECTION_EXPENSES else COLLECTION_DEPOSITS
+            val txRef = fundRef.collection(subCollectionName).document(transactionId)
+
+            val txSnapshot = transaction.get(txRef)
+            if (!txSnapshot.exists()) {
+                throw NoSuchElementException("Transaction document $transactionId does not exist.")
+            }
+
+            val alreadyVoid = txSnapshot.getBoolean(FIELD_IS_VOID) ?: false
+            if (alreadyVoid) {
+                throw IllegalStateException("Transaction is already reversed.")
+            }
+
+            val now = System.currentTimeMillis()
+            val childUpdates = mapOf<String, Any>(
+                FIELD_IS_VOID to true,
+                FIELD_VOID_REASON to voidReason,
+                FIELD_VOIDED_BY to adminEmail,
+                FIELD_VOIDED_AT to now
+            )
+            transaction.update(txRef, childUpdates)
+
+            val parentUpdates = if (isExpense) {
+                mapOf<String, Any>(
+                    FIELD_TOTAL_EXPENSES to FieldValue.increment(-originalAmount),
+                    FIELD_RECORDED_BALANCE to FieldValue.increment(originalAmount),
+                    FIELD_UPDATED_AT to now
+                )
+            } else {
+                mapOf<String, Any>(
+                    FIELD_TOTAL_DEPOSITS to FieldValue.increment(-originalAmount),
+                    FIELD_RECORDED_BALANCE to FieldValue.increment(-originalAmount),
+                    FIELD_UPDATED_AT to now
+                )
+            }
+            transaction.update(fundRef, parentUpdates)
+            null
+        }.await()
+        Result.success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        Result.failure(e)
+    }
+
     companion object {
         private const val COLLECTION_FUNDS = "funds"
         private const val COLLECTION_DEPOSITS = "deposits"
@@ -180,5 +291,9 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         private const val FIELD_TOTAL_EXPENSES = "totalExpenses"
         private const val FIELD_RECORDED_BALANCE = "recordedBalance"
         private const val FIELD_UPDATED_AT = "updatedAt"
+        private const val FIELD_IS_VOID = "isVoid"
+        private const val FIELD_VOID_REASON = "voidReason"
+        private const val FIELD_VOIDED_BY = "voidedBy"
+        private const val FIELD_VOIDED_AT = "voidedAt"
     }
 }

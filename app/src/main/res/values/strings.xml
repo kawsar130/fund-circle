@@ -188,4 +188,63 @@
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>
     <string name="char_counter_format">%1$d/%2$d</string>
+
+    <!-- Screen 06: Transaction Details & Audit Card -->
+    <string name="tx_detail_title">Transaction Details</string>
+    <string name="tx_detail_back_cd">Navigate back</string>
+    <string name="tx_detail_badge_admin">Admin View</string>
+    <string name="tx_detail_badge_member">Member View</string>
+    <string name="tx_detail_type_deposit">Capital Contribution</string>
+    <string name="tx_detail_type_expense">Operational Expense</string>
+    <string name="tx_detail_status_completed">COMPLETED &amp; POSTED</string>
+    <string name="tx_detail_status_reversed">REVERSED ↩</string>
+    <string name="tx_detail_status_completed_cd">Status: Completed and posted</string>
+    <string name="tx_detail_status_reversed_cd">Status: Reversed</string>
+    <string name="tx_detail_specs_title">TRANSACTION SPECIFICATIONS</string>
+    <string name="tx_detail_id_label">Transaction ID</string>
+    <string name="tx_detail_contributor_label">Contributor</string>
+    <string name="tx_detail_contributor_email_label">Contributor Email</string>
+    <string name="tx_detail_category_label">Category</string>
+    <string name="tx_detail_description_label">Description</string>
+    <string name="tx_detail_paid_by_label">Paid By / Payee</string>
+    <string name="tx_detail_date_label">Transaction Date</string>
+    <string name="tx_detail_method_label">Payment Method</string>
+    <string name="tx_detail_note_label">Note</string>
+    <string name="tx_detail_recorded_by_label">Recorded By</string>
+    <string name="tx_detail_recorded_at_label">Recorded At</string>
+    <string name="tx_detail_btn_reverse">↩ Reverse Transaction (Admin Only)</string>
+    <string name="tx_detail_circle_locked_notice">This circle is locked. Transactions cannot be reversed.</string>
+    <string name="tx_detail_reverse_success">Transaction reversed successfully.</string>
+    <string name="tx_detail_error_not_found">Transaction not found.</string>
+    <string name="tx_detail_error_loading">Failed to load transaction details.</string>
+    <string name="tx_detail_error_already_voided">This transaction has already been reversed.</string>
+    <string name="tx_detail_offline_warning">Viewing Offline Cache</string>
+
+    <!-- Transparency Audit Disclosure Card (Shield Icon) -->
+    <string name="tx_detail_audit_title">TRANSPARENCY AUDIT NOTE</string>
+    <string name="tx_detail_audit_icon_cd">Transparency audit shield</string>
+    <string name="tx_detail_audit_explanation">To protect financial trust, entries cannot be erased. If reversed, the original whole-integer amount is permanently preserved, while circle balances are atomically reversed with an audit note.</string>
+    <string name="tx_detail_audit_date_label">REVERSED ON</string>
+    <string name="tx_detail_audit_by_label">REVERSED BY</string>
+    <string name="tx_detail_audit_reason_label">REASON</string>
+    <string name="tx_detail_audit_impact_label">BALANCE IMPACT</string>
+    <string name="tx_detail_audit_impact_deposit_format">Atomically adjusted by -%1$s %2$s</string>
+    <string name="tx_detail_audit_impact_expense_format">Atomically adjusted by +%1$s %2$s</string>
+
+    <!-- Screen 14: Reverse Transaction Dialog -->
+    <string name="dialog_reverse_tx_title">Reverse this Transaction?</string>
+    <string name="dialog_reverse_tx_icon_cd">Reverse transaction</string>
+    <string name="dialog_reverse_tx_body">This will subtract the amount back from the pool balance. To protect trust among all circle members, financial records are immutable—this entry will permanently remain in the ledger marked as REVERSED.</string>
+    <string name="dialog_reverse_summary_header">%1$s • %2$s • %3$s</string>
+    <string name="dialog_reverse_amount_label">Original Amount:</string>
+    <string name="dialog_reverse_amount_format">%1$s %2$s</string>
+    <string name="dialog_reverse_recorded_info">Recorded: %1$s</string>
+    <string name="dialog_reverse_recorded_info_with_actor">Recorded: %1$s by %2$s</string>
+    <string name="dialog_reverse_reason_label">Reason for Reversal *</string>
+    <string name="dialog_reverse_reason_placeholder">e.g., Duplicate bank payment voucher entry.</string>
+    <string name="dialog_reverse_reason_helper">Must provide explanatory reason (5-250 characters).</string>
+    <string name="dialog_reverse_reason_error">Reason must be between 5 and 250 characters.</string>
+    <string name="dialog_reverse_btn_keep">Keep Entry</string>
+    <string name="dialog_reverse_btn_confirm">Confirm &amp; Reverse Balance</string>
+    <string name="dialog_reverse_reversing">Reversing transaction…</string>
 </resources>

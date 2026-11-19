@@ -392,4 +392,184 @@ class TransactionRepositoryImplTest {
         assertThat(result.isFailure).isTrue()
         assertThat(result.exceptionOrNull()).isInstanceOf(FundCircleError.Authorization.NotAuthorized::class.java)
     }
+
+    @Test
+    fun observeDeposit_whenFound_mapsDtoToDomainEntity() = runTest(testDispatcher) {
+        val dto = DepositDto(
+            depositId = "dep-101",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberEmail = "rahim@example.com",
+            memberName = "Rahim Uddin",
+            amount = 100_000L,
+            depositDate = 2_000L,
+            paymentMethod = "Bank Transfer",
+            note = "Contribution 1",
+            isVoid = false
+        )
+        every { remoteDataSource.observeDeposit(fundId, "dep-101") } returns flowOf(dto)
+
+        val result = repository.observeDeposit(fundId, "dep-101").first()
+
+        assertThat(result).isNotNull()
+        assertThat(result?.id).isEqualTo("dep-101")
+        assertThat(result?.amount).isEqualTo(100_000L)
+        assertThat(result?.paymentMethod).isEqualTo(PaymentMethod.BANK_TRANSFER)
+        assertThat(result?.memberName).isEqualTo("Rahim Uddin")
+        assertThat(result?.isVoid).isFalse()
+    }
+
+    @Test
+    fun observeDeposit_whenNotFound_emitsNull() = runTest(testDispatcher) {
+        every { remoteDataSource.observeDeposit(fundId, "dep-missing") } returns flowOf(null)
+
+        val result = repository.observeDeposit(fundId, "dep-missing").first()
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun observeExpense_whenFound_mapsDtoToDomainEntity() = runTest(testDispatcher) {
+        val dto = ExpenseDto(
+            expenseId = "exp-202",
+            fundId = fundId,
+            amount = 15_000L,
+            expenseDate = 3_000L,
+            category = "Office & Administration",
+            description = "Desk Supplies",
+            paymentMethod = "Cash",
+            paidBy = "Vendor",
+            createdBy = "admin-uid",
+            creatorEmail = "admin@example.com",
+            isVoid = false
+        )
+        every { remoteDataSource.observeExpense(fundId, "exp-202") } returns flowOf(dto)
+
+        val result = repository.observeExpense(fundId, "exp-202").first()
+
+        assertThat(result).isNotNull()
+        assertThat(result?.id).isEqualTo("exp-202")
+        assertThat(result?.amount).isEqualTo(15_000L)
+        assertThat(result?.category).isEqualTo(ExpenseCategory.OFFICE_AND_ADMINISTRATION)
+        assertThat(result?.description).isEqualTo("Desk Supplies")
+    }
+
+    @Test
+    fun observeExpense_whenNotFound_emitsNull() = runTest(testDispatcher) {
+        every { remoteDataSource.observeExpense(fundId, "exp-missing") } returns flowOf(null)
+
+        val result = repository.observeExpense(fundId, "exp-missing").first()
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun voidTransaction_forDeposit_delegatesToRemoteDataSourceSuccessfully() = runTest(testDispatcher) {
+        coEvery {
+            remoteDataSource.voidTransaction(
+                fundId = fundId,
+                isExpense = false,
+                transactionId = "dep-101",
+                originalAmount = 100_000L,
+                voidReason = "Accidental duplicate entry",
+                adminEmail = "admin@example.com"
+            )
+        } returns Result.success(Unit)
+
+        val result = repository.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-101",
+            originalAmount = 100_000L,
+            voidReason = "Accidental duplicate entry",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isSuccess).isTrue()
+        coVerify {
+            remoteDataSource.voidTransaction(
+                fundId = fundId,
+                isExpense = false,
+                transactionId = "dep-101",
+                originalAmount = 100_000L,
+                voidReason = "Accidental duplicate entry",
+                adminEmail = "admin@example.com"
+            )
+        }
+    }
+
+    @Test
+    fun voidTransaction_forExpense_delegatesToRemoteDataSourceSuccessfully() = runTest(testDispatcher) {
+        coEvery {
+            remoteDataSource.voidTransaction(
+                fundId = fundId,
+                isExpense = true,
+                transactionId = "exp-202",
+                originalAmount = 25_000L,
+                voidReason = "Incorrect invoice billed",
+                adminEmail = "admin@example.com"
+            )
+        } returns Result.success(Unit)
+
+        val result = repository.voidTransaction(
+            fundId = fundId,
+            isExpense = true,
+            transactionId = "exp-202",
+            originalAmount = 25_000L,
+            voidReason = "Incorrect invoice billed",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isSuccess).isTrue()
+        coVerify {
+            remoteDataSource.voidTransaction(
+                fundId = fundId,
+                isExpense = true,
+                transactionId = "exp-202",
+                originalAmount = 25_000L,
+                voidReason = "Incorrect invoice billed",
+                adminEmail = "admin@example.com"
+            )
+        }
+    }
+
+    @Test
+    fun voidTransaction_whenAlreadyVoided_mapsToTransactionAlreadyVoidedConflict() = runTest(testDispatcher) {
+        coEvery {
+            remoteDataSource.voidTransaction(any(), any(), any(), any(), any(), any())
+        } returns Result.failure(IllegalStateException("Transaction is already reversed."))
+
+        val result = repository.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-101",
+            originalAmount = 100_000L,
+            voidReason = "Accidental duplicate entry",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(FundCircleError.Conflict.TransactionAlreadyVoided::class.java)
+        val conflict = result.exceptionOrNull() as FundCircleError.Conflict.TransactionAlreadyVoided
+        assertThat(conflict.txId).isEqualTo("dep-101")
+    }
+
+    @Test
+    fun voidTransaction_whenNotFound_mapsToResourceNotFound() = runTest(testDispatcher) {
+        coEvery {
+            remoteDataSource.voidTransaction(any(), any(), any(), any(), any(), any())
+        } returns Result.failure(NoSuchElementException("Transaction not found"))
+
+        val result = repository.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-missing",
+            originalAmount = 100_000L,
+            voidReason = "Accidental duplicate entry",
+            adminEmail = "admin@example.com"
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(FundCircleError.NotFound.ResourceNotFound::class.java)
+    }
 }
