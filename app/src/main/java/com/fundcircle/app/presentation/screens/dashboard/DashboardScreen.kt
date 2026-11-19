@@ -668,11 +668,20 @@ fun TransactionItemCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                val subtitleText = stringResource(
-                    R.string.dashboard_tx_subtitle,
-                    DateUtils.formatDisplayDate(item.timestamp),
-                    item.paymentMethod.asUiText().asString()
-                )
+                val subtitleText = if (item.isExpense && item.category != null && item.title != item.category.displayName) {
+                    stringResource(
+                        R.string.dashboard_tx_subtitle_with_category,
+                        DateUtils.formatDisplayDate(item.timestamp),
+                        item.category.asUiText().asString(),
+                        item.paymentMethod.asUiText().asString()
+                    )
+                } else {
+                    stringResource(
+                        R.string.dashboard_tx_subtitle,
+                        DateUtils.formatDisplayDate(item.timestamp),
+                        item.paymentMethod.asUiText().asString()
+                    )
+                }
                 Text(
                     text = subtitleText,
                     style = MaterialTheme.typography.bodyMedium,

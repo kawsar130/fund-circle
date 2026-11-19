@@ -109,6 +109,7 @@
     <string name="dashboard_tx_card_cd">%1$s, %2$s %3$s</string>
     <string name="dashboard_tx_card_reversed_cd">Reversed, %1$s, %2$s %3$s</string>
     <string name="dashboard_tx_subtitle">%1$s • %2$s</string>
+    <string name="dashboard_tx_subtitle_with_category">%1$s • %2$s • %3$s</string>
     <string name="dashboard_deposit_prefix">+</string>
     <string name="dashboard_expense_prefix">-</string>
     <string name="dashboard_deposit_type_badge">DEP</string>
