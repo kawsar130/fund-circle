@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -93,6 +94,12 @@ fun RecordTransactionSheet(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
+
+    LaunchedEffect(fundId) {
+        if (fundId.isNotBlank()) {
+            viewModel.onAction(RecordTransactionUiAction.Initialize(fundId))
+        }
+    }
 
     LaunchedEffect(viewModel.uiEffect) {
         viewModel.uiEffect.collect { effect ->
@@ -213,6 +220,37 @@ fun RecordTransactionContent(
         }
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
+
+        // Circle Locked Banner (if circle is locked)
+        AnimatedVisibility(visible = state.isCircleLocked) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = DesignTokens.Spacing12)
+            ) {
+                Row(
+                    modifier = Modifier.padding(DesignTokens.Spacing12),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+                    Text(
+                        text = stringResource(R.string.dashboard_locked_notice),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
 
         // Error Banner (if any)
         AnimatedVisibility(visible = state.generalError != null) {
@@ -523,7 +561,7 @@ private fun DepositForm(
         // 6. Action Button
         Button(
             onClick = { onAction(RecordTransactionUiAction.Submit) },
-            enabled = !state.isSubmitting,
+            enabled = !state.isSubmitting && !state.isCircleLocked,
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -745,7 +783,7 @@ private fun ExpenseForm(
         // 7. Action Button
         Button(
             onClick = { onAction(RecordTransactionUiAction.Submit) },
-            enabled = !state.isSubmitting,
+            enabled = !state.isSubmitting && !state.isCircleLocked,
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,

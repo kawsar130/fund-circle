@@ -26,7 +26,7 @@ class MemberRepositoryImpl @Inject constructor(
 
     override fun observeMembers(fundId: String): Flow<List<CircleMember>> =
         memberRemoteDataSource.observeMembers(fundId)
-            .map { dtos -> dtos.map { it.toDomain() } }
+            .map { dtos -> dtos.mapNotNull { runCatching { it.toDomain() }.getOrNull() } }
             .catch { e -> throw e.toDomainError() }
             .flowOn(ioDispatcher)
 

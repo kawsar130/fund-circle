@@ -29,6 +29,7 @@ data class RecordTransactionUiState(
     val paidBy: String = "",
     // Metadata & Validation
     val currency: Currency = Currency.BDT,
+    val isCircleLocked: Boolean = false,
     val isSubmitting: Boolean = false,
     val amountError: UiText? = null,
     val dateError: UiText? = null,
@@ -38,6 +39,7 @@ data class RecordTransactionUiState(
 ) : UiState
 
 sealed interface RecordTransactionUiAction : UiAction {
+    data class Initialize(val fundId: String) : RecordTransactionUiAction
     data class SelectMode(val mode: RecordTransactionMode) : RecordTransactionUiAction
     data class UpdateAmount(val amount: String) : RecordTransactionUiAction
     data class UpdateDate(val epochMs: Long) : RecordTransactionUiAction

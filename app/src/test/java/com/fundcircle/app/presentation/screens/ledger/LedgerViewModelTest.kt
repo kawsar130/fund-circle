@@ -275,4 +275,15 @@ class LedgerViewModelTest {
 
         assertThat(viewModel.uiState.value.isOffline).isTrue()
     }
+
+    @Test
+    fun circleLocked_updatesIsLockedState() = runTest {
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.isLocked).isFalse()
+
+        circleFlow.value = sampleCircle.copy(isLocked = true)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.isLocked).isTrue()
+    }
 }

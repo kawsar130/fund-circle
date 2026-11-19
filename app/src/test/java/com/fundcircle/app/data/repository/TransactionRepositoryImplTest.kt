@@ -264,6 +264,35 @@ class TransactionRepositoryImplTest {
     }
 
     @Test
+    fun observeDeposits_ignoresCorruptedDtosResiliently() = runTest(testDispatcher) {
+        val validDto = DepositDto(
+            depositId = "dep-valid",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberName = "Rahim",
+            amount = 100_000L,
+            depositDate = 2_000L,
+            paymentMethod = "Cash"
+        )
+        val corruptedDto = DepositDto(
+            depositId = "dep-invalid",
+            fundId = fundId,
+            memberId = "mem-2",
+            memberName = "Corrupt",
+            amount = -500L,
+            depositDate = 1_000L,
+            paymentMethod = "Cash"
+        )
+
+        every { remoteDataSource.observeDeposits(fundId) } returns flowOf(listOf(validDto, corruptedDto))
+
+        val result = repository.observeDeposits(fundId).first()
+
+        assertThat(result).hasSize(1)
+        assertThat(result[0].id).isEqualTo("dep-valid")
+    }
+
+    @Test
     fun observeExpenses_mapsDtosToDomainEntitiesDescending() = runTest(testDispatcher) {
         val dto1 = ExpenseDto(
             expenseId = "exp-1",

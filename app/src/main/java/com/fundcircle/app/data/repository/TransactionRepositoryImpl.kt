@@ -35,8 +35,8 @@ class TransactionRepositoryImpl @Inject constructor(
             transactionRemoteDataSource.observeRecentDeposits(fundId, limit),
             transactionRemoteDataSource.observeRecentExpenses(fundId, limit)
         ) { deposits, expenses ->
-            val depositItems = deposits.map { it.toTransactionItem() }
-            val expenseItems = expenses.map { it.toTransactionItem() }
+            val depositItems = deposits.mapNotNull { runCatching { it.toTransactionItem() }.getOrNull() }
+            val expenseItems = expenses.mapNotNull { runCatching { it.toTransactionItem() }.getOrNull() }
             (depositItems + expenseItems)
                 .sortedWith(compareByDescending<TransactionItem> { it.timestamp }.thenByDescending { it.id })
                 .take(limit)
@@ -46,13 +46,13 @@ class TransactionRepositoryImpl @Inject constructor(
 
     override fun observeDeposits(fundId: String): Flow<List<Deposit>> =
         transactionRemoteDataSource.observeDeposits(fundId)
-            .map { dtos -> dtos.map { it.toDomain() } }
+            .map { dtos -> dtos.mapNotNull { runCatching { it.toDomain() }.getOrNull() } }
             .catch { e -> throw e.toDomainError() }
             .flowOn(ioDispatcher)
 
     override fun observeExpenses(fundId: String): Flow<List<Expense>> =
         transactionRemoteDataSource.observeExpenses(fundId)
-            .map { dtos -> dtos.map { it.toDomain() } }
+            .map { dtos -> dtos.mapNotNull { runCatching { it.toDomain() }.getOrNull() } }
             .catch { e -> throw e.toDomainError() }
             .flowOn(ioDispatcher)
 

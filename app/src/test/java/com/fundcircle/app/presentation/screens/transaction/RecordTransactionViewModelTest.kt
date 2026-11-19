@@ -236,4 +236,39 @@ class RecordTransactionViewModelTest {
             assertThat(effect).isEqualTo(RecordTransactionUiEffect.DismissSheet)
         }
     }
+
+    @Test
+    fun initialize_withNewFundId_reloadsCircleAndMembers() = runTest {
+        val newFundId = "fund-999"
+        val newMember = sampleMember.copy(userId = "user-999", name = "New Member")
+        val newCircle = sampleCircle.copy(id = newFundId, currency = Currency.USD)
+
+        every { observeCircleUseCase(newFundId) } returns MutableStateFlow(newCircle)
+        every { observeCircleMembersUseCase(newFundId) } returns MutableStateFlow(listOf(newMember))
+
+        viewModel.onAction(RecordTransactionUiAction.Initialize(newFundId))
+        advanceUntilIdle()
+
+        assertThat(viewModel.fundId).isEqualTo(newFundId)
+        assertThat(viewModel.uiState.value.currency).isEqualTo(Currency.USD)
+        assertThat(viewModel.uiState.value.members).containsExactly(newMember)
+        assertThat(viewModel.uiState.value.selectedMember).isEqualTo(newMember)
+    }
+
+    @Test
+    fun submit_whenCircleIsLocked_setsGeneralError() = runTest {
+        advanceUntilIdle()
+
+        circleFlow.value = sampleCircle.copy(isLocked = true)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.isCircleLocked).isTrue()
+
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("50000"))
+        viewModel.onAction(RecordTransactionUiAction.Submit)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.generalError)
+            .isEqualTo(UiText.StringResource(R.string.dashboard_locked_notice))
+    }
 }

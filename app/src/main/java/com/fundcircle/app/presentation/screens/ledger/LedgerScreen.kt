@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.CloudOff
@@ -265,6 +266,41 @@ fun TransactionsLedgerScreen(
                     }
                 }
 
+                // Circle Locked Notice Banner
+                AnimatedVisibility(
+                    visible = state.isLocked,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+                            Text(
+                                text = stringResource(R.string.dashboard_locked_notice),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+
                 // Segmented Tab Row (M3 PrimaryTabRow)
                 PrimaryTabRow(
                     selectedTabIndex = state.selectedTab.ordinal,
@@ -327,7 +363,7 @@ fun TransactionsLedgerScreen(
             }
         },
         floatingActionButton = {
-            if (state.isAdmin) {
+            if (state.isAdmin && !state.isLocked) {
                 val fabCd = stringResource(R.string.ledger_fab_record_cd)
                 ExtendedFloatingActionButton(
                     onClick = { onAction(LedgerUiAction.ClickAddTransaction) },

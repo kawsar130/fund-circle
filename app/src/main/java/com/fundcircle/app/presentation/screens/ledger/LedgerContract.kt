@@ -24,6 +24,7 @@ data class LedgerUiState(
     val isSearchActive: Boolean = false,
     val isOffline: Boolean = false,
     val isAdmin: Boolean = false,
+    val isLocked: Boolean = false,
     val currency: Currency = Currency.BDT,
     val errorMessage: UiText? = null
 ) : UiState

@@ -127,7 +127,8 @@ class LedgerViewModel @Inject constructor(
                     .collectLatest { circle ->
                         setState {
                             copy(
-                                currency = circle.currency
+                                currency = circle.currency,
+                                isLocked = circle.isLocked
                             )
                         }
                     }

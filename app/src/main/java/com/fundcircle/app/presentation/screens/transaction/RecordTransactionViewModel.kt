@@ -17,6 +17,7 @@ import com.fundcircle.app.domain.usecase.RecordDepositUseCase
 import com.fundcircle.app.domain.usecase.RecordExpenseUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
@@ -36,7 +37,11 @@ class RecordTransactionViewModel @Inject constructor(
     RecordTransactionUiState()
 ) {
 
-    val fundId: String = savedStateHandle.get<String>(KEY_FUND_ID).orEmpty()
+    var fundId: String = savedStateHandle.get<String>(KEY_FUND_ID).orEmpty()
+        private set
+
+    private var circleJob: Job? = null
+    private var membersJob: Job? = null
 
     init {
         loadCircleAndMembers()
@@ -45,15 +50,22 @@ class RecordTransactionViewModel @Inject constructor(
     private fun loadCircleAndMembers() {
         if (fundId.isBlank()) return
 
-        viewModelScope.launch {
+        circleJob?.cancel()
+        circleJob = viewModelScope.launch {
             observeCircleUseCase(fundId)
                 .catch { /* Handled in collector */ }
                 .collectLatest { circle ->
-                    setState { copy(currency = circle.currency) }
+                    setState {
+                        copy(
+                            currency = circle.currency,
+                            isCircleLocked = circle.isLocked
+                        )
+                    }
                 }
         }
 
-        viewModelScope.launch {
+        membersJob?.cancel()
+        membersJob = viewModelScope.launch {
             observeCircleMembersUseCase(fundId)
                 .catch { /* Handled in collector */ }
                 .collectLatest { membersList ->
@@ -71,6 +83,12 @@ class RecordTransactionViewModel @Inject constructor(
 
     override fun onAction(action: RecordTransactionUiAction) {
         when (action) {
+            is RecordTransactionUiAction.Initialize -> {
+                if (action.fundId.isNotBlank() && action.fundId != fundId) {
+                    fundId = action.fundId
+                    loadCircleAndMembers()
+                }
+            }
             is RecordTransactionUiAction.SelectMode -> {
                 setState {
                     copy(
@@ -152,6 +170,14 @@ class RecordTransactionViewModel @Inject constructor(
 
     private fun handleSubmit() {
         val currentState = uiState.value
+
+        if (currentState.isCircleLocked) {
+            setState {
+                copy(generalError = UiText.StringResource(R.string.dashboard_locked_notice))
+            }
+            return
+        }
+
         val parsedAmount = currentState.amountInput.toLongOrNull()
 
         var hasError = false
@@ -212,10 +238,11 @@ class RecordTransactionViewModel @Inject constructor(
             when (currentState.mode) {
                 RecordTransactionMode.DEPOSIT -> {
                     val member = checkNotNull(currentState.selectedMember)
-                    val memberDisplayName = if (member.memberId.isNotBlank() && !member.name.contains("(")) {
-                        "${member.name} (${member.memberId})"
+                    val rawName = member.name.ifBlank { member.email }
+                    val memberDisplayName = if (member.memberId.isNotBlank() && !rawName.contains("(")) {
+                        "$rawName (${member.memberId})"
                     } else {
-                        member.name
+                        rawName
                     }
                     val deposit = Deposit(
                         id = UUID.randomUUID().toString(),
