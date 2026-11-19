@@ -31,7 +31,7 @@ class RecordDepositUseCase @Inject constructor(
         }
 
         if (deposit.memberId.isBlank()) {
-            return Result.failure(IllegalArgumentException("Member must be selected"))
+            return Result.failure(FundCircleError.Validation.MemberRequired)
         }
 
         val effectiveId = if (deposit.id.isBlank()) UUID.randomUUID().toString() else deposit.id

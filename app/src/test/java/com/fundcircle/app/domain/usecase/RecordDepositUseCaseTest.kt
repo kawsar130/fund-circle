@@ -90,7 +90,7 @@ class RecordDepositUseCaseTest {
 
         val result = useCase(fundId, emptyMemberDeposit, currentTimeMillis = now)
         assertThat(result.isFailure).isTrue()
-        assertThat(result.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(result.exceptionOrNull()).isInstanceOf(FundCircleError.Validation.MemberRequired::class.java)
 
         coVerify(exactly = 0) { transactionRepository.recordDeposit(any(), any()) }
     }

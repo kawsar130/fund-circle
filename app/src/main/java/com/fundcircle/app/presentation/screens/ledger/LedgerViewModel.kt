@@ -125,7 +125,6 @@ class LedgerViewModel @Inject constructor(
                 observeCircleUseCase(fundId)
                     .catch { /* Handled in combined streams */ }
                     .collectLatest { circle ->
-                        val currentUserId = authRepository.getActiveCircleId()
                         setState {
                             copy(
                                 currency = circle.currency
@@ -141,7 +140,7 @@ class LedgerViewModel @Inject constructor(
                 ) { circle, session ->
                     val uid = session?.uid.orEmpty()
                     val email = session?.email.orEmpty()
-                    val isAdmin = uid.isNotBlank() && (circle.adminId == uid || circle.adminEmail == email)
+                    val isAdmin = uid.isNotBlank() && (circle.adminId == uid || circle.adminEmail.equals(email, ignoreCase = true))
                     isAdmin
                 }.catch { /* Ignore */ }
                     .collectLatest { isAdmin ->
@@ -187,7 +186,7 @@ class LedgerViewModel @Inject constructor(
                         dep.memberEmail.contains(trimmedQuery, ignoreCase = true) ||
                         dep.note?.contains(trimmedQuery, ignoreCase = true) == true
                     matchesMethod && matchesQuery
-                }.sortedByDescending { it.depositDate }
+                }.sortedWith(compareByDescending<Deposit> { it.depositDate }.thenByDescending { it.id })
 
                 val filteredExpenses = expenses.filter { exp ->
                     val matchesMethod = method == null || exp.paymentMethod == method
@@ -196,7 +195,7 @@ class LedgerViewModel @Inject constructor(
                         exp.paidBy.contains(trimmedQuery, ignoreCase = true) ||
                         exp.category.displayName.contains(trimmedQuery, ignoreCase = true)
                     matchesMethod && matchesQuery
-                }.sortedByDescending { it.expenseDate }
+                }.sortedWith(compareByDescending<Expense> { it.expenseDate }.thenByDescending { it.id })
 
                 Pair(filteredDeposits, filteredExpenses)
             }.collectLatest { (filteredDeposits, filteredExpenses) ->

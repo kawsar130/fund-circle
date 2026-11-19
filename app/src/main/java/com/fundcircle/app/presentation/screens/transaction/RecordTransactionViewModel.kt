@@ -286,6 +286,7 @@ class RecordTransactionViewModel @Inject constructor(
         is FundCircleError.Validation.FutureDateNotAllowed -> UiText.StringResource(R.string.error_future_date)
         is FundCircleError.Validation.DescriptionTooShort -> UiText.StringResource(R.string.error_description_too_short)
         is FundCircleError.Validation.DescriptionTooLong -> UiText.StringResource(R.string.error_description_too_long)
+        is FundCircleError.Validation.MemberRequired -> UiText.StringResource(R.string.error_member_required)
         is FundCircleError.Network -> UiText.StringResource(R.string.dashboard_error_loading)
         else -> error.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }
             ?: UiText.StringResource(R.string.dashboard_error_loading)

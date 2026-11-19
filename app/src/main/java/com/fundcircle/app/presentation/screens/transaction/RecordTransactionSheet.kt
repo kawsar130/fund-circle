@@ -92,6 +92,7 @@ fun RecordTransactionSheet(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
 
     LaunchedEffect(viewModel.uiEffect) {
         viewModel.uiEffect.collect { effect ->
@@ -104,7 +105,15 @@ fun RecordTransactionSheet(
                     onDismiss()
                 }
                 is RecordTransactionUiEffect.ShowSnackbar -> {
-                    onShowSnackbar?.invoke(effect.message)
+                    if (onShowSnackbar != null) {
+                        onShowSnackbar.invoke(effect.message)
+                    } else {
+                        android.widget.Toast.makeText(
+                            context,
+                            effect.message.asString(context),
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
@@ -429,29 +438,34 @@ private fun DepositForm(
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
         // 3. Deposit Date (<= Today)
-        OutlinedTextField(
-            value = DateUtils.formatDisplayDate(state.dateEpochMs),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(R.string.modal_add_tx_deposit_date_label)) },
-            trailingIcon = {
-                IconButton(
-                    onClick = onOpenDatePicker,
-                    modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = stringResource(R.string.modal_add_tx_select_date_cd)
-                    )
-                }
-            },
-            supportingText = state.dateError?.let { { Text(it.asString(), color = MaterialTheme.colorScheme.error) } }
-                ?: { Text(stringResource(R.string.modal_add_tx_date_helper)) },
-            isError = state.dateError != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onOpenDatePicker() }
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = DateUtils.formatDisplayDate(state.dateEpochMs),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.modal_add_tx_deposit_date_label)) },
+                trailingIcon = {
+                    IconButton(
+                        onClick = onOpenDatePicker,
+                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = stringResource(R.string.modal_add_tx_select_date_cd)
+                        )
+                    }
+                },
+                supportingText = state.dateError?.let { { Text(it.asString(), color = MaterialTheme.colorScheme.error) } }
+                    ?: { Text(stringResource(R.string.modal_add_tx_date_helper)) },
+                isError = state.dateError != null,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(onClick = onOpenDatePicker)
+            )
+        }
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
@@ -551,29 +565,34 @@ private fun ExpenseForm(
 
     Column(modifier = modifier.fillMaxWidth()) {
         // 1. Expense Date (<= Today)
-        OutlinedTextField(
-            value = DateUtils.formatDisplayDate(state.dateEpochMs),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(R.string.modal_add_tx_expense_date_label)) },
-            trailingIcon = {
-                IconButton(
-                    onClick = onOpenDatePicker,
-                    modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = stringResource(R.string.modal_add_tx_select_date_cd)
-                    )
-                }
-            },
-            supportingText = state.dateError?.let { { Text(it.asString(), color = MaterialTheme.colorScheme.error) } }
-                ?: { Text(stringResource(R.string.modal_add_tx_date_helper)) },
-            isError = state.dateError != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onOpenDatePicker() }
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = DateUtils.formatDisplayDate(state.dateEpochMs),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.modal_add_tx_expense_date_label)) },
+                trailingIcon = {
+                    IconButton(
+                        onClick = onOpenDatePicker,
+                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = stringResource(R.string.modal_add_tx_select_date_cd)
+                        )
+                    }
+                },
+                supportingText = state.dateError?.let { { Text(it.asString(), color = MaterialTheme.colorScheme.error) } }
+                    ?: { Text(stringResource(R.string.modal_add_tx_date_helper)) },
+                isError = state.dateError != null,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(onClick = onOpenDatePicker)
+            )
+        }
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
