@@ -9,6 +9,7 @@ data class CircleMember(
     val memberId: String,
     val email: String,
     val name: String,
+    val phone: String = "",
     val role: MemberRole,
     val status: MemberStatus,
     val totalContributed: Long,

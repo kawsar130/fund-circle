@@ -21,6 +21,9 @@ import com.fundcircle.app.presentation.screens.dashboard.DashboardRoute
 import com.fundcircle.app.presentation.screens.detail.TransactionDetailRoute
 import com.fundcircle.app.presentation.screens.hub.CircleHubRoute
 import com.fundcircle.app.presentation.screens.ledger.TransactionsLedgerRoute
+import com.fundcircle.app.presentation.screens.members.MembersRosterRoute
+import com.fundcircle.app.presentation.screens.members.detail.MemberDetailRoute
+import com.fundcircle.app.presentation.screens.profile.ProfileEditRoute
 import com.fundcircle.app.presentation.screens.transaction.RecordTransactionSheet
 
 /**
@@ -148,10 +151,54 @@ fun FundCircleNavHost(
         }
 
         composable<ScreenRoute.MembersRoster> { backStackEntry ->
-            val members = backStackEntry.toRoute<ScreenRoute.MembersRoster>()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Members: ${members.fundId} (Slice 6)")
-            }
+            val roster = backStackEntry.toRoute<ScreenRoute.MembersRoster>()
+            MembersRosterRoute(
+                fundId = roster.fundId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToMemberDetail = { fundId, userId ->
+                    navController.navigate(
+                        ScreenRoute.MemberDetail(fundId = fundId, memberId = userId)
+                    )
+                },
+                onNavigateToProfileEdit = {
+                    navController.navigate(
+                        ScreenRoute.ProfileEdit(fundId = roster.fundId)
+                    )
+                }
+            )
+        }
+
+        composable<ScreenRoute.MemberDetail> { backStackEntry ->
+            val detail = backStackEntry.toRoute<ScreenRoute.MemberDetail>()
+            MemberDetailRoute(
+                fundId = detail.fundId,
+                userId = detail.memberId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToTransactionDetail = { fundId, txId, isExpense ->
+                    navController.navigate(
+                        ScreenRoute.TransactionDetail(fundId = fundId, txId = txId, isExpense = isExpense)
+                    )
+                },
+                onNavigateToProfileEdit = { fundId ->
+                    navController.navigate(
+                        ScreenRoute.ProfileEdit(fundId = fundId)
+                    )
+                }
+            )
+        }
+
+        composable<ScreenRoute.ProfileEdit> { backStackEntry ->
+            val profile = backStackEntry.toRoute<ScreenRoute.ProfileEdit>()
+            ProfileEditRoute(
+                fundId = profile.fundId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

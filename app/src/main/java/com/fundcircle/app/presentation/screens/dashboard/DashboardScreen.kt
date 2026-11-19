@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Remove
@@ -217,6 +218,18 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = stringResource(R.string.dashboard_top_bar_notifications_cd),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Stakeholders Roster Action
+                    IconButton(
+                        onClick = { onAction(DashboardUiAction.NavigateToMembers) },
+                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Group,
+                            contentDescription = stringResource(R.string.members_roster_search_cd),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
