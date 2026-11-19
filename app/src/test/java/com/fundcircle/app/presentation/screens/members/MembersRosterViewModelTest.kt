@@ -12,6 +12,7 @@ import com.fundcircle.app.domain.model.UserSession
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.ObserveCircleMembersUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
+import com.fundcircle.app.domain.usecase.ObserveDepositsUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -33,6 +34,7 @@ class MembersRosterViewModelTest {
 
     private val observeCircleMembersUseCase: ObserveCircleMembersUseCase = mockk(relaxed = true)
     private val observeCircleUseCase: ObserveCircleUseCase = mockk(relaxed = true)
+    private val observeDepositsUseCase: ObserveDepositsUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val networkMonitor: NetworkMonitor = mockk(relaxed = true)
 
@@ -100,6 +102,7 @@ class MembersRosterViewModelTest {
         every { authRepository.userSession } returns userSessionFlow
         every { observeCircleUseCase(fundId) } returns flowOf(sampleCircle)
         every { observeCircleMembersUseCase(fundId) } returns flowOf(sampleMembers)
+        every { observeDepositsUseCase(fundId) } returns flowOf(emptyList())
         userSessionFlow.value = sampleAdmin
     }
 
@@ -113,6 +116,7 @@ class MembersRosterViewModelTest {
         return MembersRosterViewModel(
             observeCircleMembersUseCase = observeCircleMembersUseCase,
             observeCircleUseCase = observeCircleUseCase,
+            observeDepositsUseCase = observeDepositsUseCase,
             authRepository = authRepository,
             networkMonitor = networkMonitor,
             savedStateHandle = savedStateHandle

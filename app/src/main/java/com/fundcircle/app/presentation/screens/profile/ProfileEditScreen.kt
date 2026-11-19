@@ -173,10 +173,9 @@ fun ProfileEditScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .consumeWindowInsets(innerPadding)
                     .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
                     .imePadding()
-                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing16)
             ) {

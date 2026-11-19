@@ -173,4 +173,22 @@ class ProfileEditViewModelTest {
 
         assertThat(viewModel.uiState.value.isSuccess).isTrue()
     }
+
+    @Test
+    fun nidInput_clampedTo17Digits() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onAction(ProfileEditUiAction.NidChanged("12345678901234567890"))
+        assertThat(viewModel.uiState.value.nidNumber).isEqualTo("12345678901234567")
+    }
+
+    @Test
+    fun nomineePhoneInput_clampedTo11Digits() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onAction(ProfileEditUiAction.NomineePhoneChanged("01812345678999"))
+        assertThat(viewModel.uiState.value.nomineePhone).isEqualTo("01812345678")
+    }
 }

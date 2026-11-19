@@ -262,6 +262,7 @@
     <string name="members_roster_badge_active">ACTIVE</string>
     <string name="members_roster_badge_inactive">INACTIVE</string>
     <string name="members_roster_badge_left">LEFT</string>
+    <string name="members_roster_badge_pending">PENDING</string>
     <string name="members_roster_deposits_format">Deposits: %1$s %2$s</string>
     <string name="members_roster_deposits_count_singular">• 1 Transaction</string>
     <string name="members_roster_deposits_count_plural">• %1$d Transactions</string>
@@ -298,6 +299,16 @@
     <string name="member_detail_btn_deactivate">Deactivate Member</string>
     <string name="member_detail_btn_reactivate">Reactivate Member</string>
     <string name="member_detail_btn_mark_left">Mark as Left</string>
+    <string name="member_detail_btn_edit_profile">Edit My Profile / KYC</string>
+    <string name="member_detail_creator_cannot_deactivate">Circle creator cannot be deactivated.</string>
+    <string name="member_detail_kyc_section_title">STAKEHOLDER IDENTITY &amp; BENEFICIARY (KYC)</string>
+    <string name="member_detail_kyc_nid_label">National Identity Number (NID)</string>
+    <string name="member_detail_kyc_reveal_nid">Reveal NID</string>
+    <string name="member_detail_kyc_hide_nid">Hide NID</string>
+    <string name="member_detail_kyc_nominee_label">Nominee Name</string>
+    <string name="member_detail_kyc_phone_label">Nominee Phone</string>
+    <string name="member_detail_kyc_relation_label">Relationship</string>
+    <string name="member_detail_kyc_not_submitted">KYC identity has not been submitted by stakeholder yet.</string>
     <string name="member_detail_dialog_deactivate_title">Deactivate Member?</string>
     <string name="member_detail_dialog_deactivate_body">Deactivating %1$s will prevent them from recording further activity in this circle. Historical records remain permanently in the ledger.</string>
     <string name="member_detail_dialog_reactivate_title">Reactivate Member?</string>
@@ -323,6 +334,7 @@
     <string name="add_member_sheet_email_label">Stakeholder Gmail Address * (Used for Google Sign-In)</string>
     <string name="add_member_sheet_email_placeholder">e.g. tariqul.invest@gmail.com</string>
     <string name="add_member_sheet_email_error">Please enter a valid email address.</string>
+    <string name="add_member_sheet_error_duplicate_email">This email is already a stakeholder in this circle.</string>
     <string name="add_member_sheet_explanation">An in-app invitation will be associated with this Google account.</string>
     <string name="add_member_sheet_submit_btn">Send Invitation / Add Member</string>
     <string name="add_member_sheet_submitting">Adding member…</string>

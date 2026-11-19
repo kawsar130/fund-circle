@@ -42,6 +42,14 @@ class AddMemberUseCase @Inject constructor(
             emptyList()
         }
 
+        if (existingMembers.any { it.email.equals(trimmedEmail, ignoreCase = true) }) {
+            return Result.failure(
+                FundCircleError.Conflict.DuplicateEntry(
+                    "Member with email $trimmedEmail already exists in this circle."
+                )
+            )
+        }
+
         val nextMemberId = computeNextMemberId(existingMembers)
 
         return memberRepository.inviteMember(

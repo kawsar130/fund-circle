@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -142,6 +143,11 @@ fun MembersRosterScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     modifier: Modifier = Modifier
 ) {
+    BackHandler(enabled = state.isSearchActive || state.searchQuery.isNotBlank()) {
+        onAction(MembersRosterUiAction.SearchQueryChanged(""))
+        onAction(MembersRosterUiAction.SetSearchActive(false))
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -206,6 +212,7 @@ fun MembersRosterScreen(
         floatingActionButton = {
             // Admin FAB: Add Member (Visible only if isAdmin && !circle.isLocked)
             if (state.isAdmin && state.circle?.isLocked == false) {
+                val fabCd = stringResource(R.string.members_roster_fab_add_member_cd)
                 ExtendedFloatingActionButton(
                     onClick = { onAction(MembersRosterUiAction.OpenAddMemberSheet) },
                     icon = {
@@ -227,7 +234,7 @@ fun MembersRosterScreen(
                         .defaultMinSize(minHeight = DesignTokens.MinTouchTarget, minWidth = DesignTokens.MinTouchTarget)
                         .padding(bottom = DesignTokens.Spacing8)
                         .semantics {
-                            contentDescription = "Add new stakeholder"
+                            contentDescription = fabCd
                         }
                 )
             }
@@ -370,6 +377,7 @@ fun MembersRosterScreen(
                     ) { member ->
                         MemberCardItem(
                             member = member,
+                            depositCount = state.depositCounts[member.userId] ?: 0,
                             currency = state.circle?.currency ?: Currency.BDT,
                             onClick = { onAction(MembersRosterUiAction.ClickMember(member.userId)) },
                             modifier = Modifier
@@ -391,6 +399,7 @@ fun MembersRosterScreen(
 @Composable
 fun MemberCardItem(
     member: CircleMember,
+    depositCount: Int,
     currency: Currency,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -399,7 +408,7 @@ fun MemberCardItem(
         MemberStatus.ACTIVE -> stringResource(R.string.members_roster_badge_active)
         MemberStatus.INACTIVE -> stringResource(R.string.members_roster_badge_inactive)
         MemberStatus.LEFT -> stringResource(R.string.members_roster_badge_left)
-        MemberStatus.PENDING -> "PENDING"
+        MemberStatus.PENDING -> stringResource(R.string.members_roster_badge_pending)
     }
 
     val itemCd = stringResource(
@@ -531,6 +540,11 @@ fun MemberCardItem(
                 val formattedAmount = remember(member.totalContributed) {
                     NumberFormat.getIntegerInstance(Locale.US).format(member.totalContributed)
                 }
+                val countText = if (depositCount == 1) {
+                    stringResource(R.string.members_roster_deposits_count_singular)
+                } else {
+                    stringResource(R.string.members_roster_deposits_count_plural, depositCount)
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -541,9 +555,17 @@ fun MemberCardItem(
                             currency.symbol,
                             formattedAmount
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+
+                    Text(
+                        text = countText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     if (member.phone.isNotBlank()) {
@@ -717,7 +739,8 @@ private fun MembersRosterPreviewLight() {
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     )
-                )
+                ),
+                depositCounts = mapOf("usr_1" to 3, "usr_2" to 2, "usr_3" to 1, "usr_4" to 1)
             ),
             onAction = {}
         )

@@ -8,6 +8,7 @@ import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.GetMemberDepositsUseCase
+import com.fundcircle.app.domain.usecase.GetMemberKycUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveMemberUseCase
 import com.fundcircle.app.domain.usecase.ToggleMemberStatusUseCase
@@ -24,6 +25,7 @@ class MemberDetailViewModel @Inject constructor(
     private val observeMemberUseCase: ObserveMemberUseCase,
     private val observeCircleUseCase: ObserveCircleUseCase,
     private val getMemberDepositsUseCase: GetMemberDepositsUseCase,
+    private val getMemberKycUseCase: GetMemberKycUseCase,
     private val toggleMemberStatusUseCase: ToggleMemberStatusUseCase,
     private val authRepository: AuthRepository,
     private val networkMonitor: NetworkMonitor,
@@ -33,6 +35,7 @@ class MemberDetailViewModel @Inject constructor(
 ) {
     private var dataCollectionJob: Job? = null
     private var depositsJob: Job? = null
+    private var kycJob: Job? = null
 
     init {
         val fundId: String? = savedStateHandle[KEY_FUND_ID]
@@ -54,6 +57,12 @@ class MemberDetailViewModel @Inject constructor(
                         isExpense = false
                     )
                 )
+            }
+            is MemberDetailUiAction.ToggleRevealNid -> {
+                setState { copy(isNidRevealed = !isNidRevealed) }
+            }
+            is MemberDetailUiAction.NavigateToProfileEdit -> {
+                sendEffect(MemberDetailUiEffect.NavigateToProfileEdit(uiState.value.fundId))
             }
             is MemberDetailUiAction.RequestStatusChange -> {
                 setState { copy(pendingStatusChange = action.newStatus) }
@@ -118,8 +127,26 @@ class MemberDetailViewModel @Inject constructor(
 
                 if (member != null) {
                     loadDeposits(fundId, member.userId)
+                    if (isAdmin || isSelf) {
+                        loadKyc(fundId, member.userId)
+                    }
                 }
             }
+        }
+    }
+
+    private fun loadKyc(fundId: String, memberUserId: String) {
+        kycJob?.cancel()
+        kycJob = viewModelScope.launch {
+            setState { copy(isKycLoading = true) }
+            getMemberKycUseCase(fundId, memberUserId).fold(
+                onSuccess = { kyc ->
+                    setState { copy(kyc = kyc, isKycLoading = false) }
+                },
+                onFailure = {
+                    setState { copy(kyc = null, isKycLoading = false) }
+                }
+            )
         }
     }
 
@@ -138,6 +165,16 @@ class MemberDetailViewModel @Inject constructor(
         val targetStatus = uiState.value.pendingStatusChange ?: return
         val currentFundId = uiState.value.fundId
         val currentUserId = uiState.value.userId
+
+        if (currentUserId == uiState.value.circle?.adminId) {
+            setState {
+                copy(
+                    pendingStatusChange = null,
+                    errorMessage = UiText.StringResource(R.string.member_detail_creator_cannot_deactivate)
+                )
+            }
+            return
+        }
 
         setState { copy(isUpdatingStatus = true) }
 

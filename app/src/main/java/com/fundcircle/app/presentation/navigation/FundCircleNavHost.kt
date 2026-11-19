@@ -182,6 +182,11 @@ fun FundCircleNavHost(
                     navController.navigate(
                         ScreenRoute.TransactionDetail(fundId = fundId, txId = txId, isExpense = isExpense)
                     )
+                },
+                onNavigateToProfileEdit = { fundId ->
+                    navController.navigate(
+                        ScreenRoute.ProfileEdit(fundId = fundId)
+                    )
                 }
             )
         }

@@ -40,7 +40,7 @@ class AddStakeholderViewModel @Inject constructor(
                 }
             }
             is AddStakeholderUiAction.PhoneChanged -> {
-                val digitsOnly = action.phone.filter { it.isDigit() }
+                val digitsOnly = action.phone.filter { it.isDigit() }.take(11)
                 setState {
                     copy(
                         phone = digitsOnly,
@@ -166,6 +166,7 @@ class AddStakeholderViewModel @Inject constructor(
         is FundCircleError.Validation.MemberNameRequired -> UiText.StringResource(R.string.add_member_sheet_name_error)
         is FundCircleError.Validation.InvalidPhone -> UiText.StringResource(R.string.add_member_sheet_phone_error)
         is FundCircleError.Validation.InvalidEmail -> UiText.StringResource(R.string.add_member_sheet_email_error)
+        is FundCircleError.Conflict.DuplicateEntry -> UiText.StringResource(R.string.add_member_sheet_error_duplicate_email)
         is FundCircleError.Network -> UiText.StringResource(R.string.dashboard_error_loading)
         else -> error.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }
             ?: UiText.StringResource(R.string.dashboard_error_loading)

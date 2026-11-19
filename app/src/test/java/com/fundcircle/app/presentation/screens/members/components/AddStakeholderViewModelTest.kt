@@ -3,6 +3,7 @@ package com.fundcircle.app.presentation.screens.members.components
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.fundcircle.app.domain.model.CircleMember
+import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.MemberRepository
@@ -120,5 +121,32 @@ class AddStakeholderViewModelTest {
         }
 
         assertThat(viewModel.uiState.value.isSuccess).isTrue()
+    }
+
+    @Test
+    fun phoneInput_clampedTo11Digits() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onAction(AddStakeholderUiAction.PhoneChanged("01712345678999"))
+        assertThat(viewModel.uiState.value.phone).isEqualTo("01712345678")
+    }
+
+    @Test
+    fun submit_whenDuplicateEmail_setsGeneralError() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        coEvery {
+            addMemberUseCase(fundId, "Tariqul Islam", "01712345678", "duplicate@gmail.com")
+        } returns Result.failure(FundCircleError.Conflict.DuplicateEntry("Already exists"))
+
+        viewModel.onAction(AddStakeholderUiAction.NameChanged("Tariqul Islam"))
+        viewModel.onAction(AddStakeholderUiAction.PhoneChanged("01712345678"))
+        viewModel.onAction(AddStakeholderUiAction.EmailChanged("duplicate@gmail.com"))
+        viewModel.onAction(AddStakeholderUiAction.Submit)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.generalError).isNotNull()
     }
 }

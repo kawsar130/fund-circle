@@ -131,6 +131,23 @@ class AddMemberUseCaseTest {
         assertThat(result.isSuccess).isTrue()
     }
 
+    @Test
+    fun invoke_whenEmailAlreadyExists_returnsDuplicateEntry() = runTest {
+        every { memberRepository.observeMembers(fundId) } returns flowOf(
+            listOf(createMember("FC-001").copy(email = "existing@gmail.com"))
+        )
+
+        val result = useCase(
+            fundId = fundId,
+            name = "New Member",
+            phone = "01712345678",
+            email = "existing@gmail.com"
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(FundCircleError.Conflict.DuplicateEntry::class.java)
+    }
+
     private fun createMember(memberId: String) = CircleMember(
         userId = "usr-$memberId",
         memberId = memberId,

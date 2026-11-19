@@ -7,12 +7,14 @@ import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.FundCircle
+import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.UserSession
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.GetMemberDepositsUseCase
+import com.fundcircle.app.domain.usecase.GetMemberKycUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveMemberUseCase
 import com.fundcircle.app.domain.usecase.ToggleMemberStatusUseCase
@@ -39,6 +41,7 @@ class MemberDetailViewModelTest {
     private val observeMemberUseCase: ObserveMemberUseCase = mockk(relaxed = true)
     private val observeCircleUseCase: ObserveCircleUseCase = mockk(relaxed = true)
     private val getMemberDepositsUseCase: GetMemberDepositsUseCase = mockk(relaxed = true)
+    private val getMemberKycUseCase: GetMemberKycUseCase = mockk(relaxed = true)
     private val toggleMemberStatusUseCase: ToggleMemberStatusUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val networkMonitor: NetworkMonitor = mockk(relaxed = true)
@@ -123,8 +126,9 @@ class MemberDetailViewModelTest {
         every { networkMonitor.isOnline } returns isOnlineFlow
         every { authRepository.userSession } returns userSessionFlow
         every { observeCircleUseCase(fundId) } returns flowOf(sampleCircle)
-        every { observeMemberUseCase(fundId, targetUserId) } returns flowOf(sampleMember)
-        every { getMemberDepositsUseCase(fundId, targetUserId) } returns flowOf(sampleDeposits)
+        every { observeMemberUseCase(any(), any()) } returns flowOf(sampleMember)
+        every { getMemberDepositsUseCase(any(), any()) } returns flowOf(sampleDeposits)
+        coEvery { getMemberKycUseCase(any(), any()) } returns Result.failure(FundCircleError.NotFound.ResourceNotFound)
         userSessionFlow.value = sampleAdmin
     }
 
@@ -139,6 +143,7 @@ class MemberDetailViewModelTest {
             observeMemberUseCase = observeMemberUseCase,
             observeCircleUseCase = observeCircleUseCase,
             getMemberDepositsUseCase = getMemberDepositsUseCase,
+            getMemberKycUseCase = getMemberKycUseCase,
             toggleMemberStatusUseCase = toggleMemberStatusUseCase,
             authRepository = authRepository,
             networkMonitor = networkMonitor,
@@ -194,5 +199,52 @@ class MemberDetailViewModelTest {
 
         assertThat(viewModel.uiState.value.pendingStatusChange).isNull()
         assertThat(viewModel.uiState.value.isUpdatingStatus).isFalse()
+    }
+
+    @Test
+    fun toggleRevealNid_flipsRevealedState() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.isNidRevealed).isFalse()
+        viewModel.onAction(MemberDetailUiAction.ToggleRevealNid)
+        assertThat(viewModel.uiState.value.isNidRevealed).isTrue()
+        viewModel.onAction(MemberDetailUiAction.ToggleRevealNid)
+        assertThat(viewModel.uiState.value.isNidRevealed).isFalse()
+    }
+
+    @Test
+    fun navigateToProfileEdit_emitsEffect() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.uiEffect.test {
+            viewModel.onAction(MemberDetailUiAction.NavigateToProfileEdit)
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(MemberDetailUiEffect.NavigateToProfileEdit(fundId))
+        }
+    }
+
+    @Test
+    fun confirmStatusChange_creatorCannotBeDeactivated() = runTest {
+        // Target is the creator ("usr-admin")
+        val savedStateHandle = SavedStateHandle(mapOf("fundId" to fundId, "userId" to "usr-admin"))
+        val viewModel = MemberDetailViewModel(
+            observeMemberUseCase = observeMemberUseCase,
+            observeCircleUseCase = observeCircleUseCase,
+            getMemberDepositsUseCase = getMemberDepositsUseCase,
+            getMemberKycUseCase = getMemberKycUseCase,
+            toggleMemberStatusUseCase = toggleMemberStatusUseCase,
+            authRepository = authRepository,
+            networkMonitor = networkMonitor,
+            savedStateHandle = savedStateHandle
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(MemberDetailUiAction.RequestStatusChange(MemberStatus.INACTIVE))
+        viewModel.onAction(MemberDetailUiAction.ConfirmStatusChange)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.errorMessage).isNotNull()
     }
 }

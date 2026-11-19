@@ -48,7 +48,7 @@ class ProfileEditViewModel @Inject constructor(
                 setState { copy(fullName = action.name) }
             }
             is ProfileEditUiAction.NidChanged -> {
-                val digitsOnly = action.nid.filter { it.isDigit() }
+                val digitsOnly = action.nid.filter { it.isDigit() }.take(17)
                 setState {
                     copy(
                         nidNumber = digitsOnly,
@@ -65,7 +65,7 @@ class ProfileEditViewModel @Inject constructor(
                 }
             }
             is ProfileEditUiAction.NomineePhoneChanged -> {
-                val digitsOnly = action.phone.filter { it.isDigit() }
+                val digitsOnly = action.phone.filter { it.isDigit() }.take(11)
                 setState {
                     copy(
                         nomineePhone = digitsOnly,

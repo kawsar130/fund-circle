@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members.detail
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -94,6 +95,7 @@ fun MemberDetailRoute(
     onNavigateBack: () -> Unit,
     onNavigateToTransactionDetail: (String, String, Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateToProfileEdit: (String) -> Unit = {},
     viewModel: MemberDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,6 +110,9 @@ fun MemberDetailRoute(
             when (effect) {
                 is MemberDetailUiEffect.NavigateToTransactionDetail -> {
                     onNavigateToTransactionDetail(effect.fundId, effect.txId, effect.isExpense)
+                }
+                is MemberDetailUiEffect.NavigateToProfileEdit -> {
+                    onNavigateToProfileEdit(effect.fundId)
                 }
                 is MemberDetailUiEffect.NavigateBack -> {
                     onNavigateBack()
@@ -135,6 +140,10 @@ fun MemberDetailScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     modifier: Modifier = Modifier
 ) {
+    BackHandler(enabled = state.pendingStatusChange != null) {
+        onAction(MemberDetailUiAction.DismissStatusChangeDialog)
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -324,10 +333,16 @@ fun MemberDetailScreen(
                         val joinedDate = remember(member.joinedAt) {
                             DateUtils.formatDisplayDate(member.joinedAt)
                         }
+                        val statusText = when (member.status) {
+                            MemberStatus.ACTIVE -> stringResource(R.string.members_roster_badge_active)
+                            MemberStatus.INACTIVE -> stringResource(R.string.members_roster_badge_inactive)
+                            MemberStatus.LEFT -> stringResource(R.string.members_roster_badge_left)
+                            MemberStatus.PENDING -> stringResource(R.string.members_roster_badge_pending)
+                        }
                         Text(
                             text = stringResource(
                                 R.string.member_detail_status_joined_format,
-                                member.status.name,
+                                statusText,
                                 joinedDate
                             ),
                             style = MaterialTheme.typography.bodySmall,
@@ -405,7 +420,7 @@ fun MemberDetailScreen(
                                 }
                                 Text(
                                     text = "${currency.symbol} $formattedDeposits",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -438,6 +453,150 @@ fun MemberDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
+                            }
+                        }
+                    }
+                }
+
+                // Stakeholder KYC & Beneficiary Card (Admin or Self)
+                if (state.isAdmin || state.isSelf) {
+                    item(key = "kyc_section") {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8)
+                        ) {
+                            Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.member_detail_kyc_section_title),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    if (state.kyc != null && state.kyc.nidNumber.isNotBlank()) {
+                                        TextButton(
+                                            onClick = { onAction(MemberDetailUiAction.ToggleRevealNid) }
+                                        ) {
+                                            Text(
+                                                text = stringResource(
+                                                    if (state.isNidRevealed) R.string.member_detail_kyc_hide_nid
+                                                    else R.string.member_detail_kyc_reveal_nid
+                                                ),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+
+                                if (state.isKycLoading) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(DesignTokens.Spacing16),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                } else if (state.kyc != null && state.kyc.nidNumber.isNotBlank()) {
+                                    val kyc = state.kyc
+                                    val displayedNid = if (state.isNidRevealed) kyc.nidNumber else kyc.maskedNid
+
+                                    // NID
+                                    Text(
+                                        text = stringResource(R.string.member_detail_kyc_nid_label),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = displayedNid,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+
+                                    Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+
+                                    // Nominee Name
+                                    Text(
+                                        text = stringResource(R.string.member_detail_kyc_nominee_label),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = kyc.nomineeName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+
+                                    Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+
+                                    // Nominee Contact & Relationship
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(R.string.member_detail_kyc_phone_label),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = kyc.nomineePhone,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(R.string.member_detail_kyc_relation_label),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = kyc.nomineeRelation,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = stringResource(R.string.member_detail_kyc_not_submitted),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                if (state.isSelf) {
+                                    Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+                                    OutlinedButton(
+                                        onClick = { onAction(MemberDetailUiAction.NavigateToProfileEdit) },
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.member_detail_btn_edit_profile),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -519,7 +678,8 @@ fun MemberDetailScreen(
                 }
 
                 // Admin Danger Actions Section
-                if (state.isAdmin && !state.isSelf && state.circle?.isLocked == false) {
+                val isCreator = member.userId == state.circle?.adminId
+                if (state.isAdmin && !state.isSelf && !isCreator && state.circle?.isLocked == false) {
                     item(key = "admin_danger_actions") {
                         Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
                         Column(
@@ -760,7 +920,7 @@ private fun DepositItemRow(
                             currency.symbol,
                             formattedAmount
                         ),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.Bold,
                         color = if (deposit.isVoid) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
                         textDecoration = if (deposit.isVoid) TextDecoration.LineThrough else TextDecoration.None
