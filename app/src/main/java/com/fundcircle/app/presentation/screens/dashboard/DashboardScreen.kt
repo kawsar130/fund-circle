@@ -111,8 +111,10 @@ fun DashboardRoute(
 
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { error ->
-            snackbarHostState.showSnackbar(error.asString(context))
-            viewModel.onAction(DashboardUiAction.DismissError)
+            if (state.circle != null) {
+                snackbarHostState.showSnackbar(error.asString(context))
+                viewModel.onAction(DashboardUiAction.DismissError)
+            }
         }
     }
 
