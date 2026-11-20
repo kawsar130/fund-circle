@@ -34,12 +34,12 @@
 # 5. Firebase Firestore, Auth, Crashlytics, Messaging & Play Services
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
+-keep @com.google.firebase.firestore.IgnoreExtraProperties class * { *; }
 -keepclassmembers class * {
     @com.google.firebase.firestore.PropertyName <fields>;
     @com.google.firebase.firestore.PropertyName <methods>;
     @com.google.firebase.firestore.Exclude <fields>;
     @com.google.firebase.firestore.Exclude <methods>;
-    @com.google.firebase.firestore.IgnoreExtraProperties <fields>;
 }
 
 # 6. Google Credential Manager & Identity

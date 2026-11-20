@@ -1,11 +1,13 @@
 package com.fundcircle.app.data.dto
 
+import com.google.firebase.firestore.IgnoreExtraProperties
 import kotlinx.serialization.Serializable
 
 /**
  * Firestore DTO for /funds/{fundId}/members/{userId} subcollection.
  * Invariant 1: totalContributed is a 64-bit Long integer.
  */
+@IgnoreExtraProperties
 @Serializable
 data class MemberDto(
     val userId: String = "",
