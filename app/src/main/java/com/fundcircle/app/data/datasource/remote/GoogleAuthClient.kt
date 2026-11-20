@@ -15,6 +15,7 @@ import com.fundcircle.app.R
 import com.fundcircle.app.core.common.UiText
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import kotlinx.coroutines.CancellationException
 import java.security.MessageDigest
 import java.util.UUID
 import javax.inject.Inject
@@ -82,6 +83,8 @@ class GoogleAuthClient @Inject constructor(
             }
         } catch (e: GetCredentialCancellationException) {
             GoogleSignInResult.Cancelled
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: NoCredentialException) {
             GoogleSignInResult.Failure(
                 error = UiText.StringResource(R.string.auth_error_no_accounts),
@@ -105,6 +108,8 @@ class GoogleAuthClient @Inject constructor(
     suspend fun clearCredentialState() {
         try {
             credentialManager.clearCredentialState(ClearCredentialStateRequest())
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // Ignore failure when clearing credential state
         }

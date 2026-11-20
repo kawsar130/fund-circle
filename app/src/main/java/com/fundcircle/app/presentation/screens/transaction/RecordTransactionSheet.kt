@@ -86,9 +86,9 @@ import com.fundcircle.app.presentation.theme.FundCircleTheme
 fun RecordTransactionSheet(
     fundId: String,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
     onTransactionSaved: () -> Unit = {},
     onShowSnackbar: ((com.fundcircle.app.core.common.UiText) -> Unit)? = null,
-    modifier: Modifier = Modifier,
     viewModel: RecordTransactionViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()

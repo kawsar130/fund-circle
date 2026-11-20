@@ -14,6 +14,7 @@ import com.fundcircle.app.domain.usecase.ObserveMemberUseCase
 import com.fundcircle.app.domain.usecase.UpdateMemberKycUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -102,12 +103,16 @@ class ProfileEditViewModel @Inject constructor(
 
                 val circle = try {
                     observeCircleUseCase(fundId).first()
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (_: Exception) {
                     null
                 }
 
                 val member = try {
                     observeMemberUseCase(fundId, currentUid).first()
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (_: Exception) {
                     null
                 }
@@ -130,6 +135,8 @@ class ProfileEditViewModel @Inject constructor(
                         nomineeRelation = kyc?.nomineeRelation.orEmpty()
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 setState {
                     copy(

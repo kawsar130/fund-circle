@@ -144,8 +144,8 @@ fun TransactionsLedgerRoute(
 fun TransactionsLedgerScreen(
     state: LedgerUiState,
     onAction: (LedgerUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 

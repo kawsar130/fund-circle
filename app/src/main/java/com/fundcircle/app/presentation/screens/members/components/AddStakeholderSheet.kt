@@ -59,8 +59,8 @@ import com.fundcircle.app.presentation.theme.FundCircleTheme
 fun AddStakeholderSheet(
     fundId: String,
     onDismiss: () -> Unit,
-    onMemberAdded: ((String, String) -> Unit)? = null,
     modifier: Modifier = Modifier,
+    onMemberAdded: ((String, String) -> Unit)? = null,
     viewModel: AddStakeholderViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()

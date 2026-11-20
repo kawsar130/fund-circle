@@ -75,6 +75,7 @@ import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.TransactionItem
+import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import java.text.NumberFormat
@@ -133,8 +134,8 @@ fun DashboardRoute(
 fun DashboardScreen(
     state: DashboardUiState,
     onAction: (DashboardUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -824,8 +825,8 @@ fun TransactionItemCard(
  */
 @Composable
 fun EmptyTransactionsCard(
-    isAdmin: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isAdmin: Boolean = false
 ) {
     Card(
         modifier = modifier,

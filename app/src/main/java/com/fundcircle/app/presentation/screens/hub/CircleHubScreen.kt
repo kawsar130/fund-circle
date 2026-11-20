@@ -112,8 +112,8 @@ fun CircleHubRoute(
 fun CircleHubScreen(
     state: CircleHubUiState,
     onAction: (CircleHubUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),

@@ -107,8 +107,8 @@ fun ProfileEditRoute(
 fun ProfileEditScreen(
     state: ProfileEditUiState,
     onAction: (ProfileEditUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
