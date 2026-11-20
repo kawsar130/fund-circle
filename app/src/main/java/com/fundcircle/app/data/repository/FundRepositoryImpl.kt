@@ -139,6 +139,31 @@ class FundRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun transferAdminRole(
+        fundId: String,
+        currentAdminUserId: String,
+        newAdminUserId: String,
+        newAdminEmail: String
+    ): Result<Unit> = withContext(ioDispatcher) {
+        val result = try {
+            fundRemoteDataSource.transferAdminRole(
+                fundId = fundId,
+                currentAdminUserId = currentAdminUserId,
+                newAdminUserId = newAdminUserId,
+                newAdminEmail = newAdminEmail
+            )
+        } catch (e: CancellationException) {
+            throw e
+        }
+        if (result.isSuccess) {
+            Result.success(Unit)
+        } else {
+            val error = result.exceptionOrNull()?.toDomainError() ?: Exception("Failed to transfer admin role")
+            if (error is CancellationException) throw error
+            Result.failure(error)
+        }
+    }
+
     private fun Throwable.toDomainError(): Throwable = when (this) {
         is CancellationException -> this
         is FirebaseNetworkException -> FundCircleError.Network.Timeout

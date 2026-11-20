@@ -20,4 +20,12 @@ interface FundRepository {
 
     /** Locks or unlocks circle to prevent new transactions (Admin only) */
     suspend fun toggleCircleLock(fundId: String, isLocked: Boolean): Result<Unit>
+
+    /** Transfers circle admin ownership to a new member (Admin only) */
+    suspend fun transferAdminRole(
+        fundId: String,
+        currentAdminUserId: String,
+        newAdminUserId: String,
+        newAdminEmail: String
+    ): Result<Unit>
 }

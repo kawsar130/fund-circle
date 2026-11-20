@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
@@ -88,6 +89,7 @@ fun DashboardRoute(
     onNavigateToRecordTransaction: (String) -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToMembers: (String) -> Unit,
+    onNavigateToReports: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -105,6 +107,7 @@ fun DashboardRoute(
                 is DashboardUiEffect.NavigateToRecordTransaction -> onNavigateToRecordTransaction(effect.fundId)
                 is DashboardUiEffect.NavigateToSettings -> onNavigateToSettings(effect.fundId)
                 is DashboardUiEffect.NavigateToMembers -> onNavigateToMembers(effect.fundId)
+                is DashboardUiEffect.NavigateToReports -> onNavigateToReports(effect.fundId)
                 is DashboardUiEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
@@ -231,6 +234,18 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Default.Group,
                             contentDescription = stringResource(R.string.members_roster_search_cd),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Financial Reports Engine Action
+                    IconButton(
+                        onClick = { onAction(DashboardUiAction.NavigateToReports) },
+                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = stringResource(R.string.dashboard_top_bar_reports_cd),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
