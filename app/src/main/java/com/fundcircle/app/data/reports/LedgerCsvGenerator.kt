@@ -30,12 +30,13 @@ class LedgerCsvGenerator @Inject constructor() {
         monthlyReport: MonthlyFinancialReport? = null,
         members: List<CircleMember> = emptyList(),
         deposits: List<Deposit> = emptyList(),
-        expenses: List<Expense> = emptyList()
+        expenses: List<Expense> = emptyList(),
+        timeZone: TimeZone = TimeZone.getDefault()
     ): String = when (reportType) {
         ReportType.MONTHLY_SUMMARY -> generateMonthlySummaryCsv(circle, monthlyReport)
         ReportType.MEMBER_STATEMENT -> generateMemberStatementCsv(members, deposits)
-        ReportType.DEPOSIT_HISTORY -> generateDepositHistoryCsv(deposits)
-        ReportType.EXPENSE_HISTORY -> generateExpenseHistoryCsv(expenses)
+        ReportType.DEPOSIT_HISTORY -> generateDepositHistoryCsv(deposits, timeZone)
+        ReportType.EXPENSE_HISTORY -> generateExpenseHistoryCsv(expenses, timeZone)
     }
 
     /**
@@ -114,13 +115,16 @@ class LedgerCsvGenerator @Inject constructor() {
      * 3. Complete Deposit History:
      * Header: Deposit ID,Date,Member ID,Member Name,Member Email,Amount,Payment Method,Note,Status,Void Reason
      */
-    fun generateDepositHistoryCsv(deposits: List<Deposit>): String {
+    fun generateDepositHistoryCsv(
+        deposits: List<Deposit>,
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): String {
         val sb = StringBuilder()
         sb.append(UTF8_BOM)
         sb.appendLine("Deposit ID,Date,Member ID,Member Name,Member Email,Amount,Payment Method,Note,Status,Void Reason")
 
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
+            this.timeZone = timeZone
         }
 
         deposits.forEach { deposit ->
@@ -150,13 +154,16 @@ class LedgerCsvGenerator @Inject constructor() {
      * 4. Complete Expense History:
      * Header: Expense ID,Date,Category,Description,Amount,Payment Method,Paid By,Creator Email,Status,Void Reason
      */
-    fun generateExpenseHistoryCsv(expenses: List<Expense>): String {
+    fun generateExpenseHistoryCsv(
+        expenses: List<Expense>,
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): String {
         val sb = StringBuilder()
         sb.append(UTF8_BOM)
         sb.appendLine("Expense ID,Date,Category,Description,Amount,Payment Method,Paid By,Creator Email,Status,Void Reason")
 
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
+            this.timeZone = timeZone
         }
 
         expenses.forEach { expense ->

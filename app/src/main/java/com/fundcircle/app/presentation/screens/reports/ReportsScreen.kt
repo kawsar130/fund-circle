@@ -225,7 +225,8 @@ fun ReportsScreen(
                 item(key = "section_preview") {
                     LivePreviewCard(
                         circle = state.circle,
-                        monthlyReport = state.monthlyReport
+                        monthlyReport = state.monthlyReport,
+                        selectedReportType = state.selectedReportType
                     )
                 }
 
@@ -601,6 +602,7 @@ fun ReportTypeSelectorCard(
 fun LivePreviewCard(
     circle: FundCircle?,
     monthlyReport: MonthlyFinancialReport?,
+    selectedReportType: ReportType = ReportType.MONTHLY_SUMMARY,
     modifier: Modifier = Modifier
 ) {
     OutlinedCard(
@@ -612,12 +614,38 @@ fun LivePreviewCard(
         )
     ) {
         Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
-            Text(
-                text = stringResource(R.string.reports_preview_title),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.reports_preview_title),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                val typeLabel = when (selectedReportType) {
+                    ReportType.MONTHLY_SUMMARY -> stringResource(R.string.reports_type_monthly_summary)
+                    ReportType.MEMBER_STATEMENT -> stringResource(R.string.reports_type_member_statement)
+                    ReportType.DEPOSIT_HISTORY -> stringResource(R.string.reports_type_deposit_history)
+                    ReportType.EXPENSE_HISTORY -> stringResource(R.string.reports_type_expense_history)
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(100.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Text(
+                        text = typeLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
 
@@ -635,6 +663,19 @@ fun LivePreviewCard(
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            val typeDesc = when (selectedReportType) {
+                ReportType.MONTHLY_SUMMARY -> stringResource(R.string.reports_preview_desc_monthly_summary)
+                ReportType.MEMBER_STATEMENT -> stringResource(R.string.reports_preview_desc_member_statement)
+                ReportType.DEPOSIT_HISTORY -> stringResource(R.string.reports_preview_desc_deposit_history)
+                ReportType.EXPENSE_HISTORY -> stringResource(R.string.reports_preview_desc_expense_history)
+            }
+            Text(
+                text = typeDesc,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                modifier = Modifier.padding(top = 2.dp)
             )
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing12))

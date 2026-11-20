@@ -239,6 +239,29 @@ class LedgerCsvGeneratorTest {
     }
 
     @Test
+    fun `generateDepositHistoryCsv respects custom TimeZone parameter`() {
+        // Timestamp for 2026-11-20 00:00:00 UTC = 1795132800000L
+        val timestampUtcMidnight = 1795132800000L
+        val deposits = listOf(
+            Deposit(
+                id = "dep-tz",
+                fundId = "circle-1",
+                memberId = "FC-001",
+                memberEmail = "kawsar@example.com",
+                memberName = "Kawsar Ahmed",
+                amount = 50000L,
+                depositDate = timestampUtcMidnight,
+                paymentMethod = PaymentMethod.BANK_TRANSFER,
+                note = null,
+                isVoid = false
+            )
+        )
+
+        val csvUtc = generator.generateDepositHistoryCsv(deposits, java.util.TimeZone.getTimeZone("UTC"))
+        assertThat(csvUtc).contains("2026-11-20")
+    }
+
+    @Test
     fun `escapeCsv handles special characters properly`() {
         assertThat(generator.escapeCsv("Simple Text")).isEqualTo("Simple Text")
         assertThat(generator.escapeCsv("Text, with comma")).isEqualTo("\"Text, with comma\"")

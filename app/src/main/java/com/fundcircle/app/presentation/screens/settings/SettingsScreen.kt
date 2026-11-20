@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -247,15 +249,81 @@ fun SettingsScreen(
                     )
                 }
 
+                item(key = "spacer_profile_currency") {
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                }
+
+                // Base Currency Permanence Card (Invariant 1)
+                item(key = "item_base_currency") {
+                    val currency = state.circle?.currency ?: Currency.BDT
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(DesignTokens.Spacing16),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccountBalanceWallet,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_base_currency_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = stringResource(R.string.settings_base_currency_subtitle),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(100.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.settings_base_currency_badge,
+                                        currency.name,
+                                        currency.symbol
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 item(key = "spacer_profile_leave") {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 
                 item(key = "item_leave_circle") {
+                    val leaveSubtitle = if (state.isAdmin) {
+                        stringResource(R.string.settings_leave_admin_disabled)
+                    } else {
+                        stringResource(R.string.settings_leave_circle_subtitle)
+                    }
                     SettingsActionCard(
                         icon = Icons.AutoMirrored.Filled.ExitToApp,
                         title = stringResource(R.string.settings_leave_circle_title),
-                        subtitle = stringResource(R.string.settings_leave_circle_subtitle),
+                        subtitle = leaveSubtitle,
                         onClick = { onAction(SettingsUiAction.OpenLeaveDialog) }
                     )
                 }
@@ -357,7 +425,63 @@ fun SettingsScreen(
                     }
                 }
 
-                item(key = "spacer_theme_signout") {
+                item(key = "spacer_theme_cache") {
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                }
+
+                // Firestore 100MB Offline Disk Cache Quota Indicator (Invariant 5)
+                item(key = "item_offline_cache") {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(DesignTokens.Spacing16),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CloudDone,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_offline_cache_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = stringResource(R.string.settings_offline_cache_subtitle),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(100.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_offline_cache_badge),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                item(key = "spacer_cache_signout") {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 

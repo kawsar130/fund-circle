@@ -22,11 +22,12 @@ class GenerateMonthlyReportUseCase @Inject constructor() {
         circle: FundCircle,
         deposits: List<Deposit>,
         expenses: List<Expense>,
-        period: ReportPeriod
+        period: ReportPeriod,
+        timeZone: TimeZone = TimeZone.getDefault()
     ): MonthlyFinancialReport {
         return when (period) {
             is ReportPeriod.MonthYear -> {
-                val calendar = Calendar.getInstance()
+                val calendar = Calendar.getInstance(timeZone)
                 calendar.clear()
                 calendar.set(period.year, period.month - 1, 1, 0, 0, 0)
                 val startMs = calendar.timeInMillis
@@ -59,7 +60,7 @@ class GenerateMonthlyReportUseCase @Inject constructor() {
                         expenses.count { it.expenseDate in startMs..endMs }
 
                 val monthFormatter = SimpleDateFormat("MMMM yyyy", Locale.US).apply {
-                    timeZone = TimeZone.getDefault()
+                    this.timeZone = timeZone
                 }
                 val periodDisplay = monthFormatter.format(Date(startMs))
 

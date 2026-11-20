@@ -385,6 +385,10 @@
     <string name="reports_type_member_statement">Member-wise Deposit Statement</string>
     <string name="reports_type_deposit_history">Complete Deposit History</string>
     <string name="reports_type_expense_history">Complete Expense History</string>
+    <string name="reports_preview_desc_monthly_summary">Monthly balance statement with opening, net change, and closing figures.</string>
+    <string name="reports_preview_desc_member_statement">Stakeholder roster breakdown with individual contribution totals and deposit counts.</string>
+    <string name="reports_preview_desc_deposit_history">Chronological deposit history with payment methods, status, and audit notes.</string>
+    <string name="reports_preview_desc_expense_history">Chronological expense history with categories, paid-by details, and audit notes.</string>
     <string name="reports_preview_title">ON-SCREEN PREVIEW</string>
     <string name="reports_preview_circle_label">Fund Circle: %1$s</string>
     <string name="reports_preview_statement_period">Statement for: %1$s</string>
@@ -408,6 +412,9 @@
     <string name="settings_switch_circle_title">Switch Fund Circle</string>
     <string name="settings_switch_circle_subtitle">Return to Hub to switch or manage other circles</string>
     <string name="settings_section_membership">MY MEMBERSHIP</string>
+    <string name="settings_base_currency_title">Base Currency</string>
+    <string name="settings_base_currency_subtitle">Locked permanently to circle</string>
+    <string name="settings_base_currency_badge">%1$s (%2$s) 🔒</string>
     <string name="settings_my_profile_title">My Profile (%1$s)</string>
     <string name="settings_my_profile_subtitle">View personal and nominee information</string>
     <string name="settings_leave_circle_title">Leave Fund Circle</string>
@@ -423,6 +430,9 @@
     <string name="settings_section_preferences">APP PREFERENCES &amp; ACCOUNT</string>
     <string name="settings_dark_theme_title">Dark Theme</string>
     <string name="settings_dark_theme_subtitle">Toggle light or dark appearance</string>
+    <string name="settings_offline_cache_title">Offline Disk Cache</string>
+    <string name="settings_offline_cache_subtitle">100 MB persistent offline cache active</string>
+    <string name="settings_offline_cache_badge">100 MB 🟢</string>
     <string name="settings_sign_out_title">Sign Out of Google Account</string>
     <string name="settings_sign_out_subtitle">Sign out of your session on this device</string>
 

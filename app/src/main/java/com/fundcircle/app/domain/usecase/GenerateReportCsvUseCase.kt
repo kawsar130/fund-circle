@@ -7,6 +7,7 @@ import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.MonthlyFinancialReport
 import com.fundcircle.app.domain.model.ReportType
+import java.util.TimeZone
 import javax.inject.Inject
 
 /**
@@ -22,7 +23,8 @@ class GenerateReportCsvUseCase @Inject constructor(
         monthlyReport: MonthlyFinancialReport? = null,
         members: List<CircleMember> = emptyList(),
         deposits: List<Deposit> = emptyList(),
-        expenses: List<Expense> = emptyList()
+        expenses: List<Expense> = emptyList(),
+        timeZone: TimeZone = TimeZone.getDefault()
     ): String {
         return csvGenerator.generateCsv(
             reportType = reportType,
@@ -30,7 +32,8 @@ class GenerateReportCsvUseCase @Inject constructor(
             monthlyReport = monthlyReport,
             members = members,
             deposits = deposits,
-            expenses = expenses
+            expenses = expenses,
+            timeZone = timeZone
         )
     }
 }

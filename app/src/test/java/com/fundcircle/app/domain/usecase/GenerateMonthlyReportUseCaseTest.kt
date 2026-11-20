@@ -231,4 +231,20 @@ class GenerateMonthlyReportUseCaseTest {
         assertThat(report.closingBalance).isEqualTo(900000L)
         assertThat(report.periodDisplay).isEqualTo("All Time")
     }
+
+    @Test
+    fun `invoke with custom TimeZone correctly scopes startMs and endMs`() {
+        val utcTimeZone = java.util.TimeZone.getTimeZone("UTC")
+        val report = useCase(
+            circle = circle,
+            deposits = emptyList(),
+            expenses = emptyList(),
+            period = ReportPeriod.MonthYear(11, 2026),
+            timeZone = utcTimeZone
+        )
+
+        assertThat(report.periodDisplay).isEqualTo("November 2026")
+        assertThat(report.openingBalance).isEqualTo(0L)
+        assertThat(report.closingBalance).isEqualTo(0L)
+    }
 }
