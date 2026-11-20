@@ -257,8 +257,90 @@ class LedgerCsvGeneratorTest {
             )
         )
 
-        val csvUtc = generator.generateDepositHistoryCsv(deposits, java.util.TimeZone.getTimeZone("UTC"))
+        val csvUtc = generator.generateDepositHistoryCsv(deposits, timeZone = java.util.TimeZone.getTimeZone("UTC"))
         assertThat(csvUtc).contains("2026-11-20")
+    }
+
+    @Test
+    fun `generateMemberStatementCsv accurately counts deposits when deposit memberId matches userId`() {
+        val member = CircleMember(
+            userId = "auth-uid-123",
+            memberId = "FC-099",
+            name = "Test Member",
+            email = "test@example.com",
+            role = MemberRole.MEMBER,
+            status = MemberStatus.ACTIVE,
+            totalContributed = 100000L,
+            joinedAt = 1700000000000L,
+            lastActiveAt = 1700000000000L
+        )
+
+        // Deposit stored with userId as memberId (as written by RecordTransactionViewModel)
+        val deposits = listOf(
+            Deposit(
+                id = "dep-1",
+                fundId = "circle-1",
+                memberId = "auth-uid-123",
+                memberEmail = "test@example.com",
+                memberName = "Test Member (FC-099)",
+                amount = 50000L,
+                depositDate = 1700000000000L,
+                paymentMethod = PaymentMethod.BANK_TRANSFER,
+                note = null,
+                isVoid = false
+            ),
+            Deposit(
+                id = "dep-2",
+                fundId = "circle-1",
+                memberId = "auth-uid-123",
+                memberEmail = "test@example.com",
+                memberName = "Test Member (FC-099)",
+                amount = 50000L,
+                depositDate = 1700001000000L,
+                paymentMethod = PaymentMethod.BANK_TRANSFER,
+                note = null,
+                isVoid = false
+            )
+        )
+
+        val csv = generator.generateMemberStatementCsv(listOf(member), deposits)
+        // Verify deposit count is 2 (not 0)
+        assertThat(csv).contains("FC-099,Test Member,test@example.com,100000,2,ACTIVE")
+    }
+
+    @Test
+    fun `generateDepositHistoryCsv resolves raw userId to FC display identifier when members are provided`() {
+        val member = CircleMember(
+            userId = "auth-uid-123",
+            memberId = "FC-099",
+            name = "Test Member",
+            email = "test@example.com",
+            role = MemberRole.MEMBER,
+            status = MemberStatus.ACTIVE,
+            totalContributed = 100000L,
+            joinedAt = 1700000000000L,
+            lastActiveAt = 1700000000000L
+        )
+
+        val deposits = listOf(
+            Deposit(
+                id = "dep-1",
+                fundId = "circle-1",
+                memberId = "auth-uid-123",
+                memberEmail = "test@example.com",
+                memberName = "Test Member",
+                amount = 50000L,
+                depositDate = 1700000000000L,
+                paymentMethod = PaymentMethod.BANK_TRANSFER,
+                note = null,
+                isVoid = false
+            )
+        )
+
+        val csv = generator.generateDepositHistoryCsv(deposits, members = listOf(member))
+        // Verify FC-099 appears as Member ID instead of raw auth-uid-123
+        assertThat(csv).contains("dep-1")
+        assertThat(csv).contains("FC-099")
     }
 
     @Test

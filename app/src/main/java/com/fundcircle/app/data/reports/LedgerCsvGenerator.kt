@@ -35,7 +35,7 @@ class LedgerCsvGenerator @Inject constructor() {
     ): String = when (reportType) {
         ReportType.MONTHLY_SUMMARY -> generateMonthlySummaryCsv(circle, monthlyReport)
         ReportType.MEMBER_STATEMENT -> generateMemberStatementCsv(members, deposits)
-        ReportType.DEPOSIT_HISTORY -> generateDepositHistoryCsv(deposits, timeZone)
+        ReportType.DEPOSIT_HISTORY -> generateDepositHistoryCsv(deposits, members, timeZone)
         ReportType.EXPENSE_HISTORY -> generateExpenseHistoryCsv(expenses, timeZone)
     }
 
@@ -90,13 +90,15 @@ class LedgerCsvGenerator @Inject constructor() {
         sb.append(UTF8_BOM)
         sb.appendLine("Member ID,Name,Email,Total Contributed,Deposit Count,Status")
 
-        // Map deposits per member for accurate deposit count
-        val depositCountByMember = deposits.filter { !it.isVoid }
-            .groupBy { it.memberId }
-            .mapValues { it.value.size }
+        // Filter out voided transactions for contribution counts
+        val activeDeposits = deposits.filter { !it.isVoid }
 
         members.forEach { member ->
-            val count = depositCountByMember[member.memberId] ?: 0
+            val count = activeDeposits.count { deposit ->
+                deposit.memberId == member.memberId ||
+                        deposit.memberId == member.userId ||
+                        deposit.memberEmail.equals(member.email, ignoreCase = true)
+            }
             val row = listOf(
                 escapeCsv(member.memberId),
                 escapeCsv(member.name),
@@ -117,6 +119,7 @@ class LedgerCsvGenerator @Inject constructor() {
      */
     fun generateDepositHistoryCsv(
         deposits: List<Deposit>,
+        members: List<CircleMember> = emptyList(),
         timeZone: TimeZone = TimeZone.getDefault()
     ): String {
         val sb = StringBuilder()
@@ -127,15 +130,20 @@ class LedgerCsvGenerator @Inject constructor() {
             this.timeZone = timeZone
         }
 
+        val memberMap = members.associateBy { it.userId }
+
         deposits.forEach { deposit ->
             val status = if (deposit.isVoid) "REVERSED" else "POSTED"
             val voidReason = deposit.voidMetadata?.reason.orEmpty()
             val dateStr = dateFormat.format(Date(deposit.depositDate))
+            val resolvedMemberId = memberMap[deposit.memberId]?.memberId
+                ?: members.firstOrNull { it.email.equals(deposit.memberEmail, ignoreCase = true) }?.memberId
+                ?: deposit.memberId
 
             val row = listOf(
                 escapeCsv(deposit.id),
                 escapeCsv(dateStr),
-                escapeCsv(deposit.memberId),
+                escapeCsv(resolvedMemberId),
                 escapeCsv(deposit.memberName),
                 escapeCsv(deposit.memberEmail),
                 deposit.amount.toString(),
