@@ -76,6 +76,7 @@ import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import java.text.DateFormatSymbols
 import java.text.NumberFormat
+import java.util.Calendar
 import java.util.Locale
 
 @Composable
@@ -489,7 +490,8 @@ fun YearDropdown(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val years = remember { (2024..2030).toList() }
+    val currentCalendarYear = remember { Calendar.getInstance().get(Calendar.YEAR) }
+    val years = remember(currentCalendarYear) { (2024..maxOf(2030, currentCalendarYear)).toList() }
 
     Box(modifier = modifier) {
         OutlinedButton(

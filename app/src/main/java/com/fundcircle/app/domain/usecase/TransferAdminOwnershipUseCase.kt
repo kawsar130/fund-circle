@@ -25,6 +25,9 @@ class TransferAdminOwnershipUseCase @Inject constructor(
         if (newAdminUserId.isBlank()) {
             return Result.failure(IllegalArgumentException("Target member must be selected."))
         }
+        if (newAdminEmail.isBlank()) {
+            return Result.failure(IllegalArgumentException("Target member email cannot be blank."))
+        }
         if (newAdminUserId == currentAdminUserId) {
             return Result.failure(IllegalArgumentException("Cannot transfer admin ownership to yourself."))
         }

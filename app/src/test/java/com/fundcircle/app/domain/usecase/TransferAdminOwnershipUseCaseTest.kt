@@ -73,6 +73,21 @@ class TransferAdminOwnershipUseCaseTest {
             fundId = "fund-101",
             currentAdminUserId = "user-admin-1",
             newAdminUserId = "",
+            newAdminEmail = "member@fundcircle.app",
+            circle = sampleCircle
+        )
+
+        assertThat(result.isFailure).isTrue()
+        assertThat(result.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
+        coVerify(exactly = 0) { fundRepository.transferAdminRole(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `blank target email fails with IllegalArgumentException`() = runTest {
+        val result = useCase(
+            fundId = "fund-101",
+            currentAdminUserId = "user-admin-1",
+            newAdminUserId = "user-member-2",
             newAdminEmail = "",
             circle = sampleCircle
         )

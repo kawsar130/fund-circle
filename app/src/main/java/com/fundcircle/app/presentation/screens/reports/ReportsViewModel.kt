@@ -189,6 +189,7 @@ class ReportsViewModel @Inject constructor(
                 sendEffect(ReportsUiEffect.ShareCsv(fileUri = uri, fileName = file.name))
                 setState { copy(isExporting = false) }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 setState {
                     copy(
                         isExporting = false,
