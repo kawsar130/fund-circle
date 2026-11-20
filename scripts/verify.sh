@@ -43,8 +43,21 @@ else
     echo -e "${YELLOW}ℹ app/src/main directory not present yet. Skipping source scan.${NC}"
 fi
 
-# 3. Gradle Quality Gates (Unit Tests & Lint)
-echo -e "\n🔍 [3/3] Running Gradle Quality Gates..."
+# 3. Security Rules & Production Hardening Checks
+echo -e "\n🔍 [3/4] Checking Production Security Rules & Hardening artifacts..."
+if [ ! -f "firestore.rules" ] || [ ! -f "firestore.indexes.json" ] || [ ! -f "firebase.json" ]; then
+    echo -e "${RED}❌ FAILED: Missing required Firestore security rules or index configuration files!${NC}"
+    exit 1
+fi
+
+if ! grep -q "isMinifyEnabled = true" app/build.gradle.kts; then
+    echo -e "${RED}❌ FAILED: isMinifyEnabled is not enabled in app/build.gradle.kts!${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Production hardening configuration satisfied (firestore.rules, firestore.indexes.json, R8 minification).${NC}"
+
+# 4. Gradle Quality Gates (Unit Tests & Lint)
+echo -e "\n🔍 [4/4] Running Gradle Quality Gates..."
 if [ -f "./gradlew" ]; then
     chmod +x ./gradlew
     echo -e "Running unit test suite..."

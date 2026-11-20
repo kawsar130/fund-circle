@@ -76,3 +76,7 @@ jobs:
       - name: Assemble Debug APK
         if: steps.check_wrapper.outputs.gradlew_exists == 'true'
         run: ./gradlew assembleDebug --no-daemon
+
+      - name: Assemble Release APK (R8 Minification & Resource Shrinking)
+        if: steps.check_wrapper.outputs.gradlew_exists == 'true'
+        run: ./gradlew assembleRelease --no-daemon
