@@ -186,6 +186,16 @@ class MemberDetailViewModel @Inject constructor(
             return
         }
 
+        if (uiState.value.circle?.isLocked == true) {
+            setState {
+                copy(
+                    pendingStatusChange = null,
+                    errorMessage = UiText.StringResource(R.string.tx_detail_circle_locked_notice)
+                )
+            }
+            return
+        }
+
         setState { copy(isUpdatingStatus = true) }
 
         viewModelScope.launch {
