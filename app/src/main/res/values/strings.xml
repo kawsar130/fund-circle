@@ -124,6 +124,8 @@
     <string name="dashboard_error_title">Unable to load circle</string>
     <string name="dashboard_top_bar_active_circle_label">Active Circle</string>
     <string name="dashboard_notifications_empty">No new notifications</string>
+    <string name="notification_channel_transactions_name">Circle Transactions</string>
+    <string name="notification_channel_transactions_desc">Notifications for circle deposits, expenses, and transaction reversals.</string>
     <string name="error_not_authorized">You do not have permission to access this circle.</string>
 
     <!-- Screen 05: Transactions Ledger -->

@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -101,6 +102,8 @@ class AuthRemoteDataSourceImpl @Inject constructor(
                 )
                 userDocRef.set(updateData, SetOptions.merge()).await()
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // Best effort sync: if get() threw (e.g. offline), queue an optimistic merge write into 100MB Firestore cache
             try {
@@ -113,6 +116,8 @@ class AuthRemoteDataSourceImpl @Inject constructor(
                     "lastActiveAt" to now
                 )
                 firestore.collection("users").document(uid).set(fallbackData, SetOptions.merge())
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
                 // Secondary best-effort guard
             }

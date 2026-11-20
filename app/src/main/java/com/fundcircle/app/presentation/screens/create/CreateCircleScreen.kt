@@ -99,8 +99,8 @@ fun CreateCircleRoute(
 fun CreateCircleScreen(
     state: CreateCircleUiState,
     onAction: (CreateCircleUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()

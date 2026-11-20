@@ -3,6 +3,7 @@ package com.fundcircle.app.domain.usecase
 import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.repository.MemberRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import java.util.Locale
 import javax.inject.Inject
@@ -38,6 +39,8 @@ class AddMemberUseCase @Inject constructor(
 
         val existingMembers = try {
             memberRepository.observeMembers(fundId).first()
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             emptyList()
         }

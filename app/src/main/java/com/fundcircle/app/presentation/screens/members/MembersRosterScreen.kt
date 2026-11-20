@@ -159,8 +159,8 @@ fun MembersRosterRoute(
 fun MembersRosterScreen(
     state: MembersRosterUiState,
     onAction: (MembersRosterUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     BackHandler(enabled = state.isSearchActive || state.searchQuery.isNotBlank()) {
         onAction(MembersRosterUiAction.SearchQueryChanged(""))

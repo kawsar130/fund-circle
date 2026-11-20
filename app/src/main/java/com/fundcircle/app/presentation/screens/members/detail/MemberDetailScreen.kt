@@ -146,8 +146,8 @@ fun MemberDetailRoute(
 fun MemberDetailScreen(
     state: MemberDetailUiState,
     onAction: (MemberDetailUiAction) -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     BackHandler(enabled = state.pendingStatusChange != null) {
         onAction(MemberDetailUiAction.DismissStatusChangeDialog)
