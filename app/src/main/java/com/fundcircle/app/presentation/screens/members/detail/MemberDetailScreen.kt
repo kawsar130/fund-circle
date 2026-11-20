@@ -684,6 +684,7 @@ fun MemberDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing4)
+                                .animateItem()
                         )
                     }
                 }
