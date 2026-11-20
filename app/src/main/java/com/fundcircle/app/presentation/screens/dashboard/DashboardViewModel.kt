@@ -142,6 +142,11 @@ class DashboardViewModel @Inject constructor(
                     sendEffect(DashboardUiEffect.NavigateToMembers(fundId))
                 }
             }
+            DashboardUiAction.NavigateToReports -> {
+                if (fundId.isNotBlank()) {
+                    sendEffect(DashboardUiEffect.NavigateToReports(fundId))
+                }
+            }
             DashboardUiAction.DismissError -> {
                 setState { copy(errorMessage = null) }
             }

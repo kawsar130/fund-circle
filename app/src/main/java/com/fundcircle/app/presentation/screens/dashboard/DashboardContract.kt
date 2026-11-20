@@ -28,6 +28,7 @@ sealed interface DashboardUiAction : UiAction {
     data object NavigateToRecordTransaction : DashboardUiAction
     data object NavigateToSettings : DashboardUiAction
     data object NavigateToMembers : DashboardUiAction
+    data object NavigateToReports : DashboardUiAction
     data object DismissError : DashboardUiAction
 }
 
@@ -37,5 +38,6 @@ sealed interface DashboardUiEffect : UiEffect {
     data class NavigateToRecordTransaction(val fundId: String) : DashboardUiEffect
     data class NavigateToSettings(val fundId: String) : DashboardUiEffect
     data class NavigateToMembers(val fundId: String) : DashboardUiEffect
+    data class NavigateToReports(val fundId: String) : DashboardUiEffect
     data class ShowSnackbar(val message: UiText) : DashboardUiEffect
 }

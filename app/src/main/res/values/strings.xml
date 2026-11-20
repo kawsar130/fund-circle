@@ -370,4 +370,100 @@
     <string name="profile_edit_save_success">Profile and KYC details saved successfully.</string>
     <string name="profile_edit_error_loading">Failed to load profile KYC data.</string>
     <string name="profile_edit_error_general">Failed to save profile. Please check the fields and try again.</string>
+
+    <!-- Screen 12: Financial Reports Engine & Live Preview (CUJ-08) -->
+    <string name="reports_title">Financial Reports Engine</string>
+    <string name="reports_back_cd">Navigate back</string>
+    <string name="reports_section_period">REPORTING PERIOD</string>
+    <string name="reports_period_month_year">Month &amp; Year</string>
+    <string name="reports_period_all_time">All Time</string>
+    <string name="reports_selected_period_label">Selected Period</string>
+    <string name="reports_month_label">Month</string>
+    <string name="reports_year_label">Year</string>
+    <string name="reports_section_report_type">REPORT TYPE</string>
+    <string name="reports_type_monthly_summary">Monthly Financial Summary</string>
+    <string name="reports_type_member_statement">Member-wise Deposit Statement</string>
+    <string name="reports_type_deposit_history">Complete Deposit History</string>
+    <string name="reports_type_expense_history">Complete Expense History</string>
+    <string name="reports_preview_desc_monthly_summary">Monthly balance statement with opening, net change, and closing figures.</string>
+    <string name="reports_preview_desc_member_statement">Stakeholder roster breakdown with individual contribution totals and deposit counts.</string>
+    <string name="reports_preview_desc_deposit_history">Chronological deposit history with payment methods, status, and audit notes.</string>
+    <string name="reports_preview_desc_expense_history">Chronological expense history with categories, paid-by details, and audit notes.</string>
+    <string name="reports_preview_title">ON-SCREEN PREVIEW</string>
+    <string name="reports_preview_circle_label">Fund Circle: %1$s</string>
+    <string name="reports_preview_statement_period">Statement for: %1$s</string>
+    <string name="reports_preview_opening_balance">Opening Balance:</string>
+    <string name="reports_preview_posted_deposits">Total Posted Deposits (%1$s):</string>
+    <string name="reports_preview_posted_expenses">Total Posted Expenses (%1$s):</string>
+    <string name="reports_preview_net_change">Net Monthly Change:</string>
+    <string name="reports_preview_net_change_all_time">Net Total Change:</string>
+    <string name="reports_preview_closing_balance">Closing Recorded Balance:</string>
+    <string name="reports_preview_tx_count">Total Transactions: %1$d</string>
+    <string name="reports_btn_export_csv">Export Ledger (CSV)</string>
+    <string name="reports_exporting">Generating CSV…</string>
+    <string name="reports_share_chooser_title">Share Financial Report</string>
+    <string name="reports_error_export">Failed to generate report export.</string>
+    <string name="reports_empty_preview">No transactions recorded for the selected period.</string>
+
+    <!-- Screen 13: Settings & Circle Governance (CUJ-08) -->
+    <string name="settings_title">Settings &amp; Circle Options</string>
+    <string name="settings_back_cd">Navigate back</string>
+    <string name="settings_section_workspace">WORKSPACE NAVIGATION</string>
+    <string name="settings_switch_circle_title">Switch Fund Circle</string>
+    <string name="settings_switch_circle_subtitle">Return to Hub to switch or manage other circles</string>
+    <string name="settings_section_membership">MY MEMBERSHIP</string>
+    <string name="settings_base_currency_title">Base Currency</string>
+    <string name="settings_base_currency_subtitle">Locked permanently to circle</string>
+    <string name="settings_base_currency_badge">%1$s (%2$s) 🔒</string>
+    <string name="settings_my_profile_title">My Profile (%1$s)</string>
+    <string name="settings_my_profile_subtitle">View personal and nominee information</string>
+    <string name="settings_leave_circle_title">Leave Fund Circle</string>
+    <string name="settings_leave_circle_subtitle">Step down and retain historical records only</string>
+    <string name="settings_leave_admin_disabled">Circle Admin cannot leave without transferring ownership first.</string>
+    <string name="settings_section_governance">CIRCLE GOVERNANCE (Admin Only)</string>
+    <string name="settings_transfer_admin_title">Transfer Admin Ownership</string>
+    <string name="settings_transfer_admin_subtitle">Hand over circle leadership to another member</string>
+    <string name="settings_lock_circle_title">Archive / Lock Fund Circle</string>
+    <string name="settings_lock_circle_subtitle">Lock ledger to freeze new transactions</string>
+    <string name="settings_unlock_circle_title">Unlock Fund Circle</string>
+    <string name="settings_unlock_circle_subtitle">Re-enable new transaction recording</string>
+    <string name="settings_section_preferences">APP PREFERENCES &amp; ACCOUNT</string>
+    <string name="settings_dark_theme_title">Dark Theme</string>
+    <string name="settings_dark_theme_subtitle">Toggle light or dark appearance</string>
+    <string name="settings_offline_cache_title">Offline Disk Cache</string>
+    <string name="settings_offline_cache_subtitle">100 MB persistent offline cache active</string>
+    <string name="settings_offline_cache_badge">100 MB 🟢</string>
+    <string name="settings_sign_out_title">Sign Out of Google Account</string>
+    <string name="settings_sign_out_subtitle">Sign out of your session on this device</string>
+
+    <!-- Settings Dialogs -->
+    <string name="settings_dialog_leave_title">Leave Fund Circle?</string>
+    <string name="settings_dialog_leave_body">You are stepping down from %1$s. Your historical transactions will remain permanently recorded in the ledger.</string>
+    <string name="settings_dialog_leave_confirm">Leave Circle</string>
+    <string name="settings_dialog_transfer_title">Transfer Admin Ownership</string>
+    <string name="settings_dialog_transfer_body">Select an active stakeholder to receive administrative control of %1$s.</string>
+    <string name="settings_dialog_transfer_no_members">No other active members available to transfer leadership to.</string>
+    <string name="settings_dialog_transfer_warning">Warning: You will step down to a Member role once leadership is transferred.</string>
+    <string name="settings_dialog_transfer_confirm">Transfer Admin</string>
+    <string name="settings_dialog_lock_title">Lock Fund Circle?</string>
+    <string name="settings_dialog_lock_body">Locking %1$s will freeze the ledger and prevent any new transactions from being recorded. Historical records remain permanently viewable.</string>
+    <string name="settings_dialog_lock_confirm">Lock Circle</string>
+    <string name="settings_dialog_unlock_title">Unlock Fund Circle?</string>
+    <string name="settings_dialog_unlock_body">Unlocking %1$s will allow members to record new deposits and expenses.</string>
+    <string name="settings_dialog_unlock_confirm">Unlock Circle</string>
+    <string name="settings_dialog_sign_out_title">Sign Out?</string>
+    <string name="settings_dialog_sign_out_body">Are you sure you want to sign out of Fund Circle?</string>
+    <string name="settings_dialog_sign_out_confirm">Sign Out</string>
+    <string name="settings_dialog_cancel">Cancel</string>
+    <string name="settings_success_admin_transferred">Admin ownership transferred successfully.</string>
+    <string name="settings_success_circle_locked">Fund circle locked successfully.</string>
+    <string name="settings_success_circle_unlocked">Fund circle unlocked successfully.</string>
+    <string name="settings_success_left_circle">You have left the fund circle.</string>
+    <string name="settings_error_transfer_failed">Failed to transfer admin ownership.</string>
+    <string name="settings_error_lock_failed">Failed to update circle lock status.</string>
+    <string name="settings_error_leave_failed">Failed to leave circle.</string>
+    <string name="settings_error_sign_out_failed">Failed to sign out.</string>
+
+    <!-- Dashboard Top Bar Reports -->
+    <string name="dashboard_top_bar_reports_cd">Financial Reports Engine</string>
 </resources>

@@ -270,6 +270,18 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun navigateToReports_emitsNavigateToReportsEffect() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.uiEffect.test {
+            viewModel.onAction(DashboardUiAction.NavigateToReports)
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(DashboardUiEffect.NavigateToReports(testFundId))
+        }
+    }
+
+    @Test
     fun openNotifications_emitsShowSnackbarEffect() = runTest {
         val viewModel = createViewModel()
         advanceUntilIdle()

@@ -95,6 +95,48 @@ class FundRemoteDataSourceImpl @Inject constructor(
         Result.failure(e)
     }
 
+    override suspend fun transferAdminRole(
+        fundId: String,
+        currentAdminUserId: String,
+        newAdminUserId: String,
+        newAdminEmail: String
+    ): Result<Unit> = try {
+        val batch = firestore.batch()
+        val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
+        val oldAdminMemberRef = fundRef.collection(COLLECTION_MEMBERS).document(currentAdminUserId)
+        val newAdminMemberRef = fundRef.collection(COLLECTION_MEMBERS).document(newAdminUserId)
+
+        batch.update(
+            fundRef,
+            mapOf(
+                FIELD_ADMIN_ID to newAdminUserId,
+                FIELD_ADMIN_EMAIL to newAdminEmail,
+                FIELD_UPDATED_AT to System.currentTimeMillis()
+            )
+        )
+        batch.update(
+            oldAdminMemberRef,
+            mapOf(
+                FIELD_ROLE to "MEMBER",
+                FIELD_UPDATED_AT to System.currentTimeMillis()
+            )
+        )
+        batch.update(
+            newAdminMemberRef,
+            mapOf(
+                FIELD_ROLE to "ADMIN",
+                FIELD_UPDATED_AT to System.currentTimeMillis()
+            )
+        )
+
+        batch.commit().await()
+        Result.success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        Result.failure(e)
+    }
+
     companion object {
         private const val COLLECTION_FUNDS = "funds"
         private const val COLLECTION_MEMBERS = "members"
@@ -103,5 +145,8 @@ class FundRemoteDataSourceImpl @Inject constructor(
         private const val FIELD_IS_LOCKED = "isLocked"
         private const val FIELD_UPDATED_AT = "updatedAt"
         private const val FIELD_CREATED_CIRCLE_COUNT = "createdCircleCount"
+        private const val FIELD_ADMIN_ID = "adminId"
+        private const val FIELD_ADMIN_EMAIL = "adminEmail"
+        private const val FIELD_ROLE = "role"
     }
 }

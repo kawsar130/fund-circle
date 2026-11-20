@@ -24,6 +24,8 @@ import com.fundcircle.app.presentation.screens.ledger.TransactionsLedgerRoute
 import com.fundcircle.app.presentation.screens.members.MembersRosterRoute
 import com.fundcircle.app.presentation.screens.members.detail.MemberDetailRoute
 import com.fundcircle.app.presentation.screens.profile.ProfileEditRoute
+import com.fundcircle.app.presentation.screens.reports.ReportsRoute
+import com.fundcircle.app.presentation.screens.settings.SettingsRoute
 import com.fundcircle.app.presentation.screens.transaction.RecordTransactionSheet
 
 /**
@@ -98,6 +100,9 @@ fun FundCircleNavHost(
                 },
                 onNavigateToMembers = { fundId ->
                     navController.navigate(ScreenRoute.MembersRoster(fundId = fundId))
+                },
+                onNavigateToReports = { fundId ->
+                    navController.navigate(ScreenRoute.Reports(fundId = fundId))
                 }
             )
 
@@ -145,9 +150,31 @@ fun FundCircleNavHost(
 
         composable<ScreenRoute.Settings> { backStackEntry ->
             val settings = backStackEntry.toRoute<ScreenRoute.Settings>()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Settings: ${settings.fundId} (Slice 5)")
-            }
+            SettingsRoute(
+                fundId = settings.fundId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHub = {
+                    navController.navigate(ScreenRoute.CircleHub) {
+                        popUpTo(ScreenRoute.Dashboard(settings.fundId)) { inclusive = true }
+                    }
+                },
+                onNavigateToProfile = { fundId ->
+                    navController.navigate(ScreenRoute.ProfileEdit(fundId = fundId))
+                },
+                onNavigateToAuth = {
+                    navController.navigate(ScreenRoute.Welcome) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable<ScreenRoute.Reports> { backStackEntry ->
+            val reports = backStackEntry.toRoute<ScreenRoute.Reports>()
+            ReportsRoute(
+                fundId = reports.fundId,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable<ScreenRoute.MembersRoster> { backStackEntry ->

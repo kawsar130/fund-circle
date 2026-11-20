@@ -19,4 +19,12 @@ interface FundRemoteDataSource {
 
     /** Updates circle lock status */
     suspend fun toggleCircleLock(fundId: String, isLocked: Boolean): Result<Unit>
+
+    /** Atomically transfers circle admin ownership and updates member roles in Firestore batch */
+    suspend fun transferAdminRole(
+        fundId: String,
+        currentAdminUserId: String,
+        newAdminUserId: String,
+        newAdminEmail: String
+    ): Result<Unit>
 }
