@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -22,7 +24,17 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val webClientId: String = (project.findProperty("WEB_CLIENT_ID") as? String) ?: ""
+        val localProperties = Properties().apply {
+            val localPropsFile = rootProject.file("local.properties")
+            if (localPropsFile.exists()) {
+                localPropsFile.inputStream().use { stream ->
+                    this.load(stream)
+                }
+            }
+        }
+        val webClientId: String = localProperties.getProperty("WEB_CLIENT_ID")
+            ?: (project.findProperty("WEB_CLIENT_ID") as? String)
+            ?: ""
         buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
     }
 
@@ -38,7 +50,6 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            applicationIdSuffix = ".debug"
         }
     }
 

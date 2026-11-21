@@ -1,0 +1,7 @@
+# Location of the SDK. This is only used by Gradle.
+# For customization when using a Version Control System, please read the
+# header note.
+sdk.dir=/path/to/your/Android/sdk
+
+# Google OAuth 2.0 Web Client ID (from Firebase Console -> Authentication -> Google Sign-In)
+WEB_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
