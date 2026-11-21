@@ -4,24 +4,8 @@
       "collectionGroup": "deposits",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "depositDate", "order": "DESCENDING" },
-        { "fieldPath": "__name__", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "deposits",
-      "queryScope": "COLLECTION",
-      "fields": [
         { "fieldPath": "memberId", "order": "ASCENDING" },
         { "fieldPath": "depositDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "expenses",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "expenseDate", "order": "DESCENDING" },
-        { "fieldPath": "__name__", "order": "DESCENDING" }
       ]
     },
     {
