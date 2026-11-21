@@ -2,6 +2,7 @@ package com.fundcircle.app.data.dto
 
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
+import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
 import kotlinx.serialization.Serializable
 
@@ -9,6 +10,7 @@ import kotlinx.serialization.Serializable
  * Firestore DTO for /funds/{fundId} root document.
  * Invariant 1: Financial fields are 64-bit Long integers.
  */
+@IgnoreExtraProperties
 @Serializable
 data class FundCircleDto(
     val fundId: String = "",

@@ -1,0 +1,245 @@
+rules_version = '2';
+
+// ===============================================================
+// Fund Circle — Production Cloud Firestore Security Rules
+// ===============================================================
+// Target Platform: Android 8.0+ (Min SDK 26, Target SDK 35, Compile SDK 35)
+// Backend Architecture: 100% Serverless BaaS on Firebase Spark Plan ($0 Free Tier)
+//
+// Core Architectural & Security Invariants:
+// 1. Invariant 1 (Whole-Integer Money): All amounts strictly 64-bit int >= 1. Zero decimals/poisha.
+// 2. Invariant 2 ($O(1)$ Atomic Aggregates): Single-doc read dashboard. Circle creation enforces
+//    totalDeposits == 0, totalExpenses == 0, recordedBalance == 0. Currency locked permanently.
+// 3. Invariant 3 (Multi-Tenant Physical Isolation & Zero-Read Tenant Authorization):
+//    All circle assets isolated under /funds/{fundId}/...
+//    Zero-read O(1) membership check: getUserEmail() in fundData.memberEmails.
+// 4. Invariant 4 (Immutable Audit Trail - Zero Hard Deletes):
+//    Financial records cannot be deleted (allow delete: if false;).
+//    Reversals restricted strictly to audit metadata via affectedKeys().hasOnly([...]).
+// 5. Invariant 6 (User Data Separation & PII Protection):
+//    KYC PII (/funds/{fundId}/members/{userId}/kyc/identity) restricted strictly to Circle Admin or owner.
+//    User profiles (/users/{userId}) restricted strictly to the authenticated user.
+// ===============================================================
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: /funds/{fundId}
+// Document ID: fundId (UUIDv4)
+// Fields:
+//   - fundId: string (immutable) - Circle UUIDv4 identifier
+//   - name: string - Circle display name
+//   - description: string - Circle description
+//   - currency: string ('BDT' | 'USD' | 'EUR', permanently locked) - Base currency
+//   - adminId: string - Circle Admin UID
+//   - adminEmail: string - Circle Admin Email
+//   - memberEmails: list of strings - Zero-read tenant authorization vector
+//   - memberCount: int - Total member count in circle
+//   - totalDeposits: int (whole integer >= 0, initially 0) - Atomic aggregate deposits
+//   - totalExpenses: int (whole integer >= 0, initially 0) - Atomic aggregate expenses
+//   - recordedBalance: int (whole integer, initially 0) - Atomic aggregate net balance
+//   - isLocked: bool (initially false) - Emergency freeze toggle
+//   - createdAt: int (epoch ms, immutable) - Creation timestamp
+//   - updatedAt: int (epoch ms) - Last update timestamp
+//
+// Subcollection: /funds/{fundId}/members/{userId}
+// Document ID: userId (Firebase Auth UID)
+// Fields:
+//   - userId: string - Member Auth UID
+//   - memberId: string (e.g. 'FC-001') - Sequential member identifier
+//   - email: string - Member email address
+//   - name: string - Member display name
+//   - role: string ('ADMIN' | 'MEMBER') - Member role
+//   - status: string ('PENDING' | 'ACTIVE' | 'INACTIVE' | 'LEFT') - Member status
+//   - totalContributed: int (whole integer >= 0) - Total contributions
+//   - joinedAt: int (epoch ms) - Joining timestamp
+//   - lastActiveAt: int (epoch ms) - Last activity timestamp
+//
+// Subcollection: /funds/{fundId}/members/{userId}/kyc/identity
+// Document ID: 'identity'
+// Fields:
+//   - userId: string - Member Auth UID
+//   - nidNumber: string - National Identity Number (PII)
+//   - nomineeName: string - Nominee full name
+//   - nomineePhone: string - Nominee contact phone
+//   - nomineeRelation: string - Relationship to member
+//   - verifiedByAdmin: bool - Admin verification flag
+//   - updatedAt: int (epoch ms) - Last update timestamp
+//
+// Subcollection: /funds/{fundId}/deposits/{depositId}
+// Document ID: depositId (UUIDv4)
+// Fields:
+//   - depositId: string - Deposit UUIDv4
+//   - fundId: string - Parent Fund UUIDv4
+//   - memberId: string - Contributor Member UID
+//   - memberEmail: string - Contributor Email
+//   - memberName: string - Contributor Name
+//   - amount: int (whole positive integer >= 1, immutable) - Contribution amount
+//   - depositDate: int (epoch ms <= request.time) - Transaction date
+//   - paymentMethod: string - Payment method
+//   - note: string - Notes
+//   - isVoid: bool (initially false) - Void flag
+//   - voidReason: string - Reversal reason
+//   - voidedAt: int (epoch ms) - Reversal timestamp
+//   - voidedBy: string - Admin email who reversed
+//   - correctionHistory: list of maps - Audit diff trail
+//   - createdAt: int (epoch ms) - Creation timestamp
+//
+// Subcollection: /funds/{fundId}/expenses/{expenseId}
+// Document ID: expenseId (UUIDv4)
+// Fields:
+//   - expenseId: string - Expense UUIDv4
+//   - fundId: string - Parent Fund UUIDv4
+//   - amount: int (whole positive integer >= 1, immutable) - Expense amount
+//   - expenseDate: int (epoch ms <= request.time) - Transaction date
+//   - category: string - Expense category
+//   - description: string - Expense description
+//   - paymentMethod: string - Payment method
+//   - paidBy: string - Vendor or payee name
+//   - createdBy: string - Creator UID
+//   - creatorEmail: string - Creator Email
+//   - isVoid: bool (initially false) - Void flag
+//   - voidReason: string - Reversal reason
+//   - voidedAt: int (epoch ms) - Reversal timestamp
+//   - voidedBy: string - Admin email who reversed
+//   - correctionHistory: list of maps - Audit diff trail
+//   - createdAt: int (epoch ms) - Creation timestamp
+//
+// Subcollection: /funds/{fundId}/audit_logs/{logId}
+// Document ID: logId (UUIDv4 or auto-generated)
+// Fields:
+//   - logId: string
+//   - fundId: string
+//   - action: string
+//   - actorId: string
+//   - actorEmail: string
+//   - details: string
+//   - timestamp: int
+//
+// Collection: /users/{userId}
+// Document ID: userId (Firebase Auth UID)
+// Fields:
+//   - userId: string - User UID
+//   - email: string - Google Account Email
+//   - displayName: string - Display name
+//   - photoUrl: string - Profile picture URL
+//   - createdCircleCount: int - Created circle counter
+//   - createdAt: int - Creation timestamp
+//   - lastActiveAt: int - Last active timestamp
+//
+// Subcollection: /users/{userId}/invitations/{invitationId}
+// Document ID: invitationId (UUIDv4)
+// Fields:
+//   - invitationId: string - Invitation ID
+//   - fundId: string - Circle ID
+//   - fundName: string - Circle Name
+//   - invitedByEmail: string - Sender email
+//   - assignedRole: string - Assigned role
+//   - status: string - Status
+//   - createdAt: int - Creation timestamp
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserEmail() {
+      return request.auth.token.email;
+    }
+
+    // Zero-read tenant authorization check via memberEmails array
+    function isCircleMember(fundData) {
+      return isAuthenticated() && (getUserEmail() in fundData.memberEmails);
+    }
+
+    function isCircleAdmin(fundData) {
+      return isAuthenticated() && request.auth.uid == fundData.adminId;
+    }
+
+    // Safely retrieves parent fund document for standalone reads and atomic batch operations
+    function getFundData(fundId) {
+      return exists(/databases/$(database)/documents/funds/$(fundId))
+        ? get(/databases/$(database)/documents/funds/$(fundId)).data
+        : getAfter(/databases/$(database)/documents/funds/$(fundId)).data;
+    }
+
+    // Funds collection
+    match /funds/{fundId} {
+      allow read: if isCircleMember(resource.data);
+      allow create: if isAuthenticated() 
+                    && request.resource.data.adminId == request.auth.uid
+                    && request.resource.data.totalDeposits == 0
+                    && request.resource.data.totalExpenses == 0
+                    && request.resource.data.recordedBalance == 0;
+      allow update: if isCircleMember(resource.data)
+                    && (request.resource.data.currency == resource.data.currency); // Currency locked permanently
+      allow delete: if isCircleAdmin(resource.data)
+                    && resource.data.totalDeposits == 0 
+                    && resource.data.totalExpenses == 0;
+
+      // Members subcollection
+      match /members/{userId} {
+        allow read: if isCircleMember(getFundData(fundId));
+        allow write: if isCircleAdmin(getFundData(fundId))
+                     || (isAuthenticated() && request.auth.uid == userId); // Allow voluntary exit (status update)
+
+        // Strictly Admin-Scoped KYC Identity PII
+        match /kyc/identity {
+          allow read, write: if isCircleAdmin(getFundData(fundId)) 
+                             || (isAuthenticated() && request.auth.uid == userId);
+        }
+      }
+
+      // Deposits subcollection
+      match /deposits/{depositId} {
+        allow read: if isCircleMember(getFundData(fundId));
+        allow create: if isCircleMember(getFundData(fundId))
+                      && request.resource.data.amount is int
+                      && request.resource.data.amount >= 1
+                      && request.resource.data.depositDate <= request.time.toMillis();
+        allow update: if isCircleAdmin(getFundData(fundId))
+                      && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
+        allow delete: if false; // Financial records are immutable; reversal protocol only
+      }
+
+      // Expenses subcollection
+      match /expenses/{expenseId} {
+        allow read: if isCircleMember(getFundData(fundId));
+        allow create: if isCircleAdmin(getFundData(fundId))
+                      && request.resource.data.amount is int
+                      && request.resource.data.amount >= 1
+                      && request.resource.data.expenseDate <= request.time.toMillis();
+        allow update: if isCircleAdmin(getFundData(fundId))
+                      && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
+        allow delete: if false; // Financial records are immutable; reversal protocol only
+      }
+
+      // Audit logs
+      match /audit_logs/{logId} {
+        allow read: if isCircleMember(getFundData(fundId));
+        allow create: if isAuthenticated();
+        allow update, delete: if false; // Append-only immutable log
+      }
+    }
+
+    // User Profile & Invitations
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+
+      match /invitations/{invitationId} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+        allow create: if isAuthenticated();
+      }
+    }
+
+    // Default deny: All unmapped root paths are rejected
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
