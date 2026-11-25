@@ -88,7 +88,6 @@ fun SettingsRoute(
     fundId: String,
     onNavigateToHub: () -> Unit,
     onNavigateToProfile: (String) -> Unit,
-    onNavigateToAuth: () -> Unit,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
@@ -103,7 +102,6 @@ fun SettingsRoute(
             when (effect) {
                 is SettingsUiEffect.NavigateToHub -> onNavigateToHub()
                 is SettingsUiEffect.NavigateToProfile -> onNavigateToProfile(effect.fundId)
-                is SettingsUiEffect.NavigateToAuth -> onNavigateToAuth()
                 is SettingsUiEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
@@ -633,46 +631,6 @@ fun SettingsScreen(
                     modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
                 ) {
                     Text(lockDialogConfirm)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { onAction(SettingsUiAction.DismissDialogs) },
-                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                ) {
-                    Text(stringResource(R.string.settings_dialog_cancel))
-                }
-            }
-        )
-    }
-
-    if (state.showSignOutDialog) {
-        AlertDialog(
-            onDismissRequest = { onAction(SettingsUiAction.DismissDialogs) },
-            title = {
-                Text(
-                    text = stringResource(R.string.settings_dialog_sign_out_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.settings_dialog_sign_out_body),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { onAction(SettingsUiAction.ConfirmSignOut) },
-                    enabled = !state.isActionInProgress,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                ) {
-                    Text(stringResource(R.string.settings_dialog_sign_out_confirm))
                 }
             },
             dismissButton = {

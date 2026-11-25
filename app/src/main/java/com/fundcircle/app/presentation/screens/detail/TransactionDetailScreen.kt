@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail
 
+import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -346,9 +347,7 @@ fun TransactionDetailScreen(
                 // 2. Transaction Specification Card
                 val clipboardManager = LocalClipboardManager.current
                 val shortRef = remember(uiState.txId, uiState.isExpense) {
-                    val prefix = if (uiState.isExpense) "TX-EXP" else "TX-DEP"
-                    val suffix = uiState.txId.replace("-", "").takeLast(4).uppercase()
-                    "$prefix-$suffix"
+                    shortTransactionRef(uiState.txId, uiState.isExpense)
                 }
 
                 Card(
@@ -574,38 +573,46 @@ fun TransactionDetailScreen(
                         )
 
                         // Reversal Metadata (Rendered when transaction has been voided)
-                        if (isVoid && voidMetadata != null) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        AnimatedVisibility(
+                            visible = isVoid && voidMetadata != null,
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut()
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing10)) {
+                                if (voidMetadata != null) {
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
 
-                            DetailRow(
-                                label = stringResource(R.string.tx_detail_audit_date_label),
-                                value = DateUtils.formatDisplayDateTime(voidMetadata.voidedAt)
-                            )
-                            DetailRow(
-                                label = stringResource(R.string.tx_detail_audit_by_label),
-                                value = voidMetadata.voidedBy
-                            )
-                            DetailRow(
-                                label = stringResource(R.string.tx_detail_audit_reason_label),
-                                value = "\"${voidMetadata.reason}\""
-                            )
-                            val impactText = if (uiState.isExpense) {
-                                stringResource(
-                                    R.string.tx_detail_audit_impact_expense_format,
-                                    uiState.currency.symbol,
-                                    formattedAmount
-                                )
-                            } else {
-                                stringResource(
-                                    R.string.tx_detail_audit_impact_deposit_format,
-                                    uiState.currency.symbol,
-                                    formattedAmount
-                                )
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_date_label),
+                                        value = DateUtils.formatDisplayDateTime(voidMetadata.voidedAt)
+                                    )
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_by_label),
+                                        value = voidMetadata.voidedBy
+                                    )
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_reason_label),
+                                        value = "\"${voidMetadata.reason}\""
+                                    )
+                                    val impactText = if (uiState.isExpense) {
+                                        stringResource(
+                                            R.string.tx_detail_audit_impact_expense_format,
+                                            uiState.currency.symbol,
+                                            formattedAmount
+                                        )
+                                    } else {
+                                        stringResource(
+                                            R.string.tx_detail_audit_impact_deposit_format,
+                                            uiState.currency.symbol,
+                                            formattedAmount
+                                        )
+                                    }
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_impact_label),
+                                        value = impactText
+                                    )
+                                }
                             }
-                            DetailRow(
-                                label = stringResource(R.string.tx_detail_audit_impact_label),
-                                value = impactText
-                            )
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail.components
 
+import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -115,8 +116,7 @@ fun ReverseTransactionDialog(
         deposit?.memberName?.ifBlank { deposit.memberEmail }?.takeIf { it.isNotBlank() }
     }
 
-    val prefix = if (isExpense) "TX-EXP" else "TX-DEP"
-    val displayTxId = if (txId.startsWith("TX-")) txId else "$prefix-${txId.takeLast(4).uppercase()}"
+    val displayTxId = shortTransactionRef(txId, isExpense)
 
     val summaryHeader = stringResource(
         R.string.dialog_reverse_summary_header,

@@ -24,7 +24,6 @@ data class SettingsUiState(
     val showTransferAdminDialog: Boolean = false,
     val selectedNewAdminUserId: String? = null,
     val showLockDialog: Boolean = false,
-    val showSignOutDialog: Boolean = false,
     val isActionInProgress: Boolean = false,
     val darkThemeOverride: Boolean? = null,
     val errorMessage: UiText? = null
@@ -41,8 +40,6 @@ sealed interface SettingsUiAction : UiAction {
     data object ConfirmTransferAdmin : SettingsUiAction
     data object OpenLockDialog : SettingsUiAction
     data object ConfirmToggleCircleLock : SettingsUiAction
-    data object OpenSignOutDialog : SettingsUiAction
-    data object ConfirmSignOut : SettingsUiAction
     data object DismissDialogs : SettingsUiAction
     data object DismissError : SettingsUiAction
 }
@@ -50,6 +47,5 @@ sealed interface SettingsUiAction : UiAction {
 sealed interface SettingsUiEffect : UiEffect {
     data object NavigateToHub : SettingsUiEffect
     data class NavigateToProfile(val fundId: String) : SettingsUiEffect
-    data object NavigateToAuth : SettingsUiEffect
     data class ShowSnackbar(val message: UiText) : SettingsUiEffect
 }

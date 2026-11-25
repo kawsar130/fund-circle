@@ -42,6 +42,7 @@ class RecordTransactionViewModel @Inject constructor(
 
     private var circleJob: Job? = null
     private var membersJob: Job? = null
+    private var lastSessionKey: String? = null
 
     init {
         loadCircleAndMembers()
@@ -88,21 +89,29 @@ class RecordTransactionViewModel @Inject constructor(
                 if (isNewFund) {
                     fundId = action.fundId
                 }
-                setState {
-                    copy(
-                        mode = action.initialMode,
-                        amountInput = "",
-                        dateEpochMs = System.currentTimeMillis(),
-                        note = "",
-                        description = "",
-                        paidBy = "",
-                        isSubmitting = false,
-                        amountError = null,
-                        dateError = null,
-                        descriptionError = null,
-                        memberError = null,
-                        generalError = null
-                    )
+                val isSameSheet = !isNewFund && action.sessionKey != null && action.sessionKey == lastSessionKey
+                lastSessionKey = action.sessionKey
+                // Keep input across rotation, and never reset under an in-flight save.
+                if (!isSameSheet && !uiState.value.isSubmitting) {
+                    val defaults = RecordTransactionUiState()
+                    setState {
+                        copy(
+                            mode = action.initialMode,
+                            amountInput = "",
+                            dateEpochMs = System.currentTimeMillis(),
+                            paymentMethod = defaults.paymentMethod,
+                            selectedMember = members.firstOrNull(),
+                            note = "",
+                            category = defaults.category,
+                            description = "",
+                            paidBy = "",
+                            amountError = null,
+                            dateError = null,
+                            descriptionError = null,
+                            memberError = null,
+                            generalError = null
+                        )
+                    }
                 }
                 if (isNewFund) {
                     loadCircleAndMembers()
@@ -189,6 +198,7 @@ class RecordTransactionViewModel @Inject constructor(
 
     private fun handleSubmit() {
         val currentState = uiState.value
+        if (currentState.isSubmitting) return
 
         if (currentState.isCircleLocked) {
             setState {
@@ -250,8 +260,9 @@ class RecordTransactionViewModel @Inject constructor(
 
         val nonNullAmount = checkNotNull(parsedAmount)
 
+        // Mark submitting synchronously so a second tap is rejected before the coroutine runs.
+        setState { copy(isSubmitting = true, generalError = null) }
         viewModelScope.launch {
-            setState { copy(isSubmitting = true, generalError = null) }
             val session = authRepository.userSession.firstOrNull()
 
             when (currentState.mode) {

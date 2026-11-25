@@ -186,11 +186,6 @@ fun FundCircleNavHost(
                 onNavigateToProfile = { fundId ->
                     navController.navigate(ScreenRoute.ProfileEdit(fundId = fundId))
                 },
-                onNavigateToAuth = {
-                    navController.navigate(ScreenRoute.Welcome) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
                 bottomBar = {
                     FundCircleNavigationBar(
                         selectedTab = CircleNavTab.SETTINGS,

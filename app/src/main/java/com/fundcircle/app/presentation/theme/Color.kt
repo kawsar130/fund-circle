@@ -39,6 +39,7 @@ val OutlineVariantLight = Color(0xFFBFC9C2)
 // Slate Navy Foundation Tokens (Dark)
 val SlateNavyDarkBase = Color(0xFF0A101D)              // Root window background
 val SlateNavyDarkSurface = Color(0xFF101726)           // App bars, sheet surfaces
+val SlateNavyDarkContainerLow = Color(0xFF131B2B)      // Low-emphasis cards (between surface and container)
 val SlateNavyDarkContainer = Color(0xFF161F30)         // Elevated cards, list items
 val SlateNavyDarkContainerHigh = Color(0xFF1E2A40)     // Higher elevation cards, dialogs
 val SlateNavyDarkContainerHighest = Color(0xFF263550)  // Active pills, highlight blocks

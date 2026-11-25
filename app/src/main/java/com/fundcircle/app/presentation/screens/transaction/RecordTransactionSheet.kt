@@ -1,5 +1,7 @@
 package com.fundcircle.app.presentation.screens.transaction
 
+import java.util.UUID
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -100,9 +102,17 @@ fun RecordTransactionSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
 
+    // One key per opening of the sheet; rememberSaveable keeps it across rotation.
+    val sheetSessionKey = rememberSaveable { UUID.randomUUID().toString() }
     LaunchedEffect(fundId, initialMode) {
         if (fundId.isNotBlank()) {
-            viewModel.onAction(RecordTransactionUiAction.Initialize(fundId = fundId, initialMode = initialMode))
+            viewModel.onAction(
+                RecordTransactionUiAction.Initialize(
+                    fundId = fundId,
+                    initialMode = initialMode,
+                    sessionKey = sheetSessionKey
+                )
+            )
         }
     }
 

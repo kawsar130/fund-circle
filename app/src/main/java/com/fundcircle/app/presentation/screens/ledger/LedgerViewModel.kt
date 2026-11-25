@@ -42,7 +42,6 @@ class LedgerViewModel @Inject constructor(
 
     private val rawDeposits = MutableStateFlow<List<Deposit>>(emptyList())
     private val rawExpenses = MutableStateFlow<List<Expense>>(emptyList())
-    private val selectedTab = MutableStateFlow(LedgerTab.DEPOSITS)
     private val searchQuery = MutableStateFlow("")
     private val filterPaymentMethod = MutableStateFlow<PaymentMethod?>(null)
     private val filterCategory = MutableStateFlow<ExpenseCategory?>(null)
@@ -58,7 +57,6 @@ class LedgerViewModel @Inject constructor(
     override fun onAction(action: LedgerUiAction) {
         when (action) {
             is LedgerUiAction.SelectTab -> {
-                selectedTab.value = action.tab
                 setState { copy(selectedTab = action.tab) }
             }
             is LedgerUiAction.UpdateSearchQuery -> {

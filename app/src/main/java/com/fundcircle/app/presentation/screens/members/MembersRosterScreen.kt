@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members
 
+import com.fundcircle.app.presentation.common.extractInitials
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -584,15 +585,6 @@ fun EmptyMembersCard(
                 textAlign = TextAlign.Center
             )
         }
-    }
-}
-
-private fun extractInitials(name: String): String {
-    val parts = name.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
-    return when {
-        parts.isEmpty() -> "M"
-        parts.size == 1 -> parts[0].take(2).uppercase(Locale.US)
-        else -> "${parts[0].first()}${parts[1].first()}".uppercase(Locale.US)
     }
 }
 

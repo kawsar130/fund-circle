@@ -58,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -195,6 +196,8 @@ fun ReportsScreen(
                         selectedPeriod = state.selectedPeriod,
                         selectedMonth = state.selectedMonth,
                         selectedYear = state.selectedYear,
+                        earliestYear = state.circle?.createdAt?.let(::yearOf)
+                            ?: Calendar.getInstance().get(Calendar.YEAR),
                         onSelectPeriod = { onAction(ReportsUiAction.SelectPeriod(it)) },
                         onSelectMonthYear = { month, year ->
                             onAction(ReportsUiAction.SelectMonthYear(month, year))
@@ -285,7 +288,8 @@ fun PeriodSelectorCard(
     selectedYear: Int,
     onSelectPeriod: (ReportPeriod) -> Unit,
     onSelectMonthYear: (Int, Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    earliestYear: Int = Calendar.getInstance().get(Calendar.YEAR)
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -401,7 +405,8 @@ fun PeriodSelectorCard(
                     ConsolidatedPeriodDropdown(
                         selectedMonth = selectedMonth,
                         selectedYear = selectedYear,
-                        onSelectMonthYear = onSelectMonthYear
+                        onSelectMonthYear = onSelectMonthYear,
+                        earliestYear = earliestYear
                     )
                 }
             }
@@ -414,23 +419,21 @@ fun ConsolidatedPeriodDropdown(
     selectedMonth: Int,
     selectedYear: Int,
     onSelectMonthYear: (Int, Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    earliestYear: Int = Calendar.getInstance().get(Calendar.YEAR)
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val months = remember { DateFormatSymbols(Locale.US).months.take(12) }
-    val currentMonthName = months.getOrNull(selectedMonth - 1) ?: "Month"
+    val locale = LocalConfiguration.current.locales[0]
+    val months = remember(locale) { DateFormatSymbols.getInstance(locale).months.take(12) }
+    val currentMonthName = months.getOrNull(selectedMonth - 1).orEmpty()
 
-    val periodOptions = remember {
-        val options = mutableListOf<Pair<Int, Int>>()
-        val currentCal = Calendar.getInstance()
-        val curY = maxOf(2026, currentCal.get(Calendar.YEAR))
-        for (y in curY downTo 2024) {
-            val endMonth = if (y == curY && y == currentCal.get(Calendar.YEAR)) currentCal.get(Calendar.MONTH) + 1 else 12
-            for (m in endMonth downTo 1) {
-                options.add(m to y)
-            }
-        }
-        options
+    val periodOptions = remember(earliestYear) {
+        val now = Calendar.getInstance()
+        reportPeriodOptions(
+            earliestYear = earliestYear,
+            currentYear = now.get(Calendar.YEAR),
+            currentMonth = now.get(Calendar.MONTH) + 1
+        )
     }
 
     Box(modifier = modifier.fillMaxWidth()) {
@@ -446,7 +449,7 @@ fun ConsolidatedPeriodDropdown(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Text(
-                text = "$currentMonthName $selectedYear",
+                text = stringResource(R.string.reports_period_month_year_value, currentMonthName, selectedYear),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -466,11 +469,11 @@ fun ConsolidatedPeriodDropdown(
         ) {
             periodOptions.forEach { (m, y) ->
                 val isSelected = m == selectedMonth && y == selectedYear
-                val optionMonthName = months.getOrNull(m - 1) ?: "Month"
+                val optionMonthName = months.getOrNull(m - 1).orEmpty()
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = "$optionMonthName $y",
+                            text = stringResource(R.string.reports_period_month_year_value, optionMonthName, y),
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
@@ -610,7 +613,11 @@ fun LivePreviewCard(
             Text(
                 text = stringResource(
                     R.string.reports_preview_statement_period,
-                    monthlyReport?.periodDisplay ?: "All Time"
+                    periodLongLabel(
+                        period = monthlyReport?.period ?: ReportPeriod.AllTime,
+                        locale = LocalConfiguration.current.locales[0],
+                        allTimeLabel = stringResource(R.string.reports_period_all_time)
+                    )
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -647,11 +654,12 @@ fun LivePreviewCard(
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
                 // Deposits
-                val depositsLabel = if (report.periodDisplay == "All Time") {
+                val locale = LocalConfiguration.current.locales[0]
+                val shortMonth = periodShortMonth(report.period, locale)
+                val depositsLabel = if (shortMonth == null) {
                     stringResource(R.string.reports_preview_deposits)
                 } else {
-                    val shortMonth = report.periodDisplay.split(" ").firstOrNull()?.take(3) ?: "Nov"
-                    "Deposits ($shortMonth):"
+                    stringResource(R.string.reports_preview_deposits_for_month, shortMonth)
                 }
                 StatementRow(
                     label = depositsLabel,
@@ -664,11 +672,10 @@ fun LivePreviewCard(
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
                 // Expenses
-                val expensesLabel = if (report.periodDisplay == "All Time") {
+                val expensesLabel = if (shortMonth == null) {
                     stringResource(R.string.reports_preview_expenses)
                 } else {
-                    val shortMonth = report.periodDisplay.split(" ").firstOrNull()?.take(3) ?: "Nov"
-                    "Expenses ($shortMonth):"
+                    stringResource(R.string.reports_preview_expenses_for_month, shortMonth)
                 }
                 StatementRow(
                     label = expensesLabel,
@@ -851,4 +858,35 @@ fun ReportsScreenPreview_Dark() {
             onNavigateBack = {}
         )
     }
+}
+
+/** Year (in the device time zone) that an epoch-millis timestamp falls in. */
+internal fun yearOf(epochMs: Long): Int =
+    Calendar.getInstance().apply { timeInMillis = epochMs }.get(Calendar.YEAR)
+
+/**
+ * Month/year choices for the report period picker, newest first: every month from
+ * January of [earliestYear] through the current month. Never lists future months.
+ */
+internal fun reportPeriodOptions(earliestYear: Int, currentYear: Int, currentMonth: Int): List<Pair<Int, Int>> {
+    val firstYear = minOf(earliestYear, currentYear)
+    return (currentYear downTo firstYear).flatMap { year ->
+        val lastMonth = if (year == currentYear) currentMonth else 12
+        (lastMonth downTo 1).map { month -> month to year }
+    }
+}
+
+/** Localized short month name for a month/year report, or null for an all-time report. */
+internal fun periodShortMonth(period: ReportPeriod, locale: Locale): String? = when (period) {
+    is ReportPeriod.MonthYear -> DateFormatSymbols.getInstance(locale).shortMonths.getOrNull(period.month - 1)
+    ReportPeriod.AllTime -> null
+}
+
+/** Localized "Month Year" label for a report period, or [allTimeLabel] for an all-time report. */
+internal fun periodLongLabel(period: ReportPeriod, locale: Locale, allTimeLabel: String): String = when (period) {
+    is ReportPeriod.MonthYear -> {
+        val month = DateFormatSymbols.getInstance(locale).months.getOrNull(period.month - 1).orEmpty()
+        "$month ${period.year}".trim()
+    }
+    ReportPeriod.AllTime -> allTimeLabel
 }

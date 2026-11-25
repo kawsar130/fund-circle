@@ -14,7 +14,6 @@ import com.fundcircle.app.domain.repository.FundRepository
 import com.fundcircle.app.domain.usecase.LeaveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleMembersUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
-import com.fundcircle.app.domain.usecase.SignOutUseCase
 import com.fundcircle.app.domain.usecase.TransferAdminOwnershipUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
@@ -43,7 +42,6 @@ class SettingsViewModelTest {
     private val fundRepository: FundRepository = mockk(relaxed = true)
     private val leaveCircleUseCase: LeaveCircleUseCase = mockk(relaxed = true)
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase = mockk(relaxed = true)
-    private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val themePreferenceManager: ThemePreferenceManager = mockk(relaxed = true)
     private val darkThemeOverrideFlow = MutableStateFlow<Boolean?>(null)
@@ -133,7 +131,6 @@ class SettingsViewModelTest {
             fundRepository = fundRepository,
             leaveCircleUseCase = leaveCircleUseCase,
             transferAdminOwnershipUseCase = transferAdminOwnershipUseCase,
-            signOutUseCase = signOutUseCase,
             authRepository = authRepository,
             themePreferenceManager = themePreferenceManager
         )
@@ -311,28 +308,6 @@ class SettingsViewModelTest {
         }
 
         coVerify(exactly = 1) { fundRepository.toggleCircleLock(testFundId, true) }
-    }
-
-    @Test
-    fun `Sign Out calls signOutUseCase and navigates to Auth`() = runTest {
-        coEvery { signOutUseCase() } returns Result.success(Unit)
-
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.onAction(SettingsUiAction.OpenSignOutDialog)
-        assertThat(viewModel.uiState.value.showSignOutDialog).isTrue()
-
-        viewModel.uiEffect.test {
-            viewModel.onAction(SettingsUiAction.ConfirmSignOut)
-            advanceUntilIdle()
-
-            val effect = awaitItem()
-            assertThat(effect).isEqualTo(SettingsUiEffect.NavigateToAuth)
-            assertThat(viewModel.uiState.value.showSignOutDialog).isFalse()
-        }
-
-        coVerify(exactly = 1) { signOutUseCase() }
     }
 
     @Test
