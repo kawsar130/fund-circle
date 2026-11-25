@@ -105,6 +105,21 @@ docs/design_preview/index.html (Figma Node 42:3)
 android run --variant=debug
 ```
 
+### 🔐 Release Signing & Required GitHub Secrets
+
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which runs the unit tests, builds a signed AAB with `./gradlew bundleRelease`, and uploads it to the Play internal track. Configure these repository secrets (names only — never commit values):
+
+| Secret | Purpose |
+| --- | --- |
+| `RELEASE_KEYSTORE_BASE64` | Base64 of the upload keystore; decoded to `app/release-keystore.jks` (git-ignored). |
+| `KEYSTORE_PASSWORD` | Keystore password. |
+| `KEY_ALIAS` | Upload key alias. |
+| `KEY_PASSWORD` | Upload key password. |
+| `WEB_CLIENT_ID` | OAuth web client ID for Google Credential Manager sign-in. |
+| `PLAY_CONSOLE_SERVICE_ACCOUNT_JSON` | *Optional.* Play Console service account JSON; without it the Play upload is skipped and the AAB is kept as a workflow artifact. |
+
+Gradle resolves each value from `-P<NAME>`, then the `<NAME>` environment variable, then `local.properties` (set `KEYSTORE_FILE` to use a keystore other than `app/release-keystore.jks`). Without signing values, release builds fall back to the debug key so `assembleRelease` still works in CI, but `bundleRelease` fails fast unless both release signing and `WEB_CLIENT_ID` are configured.
+
 ---
 
 ## 📄 License & Intellectual Property
