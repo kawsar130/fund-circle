@@ -73,3 +73,6 @@ Thumbs.db
 *.bak
 *.swp
 *~
+
+# Node (Firestore rules test suite)
+node_modules/

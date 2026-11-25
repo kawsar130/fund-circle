@@ -15,7 +15,7 @@ echo -e "${BLUE}  Fund Circle Pre-Flight Verification & Quality Gates ${NC}"
 echo -e "${BLUE}======================================================${NC}\n"
 
 # 1. Invariant 1: Whole-Integer Money (No Float or Double in financial entities/parameters/functions)
-echo -e "🔍 [1/3] Checking Architectural Invariant 1 (64-bit Long monetary model)..."
+echo -e "🔍 [1/4] Checking Architectural Invariant 1 (64-bit Long monetary model)..."
 if [ -d "app/src/main" ]; then
     FORBIDDEN_MONEY=$(grep -rnE '\b[a-zA-Z0-9_]*(amount|balance|deposit|expense|target|total)[a-zA-Z0-9_]*\s*:\s*(Double|Float)' app/src/main/ || true)
     if [ -n "$FORBIDDEN_MONEY" ]; then
@@ -29,7 +29,7 @@ else
 fi
 
 # 2. Invariant 4: Zero Hard Deletes (Verify no delete() on transaction collections/batches/tx)
-echo -e "\n🔍 [2/3] Checking Architectural Invariant 4 (Immutable Ledger / No Hard Deletes)..."
+echo -e "\n🔍 [2/4] Checking Architectural Invariant 4 (Immutable Ledger / No Hard Deletes)..."
 if [ -d "app/src/main" ]; then
     FORBIDDEN_DELETE=$(grep -rnE '(\.delete\(|(batch|tx|transaction)\.delete\()' app/src/main/ || true)
     if [ -n "$FORBIDDEN_DELETE" ]; then

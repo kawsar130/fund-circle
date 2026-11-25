@@ -36,6 +36,41 @@ jobs:
         run: |
           echo "Localization pre-check ready."
 
+  firestore-rules-tests:
+    name: Firestore Security Rules (Emulator)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firestore-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: firestore-tests/package-lock.json
+
+      - name: Set up JDK 17 (Firestore emulator runtime)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Firebase emulator JAR
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('firestore-tests/package-lock.json') }}
+
+      - name: Install test dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run rules suite against the Firestore emulator
+        run: npx firebase --config ../firebase.json emulators:exec --only firestore --project demo-fundcircle "npm test"
+
   android-build-and-test:
     name: Android Build & Quality Gates
     runs-on: ubuntu-latest
