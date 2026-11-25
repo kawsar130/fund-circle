@@ -26,14 +26,14 @@ data class SettingsUiState(
     val showLockDialog: Boolean = false,
     val showSignOutDialog: Boolean = false,
     val isActionInProgress: Boolean = false,
-    val isDarkTheme: Boolean = false,
+    val darkThemeOverride: Boolean? = null,
     val errorMessage: UiText? = null
 ) : UiState
 
 sealed interface SettingsUiAction : UiAction {
     data object ClickSwitchCircle : SettingsUiAction
     data object ClickMyProfile : SettingsUiAction
-    data object ToggleDarkTheme : SettingsUiAction
+    data class SetDarkTheme(val isDark: Boolean) : SettingsUiAction
     data object OpenLeaveDialog : SettingsUiAction
     data object ConfirmLeaveCircle : SettingsUiAction
     data object OpenTransferAdminDialog : SettingsUiAction

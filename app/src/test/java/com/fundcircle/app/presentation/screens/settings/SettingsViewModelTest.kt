@@ -2,6 +2,7 @@ package com.fundcircle.app.presentation.screens.settings
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.fundcircle.app.core.theme.ThemePreferenceManager
 import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
@@ -20,8 +21,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -42,6 +45,8 @@ class SettingsViewModelTest {
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase = mockk(relaxed = true)
     private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
+    private val themePreferenceManager: ThemePreferenceManager = mockk(relaxed = true)
+    private val darkThemeOverrideFlow = MutableStateFlow<Boolean?>(null)
 
     private val testDispatcher = StandardTestDispatcher()
     private val testFundId = "circle-123"
@@ -111,6 +116,7 @@ class SettingsViewModelTest {
         every { observeCircleUseCase(testFundId) } returns flowOf(sampleCircle)
         every { observeCircleMembersUseCase(testFundId) } returns flowOf(listOf(adminMember, regularMember))
         every { authRepository.userSession } returns flowOf(sampleAdminSession)
+        every { themePreferenceManager.darkThemeOverride } returns darkThemeOverrideFlow
     }
 
     @After
@@ -128,7 +134,8 @@ class SettingsViewModelTest {
             leaveCircleUseCase = leaveCircleUseCase,
             transferAdminOwnershipUseCase = transferAdminOwnershipUseCase,
             signOutUseCase = signOutUseCase,
-            authRepository = authRepository
+            authRepository = authRepository,
+            themePreferenceManager = themePreferenceManager
         )
     }
 
@@ -326,5 +333,27 @@ class SettingsViewModelTest {
         }
 
         coVerify(exactly = 1) { signOutUseCase() }
+    }
+
+    @Test
+    fun `SetDarkTheme delegates to ThemePreferenceManager and updates uiState override`() = runTest {
+        every { themePreferenceManager.setDarkTheme(any()) } answers {
+            darkThemeOverrideFlow.value = firstArg()
+        }
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.darkThemeOverride).isNull()
+
+        viewModel.onAction(SettingsUiAction.SetDarkTheme(true))
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.darkThemeOverride).isTrue()
+
+        viewModel.onAction(SettingsUiAction.SetDarkTheme(false))
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.darkThemeOverride).isFalse()
+
+        verify(exactly = 1) { themePreferenceManager.setDarkTheme(true) }
+        verify(exactly = 1) { themePreferenceManager.setDarkTheme(false) }
     }
 }

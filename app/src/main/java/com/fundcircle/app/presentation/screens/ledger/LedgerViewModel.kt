@@ -8,6 +8,7 @@ import com.fundcircle.app.core.common.UiText
 import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
+import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.repository.AuthRepository
@@ -44,6 +45,7 @@ class LedgerViewModel @Inject constructor(
     private val selectedTab = MutableStateFlow(LedgerTab.DEPOSITS)
     private val searchQuery = MutableStateFlow("")
     private val filterPaymentMethod = MutableStateFlow<PaymentMethod?>(null)
+    private val filterCategory = MutableStateFlow<ExpenseCategory?>(null)
 
     private var ledgerJob: Job? = null
 
@@ -66,6 +68,10 @@ class LedgerViewModel @Inject constructor(
             is LedgerUiAction.FilterByPaymentMethod -> {
                 filterPaymentMethod.value = action.method
                 setState { copy(filterPaymentMethod = action.method) }
+            }
+            is LedgerUiAction.FilterByCategory -> {
+                filterCategory.value = action.category
+                setState { copy(filterCategory = action.category) }
             }
             is LedgerUiAction.ClickTransaction -> {
                 sendEffect(
@@ -174,10 +180,10 @@ class LedgerViewModel @Inject constructor(
             combine(
                 rawDeposits,
                 rawExpenses,
-                selectedTab,
                 searchQuery,
-                filterPaymentMethod
-            ) { deposits, expenses, tab, query, method ->
+                filterPaymentMethod,
+                filterCategory
+            ) { deposits, expenses, query, method, category ->
                 val trimmedQuery = query.trim()
 
                 val filteredDeposits = deposits.filter { dep ->
@@ -191,11 +197,12 @@ class LedgerViewModel @Inject constructor(
 
                 val filteredExpenses = expenses.filter { exp ->
                     val matchesMethod = method == null || exp.paymentMethod == method
+                    val matchesCategory = category == null || exp.category == category
                     val matchesQuery = trimmedQuery.isBlank() ||
                         exp.description.contains(trimmedQuery, ignoreCase = true) ||
                         exp.paidBy.contains(trimmedQuery, ignoreCase = true) ||
                         exp.category.displayName.contains(trimmedQuery, ignoreCase = true)
-                    matchesMethod && matchesQuery
+                    matchesMethod && matchesCategory && matchesQuery
                 }.sortedWith(compareByDescending<Expense> { it.expenseDate }.thenByDescending { it.id })
 
                 Pair(filteredDeposits, filteredExpenses)

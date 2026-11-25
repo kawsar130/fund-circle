@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.fundcircle.app.R
 import com.fundcircle.app.core.common.UiText
+import com.fundcircle.app.core.theme.ThemePreferenceManager
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.repository.FundRepository
@@ -30,7 +31,8 @@ class SettingsViewModel @Inject constructor(
     private val leaveCircleUseCase: LeaveCircleUseCase,
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val themePreferenceManager: ThemePreferenceManager
 ) : BaseViewModel<SettingsUiState, SettingsUiAction, SettingsUiEffect>(SettingsUiState()) {
 
     val fundId: String = savedStateHandle.get<String>(KEY_FUND_ID)
@@ -38,8 +40,22 @@ class SettingsViewModel @Inject constructor(
         .orEmpty()
 
     init {
-        setState { copy(fundId = this@SettingsViewModel.fundId) }
+        setState {
+            copy(
+                fundId = this@SettingsViewModel.fundId,
+                darkThemeOverride = themePreferenceManager.darkThemeOverride.value
+            )
+        }
+        observeThemePreference()
         loadSettingsData()
+    }
+
+    private fun observeThemePreference() {
+        viewModelScope.launch {
+            themePreferenceManager.darkThemeOverride.collect { override ->
+                setState { copy(darkThemeOverride = override) }
+            }
+        }
     }
 
     private fun loadSettingsData() {
@@ -105,8 +121,8 @@ class SettingsViewModel @Inject constructor(
             is SettingsUiAction.ClickMyProfile -> {
                 sendEffect(SettingsUiEffect.NavigateToProfile(fundId))
             }
-            is SettingsUiAction.ToggleDarkTheme -> {
-                setState { copy(isDarkTheme = !isDarkTheme) }
+            is SettingsUiAction.SetDarkTheme -> {
+                themePreferenceManager.setDarkTheme(action.isDark)
             }
             is SettingsUiAction.OpenLeaveDialog -> {
                 if (uiState.value.isAdmin) {

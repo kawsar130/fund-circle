@@ -271,4 +271,33 @@ class RecordTransactionViewModelTest {
         assertThat(viewModel.uiState.value.generalError)
             .isEqualTo(UiText.StringResource(R.string.dashboard_locked_notice))
     }
+
+    @Test
+    fun initialize_withExpenseModeOnSameFund_switchesModeAndResetsTransientFields() = runTest {
+        advanceUntilIdle()
+
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("5000"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateNote("Previous note"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateDescription("ab"))
+        viewModel.onAction(RecordTransactionUiAction.SelectMode(RecordTransactionMode.EXPENSE))
+        viewModel.onAction(RecordTransactionUiAction.Submit) // triggers descriptionError
+
+        viewModel.onAction(
+            RecordTransactionUiAction.Initialize(
+                fundId = testFundId,
+                initialMode = RecordTransactionMode.EXPENSE
+            )
+        )
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(viewModel.fundId).isEqualTo(testFundId)
+        assertThat(state.mode).isEqualTo(RecordTransactionMode.EXPENSE)
+        assertThat(state.amountInput).isEmpty()
+        assertThat(state.note).isEmpty()
+        assertThat(state.description).isEmpty()
+        assertThat(state.paidBy).isEmpty()
+        assertThat(state.descriptionError).isNull()
+        assertThat(state.amountError).isNull()
+    }
 }

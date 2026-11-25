@@ -17,13 +17,13 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Description
@@ -74,6 +74,9 @@ import com.fundcircle.app.domain.model.ReportPeriod
 import com.fundcircle.app.domain.model.ReportType
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import com.fundcircle.app.presentation.theme.TabularNumMedium
+import com.fundcircle.app.presentation.theme.TabularNumSmall
 import java.text.DateFormatSymbols
 import java.text.NumberFormat
 import java.util.Calendar
@@ -82,8 +85,9 @@ import java.util.Locale
 @Composable
 fun ReportsRoute(
     fundId: String,
-    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     viewModel: ReportsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -127,6 +131,7 @@ fun ReportsRoute(
         onAction = viewModel::onAction,
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
+        bottomBar = bottomBar,
         modifier = modifier
     )
 }
@@ -136,13 +141,15 @@ fun ReportsRoute(
 fun ReportsScreen(
     state: ReportsUiState,
     onAction: (ReportsUiAction) -> Unit,
-    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    onNavigateBack: () -> Unit = {},
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = bottomBar,
         topBar = {
             TopAppBar(
                 title = {
@@ -151,17 +158,6 @@ fun ReportsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.reports_back_cd)
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -235,15 +231,15 @@ fun ReportsScreen(
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
                 }
 
-                // Section 4: Primary Export Action Button (56dp)
+                // Section 4: Primary Export Action Button (52dp Pill)
                 item(key = "section_export_btn") {
                     Button(
                         onClick = { onAction(ReportsUiAction.ExportCsv) },
                         enabled = !state.isExporting && state.circle != null,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .height(52.dp),
+                        shape = DesignTokens.PillShape,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
@@ -262,14 +258,8 @@ fun ReportsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         } else {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
                             Text(
-                                text = stringResource(R.string.reports_btn_export_csv),
+                                text = "📄 " + stringResource(R.string.reports_btn_export_csv),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -299,16 +289,16 @@ fun PeriodSelectorCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
             Text(
-                text = stringResource(R.string.reports_section_period),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
+                text = stringResource(R.string.reports_section_period).uppercase(Locale.US),
+                style = SectionHeaderStyle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -400,7 +390,7 @@ fun PeriodSelectorCard(
                 }
             }
 
-            // Month and Year Selectors if Month & Year is selected
+            // Consolidated Month & Year Dropdown Selector if Month & Year is selected
             AnimatedVisibility(
                 visible = selectedPeriod is ReportPeriod.MonthYear,
                 enter = fadeIn(),
@@ -408,22 +398,11 @@ fun PeriodSelectorCard(
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8)
-                    ) {
-                        MonthDropdown(
-                            selectedMonth = selectedMonth,
-                            onMonthSelected = { onSelectMonthYear(it, selectedYear) },
-                            modifier = Modifier.weight(1.5f)
-                        )
-
-                        YearDropdown(
-                            selectedYear = selectedYear,
-                            onYearSelected = { onSelectMonthYear(selectedMonth, it) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    ConsolidatedPeriodDropdown(
+                        selectedMonth = selectedMonth,
+                        selectedYear = selectedYear,
+                        onSelectMonthYear = onSelectMonthYear
+                    )
                 }
             }
         }
@@ -431,103 +410,74 @@ fun PeriodSelectorCard(
 }
 
 @Composable
-fun MonthDropdown(
+fun ConsolidatedPeriodDropdown(
     selectedMonth: Int,
-    onMonthSelected: (Int) -> Unit,
+    selectedYear: Int,
+    onSelectMonthYear: (Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
     val months = remember { DateFormatSymbols(Locale.US).months.take(12) }
     val currentMonthName = months.getOrNull(selectedMonth - 1) ?: "Month"
 
-    Box(modifier = modifier) {
-        OutlinedButton(
-            onClick = { expanded = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = currentMonthName,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null
-            )
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            months.forEachIndexed { index, name ->
-                val monthIndex = index + 1
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = name,
-                            fontWeight = if (monthIndex == selectedMonth) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onMonthSelected(monthIndex)
-                    }
-                )
+    val periodOptions = remember {
+        val options = mutableListOf<Pair<Int, Int>>()
+        val currentCal = Calendar.getInstance()
+        val curY = maxOf(2026, currentCal.get(Calendar.YEAR))
+        for (y in curY downTo 2024) {
+            val endMonth = if (y == curY && y == currentCal.get(Calendar.YEAR)) currentCal.get(Calendar.MONTH) + 1 else 12
+            for (m in endMonth downTo 1) {
+                options.add(m to y)
             }
         }
+        options
     }
-}
 
-@Composable
-fun YearDropdown(
-    selectedYear: Int,
-    onYearSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val currentCalendarYear = remember { Calendar.getInstance().get(Calendar.YEAR) }
-    val years = remember(currentCalendarYear) { (2024..maxOf(2030, currentCalendarYear)).toList() }
-
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
         OutlinedButton(
             onClick = { expanded = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
             Text(
-                text = selectedYear.toString(),
+                text = "$currentMonthName $selectedYear",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.heightIn(max = 280.dp)
         ) {
-            years.forEach { year ->
+            periodOptions.forEach { (m, y) ->
+                val isSelected = m == selectedMonth && y == selectedYear
+                val optionMonthName = months.getOrNull(m - 1) ?: "Month"
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = year.toString(),
-                            fontWeight = if (year == selectedYear) FontWeight.Bold else FontWeight.Normal
+                            text = "$optionMonthName $y",
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     },
                     onClick = {
                         expanded = false
-                        onYearSelected(year)
+                        onSelectMonthYear(m, y)
                     }
                 )
             }
@@ -546,16 +496,16 @@ fun ReportTypeSelectorCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
             Text(
-                text = stringResource(R.string.reports_section_report_type),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
+                text = stringResource(R.string.reports_section_report_type).uppercase(Locale.US),
+                style = SectionHeaderStyle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -607,11 +557,11 @@ fun LivePreviewCard(
     selectedReportType: ReportType = ReportType.MONTHLY_SUMMARY,
     modifier: Modifier = Modifier
 ) {
-    OutlinedCard(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
-        colors = CardDefaults.outlinedCardColors(
+        shape = DesignTokens.CardShape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
@@ -622,9 +572,8 @@ fun LivePreviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.reports_preview_title),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.ExtraBold,
+                    text = stringResource(R.string.reports_preview_title).uppercase(Locale.US),
+                    style = SectionHeaderStyle,
                     color = MaterialTheme.colorScheme.primary
                 )
 
@@ -636,7 +585,7 @@ fun LivePreviewCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(100.dp),
+                    shape = DesignTokens.PillShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ) {
@@ -690,19 +639,22 @@ fun LivePreviewCard(
             if (report != null) {
                 // Opening Balance
                 StatementRow(
-                    label = stringResource(R.string.reports_preview_opening_balance),
+                    label = stringResource(R.string.reports_preview_opening),
                     amount = report.openingBalance,
                     currency = currency
                 )
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
-                // Total Posted Deposits
+                // Deposits
+                val depositsLabel = if (report.periodDisplay == "All Time") {
+                    stringResource(R.string.reports_preview_deposits)
+                } else {
+                    val shortMonth = report.periodDisplay.split(" ").firstOrNull()?.take(3) ?: "Nov"
+                    "Deposits ($shortMonth):"
+                }
                 StatementRow(
-                    label = stringResource(
-                        R.string.reports_preview_posted_deposits,
-                        report.periodDisplay
-                    ),
+                    label = depositsLabel,
                     amount = report.totalDeposits,
                     currency = currency,
                     prefix = "+ ",
@@ -711,12 +663,15 @@ fun LivePreviewCard(
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
-                // Total Posted Expenses
+                // Expenses
+                val expensesLabel = if (report.periodDisplay == "All Time") {
+                    stringResource(R.string.reports_preview_expenses)
+                } else {
+                    val shortMonth = report.periodDisplay.split(" ").firstOrNull()?.take(3) ?: "Nov"
+                    "Expenses ($shortMonth):"
+                }
                 StatementRow(
-                    label = stringResource(
-                        R.string.reports_preview_posted_expenses,
-                        report.periodDisplay
-                    ),
+                    label = expensesLabel,
                     amount = report.totalExpenses,
                     currency = currency,
                     prefix = "- ",
@@ -727,11 +682,11 @@ fun LivePreviewCard(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
 
-                // Net Change
-                val netLabel = if (report.periodDisplay == "All Time") {
-                    stringResource(R.string.reports_preview_net_change_all_time)
+                // Net Surplus / Deficit
+                val netLabel = if (report.netChange >= 0) {
+                    stringResource(R.string.reports_preview_net)
                 } else {
-                    stringResource(R.string.reports_preview_net_change)
+                    stringResource(R.string.reports_preview_net_deficit)
                 }
                 val netPrefix = if (report.netChange >= 0) "+ " else "- "
                 StatementRow(
@@ -749,7 +704,7 @@ fun LivePreviewCard(
 
                 // Closing Recorded Balance
                 StatementRow(
-                    label = stringResource(R.string.reports_preview_closing_balance),
+                    label = stringResource(R.string.reports_preview_closing),
                     amount = report.closingBalance,
                     currency = currency,
                     isBold = true,
@@ -801,16 +756,15 @@ fun StatementRow(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (isBold) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f, fill = false)
         )
         Text(
             text = "$prefix${currency.symbol} $formattedAmount",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontFeatureSettings = "tnum"
-            ),
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.SemiBold,
-            color = textColor
+            style = (if (isBold) TabularNumMedium else TabularNumSmall).copy(
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.SemiBold,
+                color = textColor
+            )
         )
     }
 }

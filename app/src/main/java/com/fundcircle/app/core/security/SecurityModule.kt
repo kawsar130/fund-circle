@@ -10,11 +10,18 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class AppPreferences
 
 @Module
 @InstallIn(SingletonComponent::class)
 object SecurityModule {
+
+    private const val PREFS_APP_SETTINGS = "fc_app_prefs"
 
     @Provides
     @Singleton
@@ -32,6 +39,15 @@ object SecurityModule {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
+    }
+
+    @Provides
+    @Singleton
+    @AppPreferences
+    fun provideAppPreferences(
+        @ApplicationContext context: Context
+    ): SharedPreferences {
+        return context.getSharedPreferences(PREFS_APP_SETTINGS, Context.MODE_PRIVATE)
     }
 
     @Provides

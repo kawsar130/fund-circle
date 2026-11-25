@@ -6,6 +6,7 @@ import com.fundcircle.app.domain.model.TransactionItem
 import com.fundcircle.app.presentation.common.UiAction
 import com.fundcircle.app.presentation.common.UiEffect
 import com.fundcircle.app.presentation.common.UiState
+import com.fundcircle.app.presentation.screens.transaction.RecordTransactionMode
 
 /**
  * MVI Contract for Screen 04: Circle Home Dashboard (CUJ-04).
@@ -25,7 +26,9 @@ sealed interface DashboardUiAction : UiAction {
     data object OpenNotifications : DashboardUiAction
     data object NavigateToLedger : DashboardUiAction
     data class NavigateToTransactionDetail(val txId: String, val isExpense: Boolean) : DashboardUiAction
-    data object NavigateToRecordTransaction : DashboardUiAction
+    data class NavigateToRecordTransaction(
+        val initialMode: RecordTransactionMode = RecordTransactionMode.DEPOSIT
+    ) : DashboardUiAction
     data object NavigateToSettings : DashboardUiAction
     data object NavigateToMembers : DashboardUiAction
     data object NavigateToReports : DashboardUiAction
@@ -35,7 +38,10 @@ sealed interface DashboardUiAction : UiAction {
 sealed interface DashboardUiEffect : UiEffect {
     data class NavigateToLedger(val fundId: String) : DashboardUiEffect
     data class NavigateToTransactionDetail(val fundId: String, val txId: String, val isExpense: Boolean) : DashboardUiEffect
-    data class NavigateToRecordTransaction(val fundId: String) : DashboardUiEffect
+    data class NavigateToRecordTransaction(
+        val fundId: String,
+        val initialMode: RecordTransactionMode = RecordTransactionMode.DEPOSIT
+    ) : DashboardUiEffect
     data class NavigateToSettings(val fundId: String) : DashboardUiEffect
     data class NavigateToMembers(val fundId: String) : DashboardUiEffect
     data class NavigateToReports(val fundId: String) : DashboardUiEffect

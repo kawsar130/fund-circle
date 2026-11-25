@@ -9,7 +9,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -36,6 +38,11 @@ val LightColorScheme = lightColorScheme(
     onSurface = OnSurfaceLight,
     surfaceVariant = SurfaceVariantLight,
     onSurfaceVariant = OnSurfaceVariantLight,
+    surfaceContainerLowest = BackgroundLight,
+    surfaceContainerLow = SurfaceContainerLowLight,
+    surfaceContainer = SurfaceContainerLight,
+    surfaceContainerHigh = SurfaceContainerHighLight,
+    surfaceContainerHighest = SurfaceContainerHighestLight,
     outline = OutlineLight,
     outlineVariant = OutlineVariantLight
 )
@@ -63,9 +70,15 @@ val DarkColorScheme = darkColorScheme(
     onSurface = OnSurfaceDark,
     surfaceVariant = SurfaceVariantDark,
     onSurfaceVariant = OnSurfaceVariantDark,
+    surfaceContainer = SlateNavyDarkContainer,
+    surfaceContainerHigh = SlateNavyDarkContainerHigh,
+    surfaceContainerHighest = SlateNavyDarkContainerHighest,
     outline = OutlineDark,
     outlineVariant = OutlineVariantDark
 )
+
+/** Exposes the active Fund Circle dark/light theme flag to screens that read resolved dark-mode styling. */
+val LocalFundCircleDarkTheme = staticCompositionLocalOf { false }
 
 @Composable
 fun FundCircleTheme(
@@ -90,12 +103,14 @@ fun FundCircleTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        shapes = Shapes,
-        content = content
-    )
+    CompositionLocalProvider(LocalFundCircleDarkTheme provides darkTheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = Shapes,
+            content = content
+        )
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

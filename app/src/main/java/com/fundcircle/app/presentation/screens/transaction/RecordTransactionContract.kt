@@ -39,7 +39,10 @@ data class RecordTransactionUiState(
 ) : UiState
 
 sealed interface RecordTransactionUiAction : UiAction {
-    data class Initialize(val fundId: String) : RecordTransactionUiAction
+    data class Initialize(
+        val fundId: String,
+        val initialMode: RecordTransactionMode = RecordTransactionMode.DEPOSIT
+    ) : RecordTransactionUiAction
     data class SelectMode(val mode: RecordTransactionMode) : RecordTransactionUiAction
     data class UpdateAmount(val amount: String) : RecordTransactionUiAction
     data class UpdateDate(val epochMs: Long) : RecordTransactionUiAction

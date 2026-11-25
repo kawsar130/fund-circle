@@ -27,10 +27,23 @@ val BackgroundLight = Color(0xFFFCFDF7)
 val OnBackgroundLight = Color(0xFF191C1A)
 val SurfaceLight = Color(0xFFFCFDF7)
 val OnSurfaceLight = Color(0xFF191C1A)
+val SurfaceContainerLowLight = Color(0xFFF6FAF6)
+val SurfaceContainerLight = Color(0xFFF2F7F2)
+val SurfaceContainerHighLight = Color(0xFFEAF3EC)
+val SurfaceContainerHighestLight = Color(0xFFE1EFE6)
 val SurfaceVariantLight = Color(0xFFDDE5DE)
 val OnSurfaceVariantLight = Color(0xFF404944)
 val OutlineLight = Color(0xFF707973)
 val OutlineVariantLight = Color(0xFFBFC9C2)
+
+// Slate Navy Foundation Tokens (Dark)
+val SlateNavyDarkBase = Color(0xFF0A101D)              // Root window background
+val SlateNavyDarkSurface = Color(0xFF101726)           // App bars, sheet surfaces
+val SlateNavyDarkContainer = Color(0xFF161F30)         // Elevated cards, list items
+val SlateNavyDarkContainerHigh = Color(0xFF1E2A40)     // Higher elevation cards, dialogs
+val SlateNavyDarkContainerHighest = Color(0xFF263550)  // Active pills, highlight blocks
+val SlateNavyDarkOutline = Color(0xFF263550)           // Card borders, input field strokes
+val SlateNavyDarkOutlineVariant = Color(0xFF1A2436)    // Subtle dividers, inner separators
 
 // Brand Semantic Colors (Dark)
 val EmeraldPrimaryDark = Color(0xFF00DF9A)
@@ -53,11 +66,11 @@ val OnErrorDark = Color(0xFF690005)
 val ErrorContainerDark = Color(0xFF93000A)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
-val BackgroundDark = Color(0xFF111412)
-val OnBackgroundDark = Color(0xFFE2E3DE)
-val SurfaceDark = Color(0xFF111412)
-val OnSurfaceDark = Color(0xFFE2E3DE)
-val SurfaceVariantDark = Color(0xFF404944)
-val OnSurfaceVariantDark = Color(0xFFBFC9C2)
-val OutlineDark = Color(0xFF8A938C)
-val OutlineVariantDark = Color(0xFF404944)
+val BackgroundDark = SlateNavyDarkBase
+val OnBackgroundDark = Color(0xFFE2E8F0)
+val SurfaceDark = SlateNavyDarkSurface
+val OnSurfaceDark = Color(0xFFE2E8F0)
+val SurfaceVariantDark = SlateNavyDarkContainer
+val OnSurfaceVariantDark = Color(0xFF94A3B8)
+val OutlineDark = SlateNavyDarkOutline
+val OutlineVariantDark = SlateNavyDarkOutlineVariant

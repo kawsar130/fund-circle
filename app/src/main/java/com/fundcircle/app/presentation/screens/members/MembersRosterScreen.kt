@@ -6,6 +6,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +28,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.PersonAdd
@@ -77,9 +77,12 @@ import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.MemberStatus
+import com.fundcircle.app.presentation.components.MemberStatusBadge
+import com.fundcircle.app.presentation.components.RoleBadge
 import com.fundcircle.app.presentation.screens.members.components.AddStakeholderSheet
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.TabularNumSmall
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -91,10 +94,11 @@ import java.util.Locale
 @Composable
 fun MembersRosterRoute(
     fundId: String,
-    onNavigateBack: () -> Unit,
     onNavigateToMemberDetail: (String, String) -> Unit,
     onNavigateToProfileEdit: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     viewModel: MembersRosterViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -136,6 +140,7 @@ fun MembersRosterRoute(
         state = state,
         onAction = viewModel::onAction,
         snackbarHostState = snackbarHostState,
+        bottomBar = bottomBar,
         modifier = modifier
     )
 
@@ -160,7 +165,8 @@ fun MembersRosterScreen(
     state: MembersRosterUiState,
     onAction: (MembersRosterUiAction) -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {}
 ) {
     BackHandler(enabled = state.isSearchActive || state.searchQuery.isNotBlank()) {
         onAction(MembersRosterUiAction.SearchQueryChanged(""))
@@ -170,6 +176,7 @@ fun MembersRosterScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = bottomBar,
         topBar = {
             TopAppBar(
                 title = {
@@ -183,18 +190,6 @@ fun MembersRosterScreen(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { onAction(MembersRosterUiAction.NavigateBack) },
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.members_roster_back_cd),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 },
                 actions = {
                     // Search toggle icon
@@ -247,6 +242,7 @@ fun MembersRosterScreen(
                             fontWeight = FontWeight.Bold
                         )
                     },
+                    shape = DesignTokens.PillShape,
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
@@ -438,10 +434,11 @@ fun MemberCardItem(
     )
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
@@ -456,22 +453,26 @@ fun MemberCardItem(
                 .padding(DesignTokens.Spacing16),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar Initials (40x40dp Circular Container)
+            // Avatar Initials (38x38dp Circular Container)
             val initials = remember(member.name) {
                 extractInitials(member.name)
             }
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(38.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                    .background(
+                        if (member.role == MemberRole.ADMIN) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.secondaryContainer
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initials,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = if (member.role == MemberRole.ADMIN) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
 
@@ -479,79 +480,14 @@ fun MemberCardItem(
 
             // Main Info
             Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${member.name} (${member.memberId})",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Admin Role Badge
-                        if (member.role == MemberRole.ADMIN) {
-                            Surface(
-                                shape = RoundedCornerShape(100.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.members_roster_badge_admin),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(4.dp))
-                        }
-
-                        // Status Badge
-                        val (containerColor, contentColor, labelRes) = when (member.status) {
-                            MemberStatus.ACTIVE -> Triple(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.onPrimaryContainer,
-                                R.string.members_roster_badge_active
-                            )
-                            MemberStatus.INACTIVE -> Triple(
-                                MaterialTheme.colorScheme.tertiaryContainer,
-                                MaterialTheme.colorScheme.onTertiaryContainer,
-                                R.string.members_roster_badge_inactive
-                            )
-                            MemberStatus.LEFT -> Triple(
-                                MaterialTheme.colorScheme.surfaceVariant,
-                                MaterialTheme.colorScheme.onSurfaceVariant,
-                                R.string.members_roster_badge_left
-                            )
-                            MemberStatus.PENDING -> Triple(
-                                MaterialTheme.colorScheme.tertiaryContainer,
-                                MaterialTheme.colorScheme.onTertiaryContainer,
-                                R.string.members_roster_badge_inactive
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = containerColor,
-                            contentColor = contentColor
-                        ) {
-                            Text(
-                                text = stringResource(labelRes),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
+                Text(
+                    text = "${member.name} (${member.memberId})",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -574,7 +510,7 @@ fun MemberCardItem(
                             currency.symbol,
                             formattedAmount
                         ),
-                        style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                        style = TabularNumSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -586,18 +522,18 @@ fun MemberCardItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
-                    if (member.phone.isNotBlank()) {
-                        Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
-                        Text(
-                            text = "• ${member.phone}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
+            }
+
+            Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+
+            // Right-aligned Stacked Badges: RoleBadge + MemberStatusBadge
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                RoleBadge(role = member.role)
+                MemberStatusBadge(status = member.status)
             }
         }
     }

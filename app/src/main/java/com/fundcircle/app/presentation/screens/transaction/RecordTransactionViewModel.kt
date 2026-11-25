@@ -84,8 +84,27 @@ class RecordTransactionViewModel @Inject constructor(
     override fun onAction(action: RecordTransactionUiAction) {
         when (action) {
             is RecordTransactionUiAction.Initialize -> {
-                if (action.fundId.isNotBlank() && action.fundId != fundId) {
+                val isNewFund = action.fundId.isNotBlank() && action.fundId != fundId
+                if (isNewFund) {
                     fundId = action.fundId
+                }
+                setState {
+                    copy(
+                        mode = action.initialMode,
+                        amountInput = "",
+                        dateEpochMs = System.currentTimeMillis(),
+                        note = "",
+                        description = "",
+                        paidBy = "",
+                        isSubmitting = false,
+                        amountError = null,
+                        dateError = null,
+                        descriptionError = null,
+                        memberError = null,
+                        generalError = null
+                    )
+                }
+                if (isNewFund) {
                     loadCircleAndMembers()
                 }
             }
