@@ -10,6 +10,7 @@ import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.MemberRole
+import com.fundcircle.app.domain.model.normalizedEmail
 import com.fundcircle.app.domain.repository.FundRepository
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -42,7 +43,7 @@ class FundRepositoryImpl @Inject constructor(
                 if (email.isNullOrBlank()) {
                     flowOf(emptyList())
                 } else {
-                    fundRemoteDataSource.observeUserCircles(email)
+                    fundRemoteDataSource.observeUserCircles(email.normalizedEmail())
                         .map { dtos -> dtos.map { it.toDomain() } }
                 }
             }.catch { e ->
@@ -86,8 +87,8 @@ class FundRepositoryImpl @Inject constructor(
             description = description,
             currency = currency.name,
             adminId = userSession.uid,
-            adminEmail = userSession.email,
-            memberEmails = listOf(userSession.email),
+            adminEmail = userSession.email.normalizedEmail(),
+            memberEmails = listOf(userSession.email.normalizedEmail()),
             memberCount = 1,
             totalDeposits = 0L,
             totalExpenses = 0L,
@@ -100,7 +101,7 @@ class FundRepositoryImpl @Inject constructor(
         val adminMemberDto = MemberDto(
             userId = userSession.uid,
             memberId = "FC-001",
-            email = userSession.email,
+            email = userSession.email.normalizedEmail(),
             name = userSession.displayName,
             role = MemberRole.ADMIN.name,
             status = "ACTIVE",
@@ -150,7 +151,7 @@ class FundRepositoryImpl @Inject constructor(
                 fundId = fundId,
                 currentAdminUserId = currentAdminUserId,
                 newAdminUserId = newAdminUserId,
-                newAdminEmail = newAdminEmail
+                newAdminEmail = newAdminEmail.normalizedEmail()
             )
         } catch (e: CancellationException) {
             throw e

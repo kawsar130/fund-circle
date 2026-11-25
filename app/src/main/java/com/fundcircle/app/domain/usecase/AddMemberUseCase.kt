@@ -2,6 +2,7 @@ package com.fundcircle.app.domain.usecase
 
 import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.FundCircleError
+import com.fundcircle.app.domain.model.normalizedEmail
 import com.fundcircle.app.domain.repository.MemberRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
@@ -31,7 +32,7 @@ class AddMemberUseCase @Inject constructor(
             return Result.failure(FundCircleError.Validation.InvalidPhone())
         }
 
-        val trimmedEmail = email.trim()
+        val trimmedEmail = email.normalizedEmail()
         val emailRegex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
         if (!emailRegex.matches(trimmedEmail)) {
             return Result.failure(FundCircleError.Validation.InvalidEmail())

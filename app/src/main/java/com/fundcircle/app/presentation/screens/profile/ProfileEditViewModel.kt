@@ -10,7 +10,7 @@ import com.fundcircle.app.domain.model.MemberKyc
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.GetMemberKycUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
-import com.fundcircle.app.domain.usecase.ObserveMemberUseCase
+import com.fundcircle.app.domain.usecase.ObserveCurrentMemberUseCase
 import com.fundcircle.app.domain.usecase.UpdateMemberKycUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +24,7 @@ class ProfileEditViewModel @Inject constructor(
     private val getMemberKycUseCase: GetMemberKycUseCase,
     private val updateMemberKycUseCase: UpdateMemberKycUseCase,
     private val observeCircleUseCase: ObserveCircleUseCase,
-    private val observeMemberUseCase: ObserveMemberUseCase,
+    private val observeCurrentMemberUseCase: ObserveCurrentMemberUseCase,
     private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<ProfileEditUiState, ProfileEditUiAction, ProfileEditUiEffect>(
@@ -110,21 +110,23 @@ class ProfileEditViewModel @Inject constructor(
                 }
 
                 val member = try {
-                    observeMemberUseCase(fundId, currentUid).first()
+                    observeCurrentMemberUseCase(fundId, currentUid, session?.email.orEmpty()).first()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
                     null
                 }
 
-                val kycResult = getMemberKycUseCase(fundId, currentUid)
+                // Invited members' documents are not keyed by their Auth UID.
+                val memberDocId = member?.userId ?: currentUid
+                val kycResult = getMemberKycUseCase(fundId, memberDocId)
                 val kyc = kycResult.getOrNull()
 
                 setState {
                     copy(
                         isLoading = false,
                         fundId = fundId,
-                        userId = currentUid,
+                        userId = memberDocId,
                         circle = circle,
                         member = member,
                         fullName = member?.name ?: session?.displayName.orEmpty(),

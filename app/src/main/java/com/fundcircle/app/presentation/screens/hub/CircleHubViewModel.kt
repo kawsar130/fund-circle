@@ -48,8 +48,12 @@ class CircleHubViewModel @Inject constructor(
                 sessionLocalDataSource.observeUserSession()
             ) { circles, userSession ->
                 val currentUserId = userSession?.uid.orEmpty()
-                val managed = circles.filter { it.adminId == currentUserId }
-                val joined = circles.filter { it.adminId != currentUserId }
+                val currentEmail = userSession?.email.orEmpty()
+                // Admin is matched by UID (creator) or email (after an ownership transfer).
+                val (managed, joined) = circles.partition {
+                    (currentUserId.isNotBlank() && it.adminId == currentUserId) ||
+                        (currentEmail.isNotBlank() && it.adminEmail.equals(currentEmail, ignoreCase = true))
+                }
                 Triple(managed, joined, userSession)
             }.catch { error ->
                 val errorUiText = error.message?.takeIf { it.isNotBlank() }?.let { UiText.DynamicString(it) }

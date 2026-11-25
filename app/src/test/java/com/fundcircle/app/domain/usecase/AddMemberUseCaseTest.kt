@@ -7,6 +7,7 @@ import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.MemberRepository
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -129,6 +130,21 @@ class AddMemberUseCaseTest {
         )
 
         assertThat(result.isSuccess).isTrue()
+    }
+
+    @Test
+    fun invoke_mixedCaseEmail_isInvitedInLowercaseSoRulesAndQueriesMatch() = runTest {
+        every { memberRepository.observeMembers(fundId) } returns flowOf(listOf(createMember("FC-001")))
+        coEvery {
+            memberRepository.inviteMember(fundId, "Alice", "01712345678", "alice@gmail.com", "FC-002")
+        } returns Result.success(Unit)
+
+        val result = useCase(fundId = fundId, name = "Alice", phone = "01712345678", email = "  Alice@Gmail.COM ")
+
+        assertThat(result.isSuccess).isTrue()
+        coVerify(exactly = 1) {
+            memberRepository.inviteMember(fundId, "Alice", "01712345678", "alice@gmail.com", "FC-002")
+        }
     }
 
     @Test
