@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,8 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
+import com.fundcircle.app.domain.model.MemberRole
+import com.fundcircle.app.presentation.components.RoleBadge
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import java.util.Locale
 
 /**
  * Screen 10: Add Stakeholder Modal Bottom Sheet (Admin Flow).
@@ -118,14 +123,26 @@ fun AddStakeholderContent(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = stringResource(R.string.add_member_sheet_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.add_member_sheet_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(
+                        R.string.add_member_sheet_id_preview_format,
+                        state.allocatedMemberId
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             IconButton(
                 onClick = onClose,
                 modifier = Modifier.size(DesignTokens.MinTouchTarget)
@@ -138,38 +155,6 @@ fun AddStakeholderContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-
-        // Sequential Member ID Allocation Preview Chip
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = DesignTokens.Spacing12, vertical = DesignTokens.Spacing8),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PersonAdd,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
-                Text(
-                    text = stringResource(
-                        R.string.add_member_sheet_id_preview_format,
-                        state.allocatedMemberId
-                    ),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-
         Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
 
         // Full Name Field
@@ -178,6 +163,7 @@ fun AddStakeholderContent(
             onValueChange = { onAction(AddStakeholderUiAction.NameChanged(it)) },
             label = { Text(text = stringResource(R.string.add_member_sheet_name_label)) },
             placeholder = { Text(text = stringResource(R.string.add_member_sheet_name_placeholder)) },
+            leadingIcon = { Text("👤", modifier = Modifier.padding(start = DesignTokens.Spacing12)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             isError = state.nameError != null,
             supportingText = state.nameError?.let { { Text(it.asString()) } },
@@ -193,6 +179,7 @@ fun AddStakeholderContent(
             onValueChange = { onAction(AddStakeholderUiAction.PhoneChanged(it)) },
             label = { Text(text = stringResource(R.string.add_member_sheet_phone_label)) },
             placeholder = { Text(text = stringResource(R.string.add_member_sheet_phone_placeholder)) },
+            leadingIcon = { Text("📱", modifier = Modifier.padding(start = DesignTokens.Spacing12)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next
@@ -211,6 +198,7 @@ fun AddStakeholderContent(
             onValueChange = { onAction(AddStakeholderUiAction.EmailChanged(it)) },
             label = { Text(text = stringResource(R.string.add_member_sheet_email_label)) },
             placeholder = { Text(text = stringResource(R.string.add_member_sheet_email_placeholder)) },
+            leadingIcon = { Text("✉️", modifier = Modifier.padding(start = DesignTokens.Spacing12)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
@@ -223,6 +211,32 @@ fun AddStakeholderContent(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
+
+        // Assigned Circle Role Card
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
+                Text(
+                    text = stringResource(R.string.add_member_sheet_role_label).uppercase(Locale.US),
+                    style = SectionHeaderStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                RoleBadge(role = MemberRole.MEMBER)
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                Text(
+                    text = stringResource(R.string.add_member_sheet_role_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
@@ -264,7 +278,7 @@ fun AddStakeholderContent(
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
 
-        // Submit Action Button (>= 48dp)
+        // Submit Action Button (52dp Pill Shape)
         Button(
             onClick = { onAction(AddStakeholderUiAction.Submit) },
             enabled = !state.isSubmitting,
@@ -272,10 +286,10 @@ fun AddStakeholderContent(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
-            shape = RoundedCornerShape(12.dp),
+            shape = DesignTokens.PillShape,
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                .height(52.dp)
         ) {
             if (state.isSubmitting) {
                 CircularProgressIndicator(
@@ -286,12 +300,12 @@ fun AddStakeholderContent(
                 Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
                 Text(
                     text = stringResource(R.string.add_member_sheet_submitting),
-                    style = MaterialTheme.typography.labelLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
             } else {
                 Text(
-                    text = stringResource(R.string.add_member_sheet_submit_btn),
-                    style = MaterialTheme.typography.labelLarge,
+                    text = stringResource(R.string.add_member_sheet_btn_send),
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }

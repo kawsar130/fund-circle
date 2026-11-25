@@ -21,16 +21,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -58,6 +54,7 @@ import com.fundcircle.app.data.datasource.remote.GoogleAuthClient
 import com.fundcircle.app.data.datasource.remote.GoogleSignInResult
 import com.fundcircle.app.presentation.components.BrandLogo
 import com.fundcircle.app.presentation.components.GoogleIcon
+import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -167,8 +164,13 @@ fun AuthScreenContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Center Brand Section
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(vertical = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         // Offline Banner (Animated)
                         AnimatedVisibility(
@@ -195,12 +197,10 @@ fun AuthScreenContent(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Center Brand Section
                         BrandLogo(
-                            modifier = Modifier.padding(bottom = 20.dp),
-                            size = 96.dp
+                            modifier = Modifier.padding(bottom = 24.dp),
+                            size = 84.dp,
+                            useMonogram = true
                         )
 
                         Text(
@@ -210,51 +210,40 @@ fun AuthScreenContent(
                             color = MaterialTheme.colorScheme.onBackground
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
                             text = stringResource(R.string.auth_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(28.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                        // Feature Highlights Card
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                FeatureHighlightItem(text = stringResource(R.string.auth_feature_1))
-                                FeatureHighlightItem(text = stringResource(R.string.auth_feature_2))
-                                FeatureHighlightItem(text = stringResource(R.string.auth_feature_3))
-                                FeatureHighlightItem(text = stringResource(R.string.auth_feature_4))
-                            }
-                        }
+                        Text(
+                            text = stringResource(R.string.auth_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.widthIn(max = 280.dp)
+                        )
                     }
 
-                    // Actions Section
+                    // Bottom Actions Section
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 24.dp),
+                            .padding(bottom = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Button(
                             onClick = onSignInClicked,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
+                                .height(52.dp),
                             enabled = !uiState.isLoading,
-                            shape = MaterialTheme.shapes.medium,
+                            shape = DesignTokens.CardShape,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -293,12 +282,12 @@ fun AuthScreenContent(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = stringResource(R.string.auth_terms_notice),
+                            text = stringResource(R.string.auth_credential_manager_notice),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
@@ -306,30 +295,6 @@ fun AuthScreenContent(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun FeatureHighlightItem(
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.CheckCircle,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 

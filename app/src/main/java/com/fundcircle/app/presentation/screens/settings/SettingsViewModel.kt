@@ -5,13 +5,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.fundcircle.app.R
 import com.fundcircle.app.core.common.UiText
+import com.fundcircle.app.core.theme.ThemePreferenceManager
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.repository.FundRepository
 import com.fundcircle.app.domain.usecase.LeaveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleMembersUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
-import com.fundcircle.app.domain.usecase.SignOutUseCase
 import com.fundcircle.app.domain.usecase.TransferAdminOwnershipUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import com.fundcircle.app.presentation.navigation.ScreenRoute
@@ -29,8 +29,8 @@ class SettingsViewModel @Inject constructor(
     private val fundRepository: FundRepository,
     private val leaveCircleUseCase: LeaveCircleUseCase,
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase,
-    private val signOutUseCase: SignOutUseCase,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val themePreferenceManager: ThemePreferenceManager
 ) : BaseViewModel<SettingsUiState, SettingsUiAction, SettingsUiEffect>(SettingsUiState()) {
 
     val fundId: String = savedStateHandle.get<String>(KEY_FUND_ID)
@@ -38,8 +38,22 @@ class SettingsViewModel @Inject constructor(
         .orEmpty()
 
     init {
-        setState { copy(fundId = this@SettingsViewModel.fundId) }
+        setState {
+            copy(
+                fundId = this@SettingsViewModel.fundId,
+                darkThemeOverride = themePreferenceManager.darkThemeOverride.value
+            )
+        }
+        observeThemePreference()
         loadSettingsData()
+    }
+
+    private fun observeThemePreference() {
+        viewModelScope.launch {
+            themePreferenceManager.darkThemeOverride.collect { override ->
+                setState { copy(darkThemeOverride = override) }
+            }
+        }
     }
 
     private fun loadSettingsData() {
@@ -105,8 +119,8 @@ class SettingsViewModel @Inject constructor(
             is SettingsUiAction.ClickMyProfile -> {
                 sendEffect(SettingsUiEffect.NavigateToProfile(fundId))
             }
-            is SettingsUiAction.ToggleDarkTheme -> {
-                setState { copy(isDarkTheme = !isDarkTheme) }
+            is SettingsUiAction.SetDarkTheme -> {
+                themePreferenceManager.setDarkTheme(action.isDark)
             }
             is SettingsUiAction.OpenLeaveDialog -> {
                 if (uiState.value.isAdmin) {
@@ -139,19 +153,12 @@ class SettingsViewModel @Inject constructor(
             is SettingsUiAction.ConfirmToggleCircleLock -> {
                 executeToggleLock()
             }
-            is SettingsUiAction.OpenSignOutDialog -> {
-                setState { copy(showSignOutDialog = true) }
-            }
-            is SettingsUiAction.ConfirmSignOut -> {
-                executeSignOut()
-            }
             is SettingsUiAction.DismissDialogs -> {
                 setState {
                     copy(
                         showLeaveDialog = false,
                         showTransferAdminDialog = false,
-                        showLockDialog = false,
-                        showSignOutDialog = false
+                        showLockDialog = false
                     )
                 }
             }
@@ -249,24 +256,6 @@ class SettingsViewModel @Inject constructor(
                     copy(
                         isActionInProgress = false,
                         errorMessage = UiText.StringResource(R.string.settings_error_lock_failed)
-                    )
-                }
-            }
-        }
-    }
-
-    private fun executeSignOut() {
-        setState { copy(isActionInProgress = true) }
-        viewModelScope.launch {
-            val result = signOutUseCase()
-            if (result.isSuccess) {
-                setState { copy(showSignOutDialog = false, isActionInProgress = false) }
-                sendEffect(SettingsUiEffect.NavigateToAuth)
-            } else {
-                setState {
-                    copy(
-                        isActionInProgress = false,
-                        errorMessage = UiText.StringResource(R.string.settings_error_sign_out_failed)
                     )
                 }
             }

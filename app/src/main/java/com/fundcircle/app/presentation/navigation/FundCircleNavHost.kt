@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.fundcircle.app.presentation.components.FundCircleNavigationBar
 import com.fundcircle.app.presentation.screens.auth.AuthScreen
 import com.fundcircle.app.presentation.screens.create.CreateCircleRoute
 import com.fundcircle.app.presentation.screens.dashboard.DashboardRoute
@@ -26,6 +27,7 @@ import com.fundcircle.app.presentation.screens.members.detail.MemberDetailRoute
 import com.fundcircle.app.presentation.screens.profile.ProfileEditRoute
 import com.fundcircle.app.presentation.screens.reports.ReportsRoute
 import com.fundcircle.app.presentation.screens.settings.SettingsRoute
+import com.fundcircle.app.presentation.screens.transaction.RecordTransactionMode
 import com.fundcircle.app.presentation.screens.transaction.RecordTransactionSheet
 
 /**
@@ -63,6 +65,11 @@ fun FundCircleNavHost(
                 },
                 onNavigateToCreateCircle = {
                     navController.navigate(ScreenRoute.CreateCircle)
+                },
+                onNavigateToAuth = {
+                    navController.navigate(ScreenRoute.Welcome) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -80,36 +87,46 @@ fun FundCircleNavHost(
             )
         }
 
-        composable<ScreenRoute.Dashboard> {
-            var recordingFundId by remember { mutableStateOf<String?>(null) }
+        composable<ScreenRoute.Dashboard> { backStackEntry ->
+            val dashboard = backStackEntry.toRoute<ScreenRoute.Dashboard>()
+            var recordingRequest by remember { mutableStateOf<Pair<String, RecordTransactionMode>?>(null) }
 
             DashboardRoute(
                 onNavigateToLedger = { fundId ->
-                    navController.navigate(ScreenRoute.TransactionsLedger(fundId = fundId))
+                    navigateToCircleTab(navController, fundId, CircleNavTab.TRANSACTIONS)
                 },
                 onNavigateToTransactionDetail = { fundId, txId, isExpense ->
                     navController.navigate(
                         ScreenRoute.TransactionDetail(fundId = fundId, txId = txId, isExpense = isExpense)
                     )
                 },
-                onNavigateToRecordTransaction = { fundId ->
-                    recordingFundId = fundId
+                onNavigateToRecordTransaction = { fundId, initialMode ->
+                    recordingRequest = fundId to initialMode
                 },
                 onNavigateToSettings = { fundId ->
-                    navController.navigate(ScreenRoute.Settings(fundId = fundId))
+                    navigateToCircleTab(navController, fundId, CircleNavTab.SETTINGS)
                 },
                 onNavigateToMembers = { fundId ->
-                    navController.navigate(ScreenRoute.MembersRoster(fundId = fundId))
+                    navigateToCircleTab(navController, fundId, CircleNavTab.MEMBERS)
                 },
                 onNavigateToReports = { fundId ->
-                    navController.navigate(ScreenRoute.Reports(fundId = fundId))
+                    navigateToCircleTab(navController, fundId, CircleNavTab.REPORTS)
+                },
+                bottomBar = {
+                    FundCircleNavigationBar(
+                        selectedTab = CircleNavTab.HOME,
+                        onTabSelected = { tab ->
+                            navigateToCircleTab(navController, dashboard.fundId, tab)
+                        }
+                    )
                 }
             )
 
-            recordingFundId?.let { fundId ->
+            recordingRequest?.let { (fundId, initialMode) ->
                 RecordTransactionSheet(
                     fundId = fundId,
-                    onDismiss = { recordingFundId = null }
+                    initialMode = initialMode,
+                    onDismiss = { recordingRequest = null }
                 )
             }
         }
@@ -129,6 +146,14 @@ fun FundCircleNavHost(
                 },
                 onOpenAddTransactionSheet = { _ ->
                     showRecordSheet = true
+                },
+                bottomBar = {
+                    FundCircleNavigationBar(
+                        selectedTab = CircleNavTab.TRANSACTIONS,
+                        onTabSelected = { tab ->
+                            navigateToCircleTab(navController, ledger.fundId, tab)
+                        }
+                    )
                 }
             )
 
@@ -161,10 +186,13 @@ fun FundCircleNavHost(
                 onNavigateToProfile = { fundId ->
                     navController.navigate(ScreenRoute.ProfileEdit(fundId = fundId))
                 },
-                onNavigateToAuth = {
-                    navController.navigate(ScreenRoute.Welcome) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                bottomBar = {
+                    FundCircleNavigationBar(
+                        selectedTab = CircleNavTab.SETTINGS,
+                        onTabSelected = { tab ->
+                            navigateToCircleTab(navController, settings.fundId, tab)
+                        }
+                    )
                 }
             )
         }
@@ -173,7 +201,15 @@ fun FundCircleNavHost(
             val reports = backStackEntry.toRoute<ScreenRoute.Reports>()
             ReportsRoute(
                 fundId = reports.fundId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                bottomBar = {
+                    FundCircleNavigationBar(
+                        selectedTab = CircleNavTab.REPORTS,
+                        onTabSelected = { tab ->
+                            navigateToCircleTab(navController, reports.fundId, tab)
+                        }
+                    )
+                }
             )
         }
 
@@ -192,6 +228,14 @@ fun FundCircleNavHost(
                 onNavigateToProfileEdit = {
                     navController.navigate(
                         ScreenRoute.ProfileEdit(fundId = roster.fundId)
+                    )
+                },
+                bottomBar = {
+                    FundCircleNavigationBar(
+                        selectedTab = CircleNavTab.MEMBERS,
+                        onTabSelected = { tab ->
+                            navigateToCircleTab(navController, roster.fundId, tab)
+                        }
                     )
                 }
             )
@@ -227,5 +271,23 @@ fun FundCircleNavHost(
                 }
             )
         }
+    }
+}
+
+/**
+ * Single-top, state-preserving navigation helper between active circle tabs.
+ */
+private fun navigateToCircleTab(
+    navController: NavHostController,
+    fundId: String,
+    targetTab: CircleNavTab
+) {
+    val targetRoute: ScreenRoute = targetTab.toRoute(fundId)
+    navController.navigate(targetRoute) {
+        popUpTo(ScreenRoute.Dashboard(fundId = fundId)) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

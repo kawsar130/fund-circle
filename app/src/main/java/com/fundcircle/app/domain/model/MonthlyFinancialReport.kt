@@ -13,5 +13,7 @@ data class MonthlyFinancialReport(
     val totalExpenses: Long,
     val netChange: Long,
     val closingBalance: Long,
-    val transactionCount: Int
+    val transactionCount: Int,
+    /** The period this report covers; drives localized labels instead of parsing [periodDisplay]. */
+    val period: ReportPeriod = ReportPeriod.AllTime
 )

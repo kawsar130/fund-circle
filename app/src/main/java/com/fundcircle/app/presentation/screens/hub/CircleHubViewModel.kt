@@ -7,6 +7,7 @@ import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.data.datasource.local.SessionLocalDataSource
 import com.fundcircle.app.domain.usecase.ObserveUserCirclesUseCase
 import com.fundcircle.app.domain.usecase.SetActiveCircleUseCase
+import com.fundcircle.app.domain.usecase.SignOutUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,7 +22,8 @@ class CircleHubViewModel @Inject constructor(
     private val observeUserCirclesUseCase: ObserveUserCirclesUseCase,
     private val sessionLocalDataSource: SessionLocalDataSource,
     private val setActiveCircleUseCase: SetActiveCircleUseCase,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    private val signOutUseCase: SignOutUseCase
 ) : BaseViewModel<CircleHubUiState, CircleHubUiAction, CircleHubUiEffect>(CircleHubUiState()) {
 
     private var observeJob: Job? = null
@@ -85,6 +87,14 @@ class CircleHubViewModel @Inject constructor(
             is CircleHubUiAction.CreateCircleClicked -> handleCreateCircleClicked()
             is CircleHubUiAction.RefreshTriggered -> observeCirclesAndSession()
             is CircleHubUiAction.DismissError -> setState { copy(errorMessage = null) }
+            is CircleHubUiAction.SignOutClicked -> handleSignOut()
+        }
+    }
+
+    private fun handleSignOut() {
+        viewModelScope.launch {
+            signOutUseCase()
+            sendEffect(CircleHubUiEffect.NavigateToAuth)
         }
     }
 

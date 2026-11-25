@@ -6,6 +6,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,26 +17,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -47,7 +48,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -104,6 +107,7 @@ fun CreateCircleScreen(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    var currencyDropdownExpanded by remember { mutableStateOf(false) }
 
     BackHandler {
         onAction(CreateCircleUiAction.BackClicked)
@@ -126,7 +130,7 @@ fun CreateCircleScreen(
                         modifier = Modifier.size(DesignTokens.MinTouchTarget)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.create_circle_close_content_description)
                         )
                     }
@@ -135,6 +139,53 @@ fun CreateCircleScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
+        },
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 2.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12)
+                ) {
+                    Button(
+                        onClick = { onAction(CreateCircleUiAction.CreateClicked) },
+                        enabled = state.isCreateEnabled,
+                        shape = DesignTokens.CardShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+                            Text(
+                                text = stringResource(R.string.create_circle_loading),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.create_circle_btn_submit),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
         }
     ) { innerPadding ->
         Column(
@@ -193,6 +244,8 @@ fun CreateCircleScreen(
                 onValueChange = { onAction(CreateCircleUiAction.NameChanged(it)) },
                 label = { Text(text = stringResource(R.string.create_circle_name_label)) },
                 placeholder = { Text(text = stringResource(R.string.create_circle_name_placeholder)) },
+                leadingIcon = { Text("🏛️", fontSize = 18.sp) },
+                shape = DesignTokens.InputShape,
                 singleLine = true,
                 isError = state.nameError != null,
                 supportingText = {
@@ -213,7 +266,7 @@ fun CreateCircleScreen(
                                 50
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -224,100 +277,52 @@ fun CreateCircleScreen(
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
 
-            // Primary Currency Selector
-            Text(
-                text = stringResource(R.string.create_circle_currency_label),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-
-            Text(
-                text = stringResource(R.string.create_circle_currency_helper),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
-            )
-
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8)
-            ) {
-                Currency.entries.forEach { currency ->
-                    val isSelected = state.currency == currency
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onAction(CreateCircleUiAction.CurrencySelected(currency)) },
-                        label = {
-                            Text(
-                                text = stringResource(
-                                    R.string.create_circle_currency_option,
-                                    currency.symbol,
-                                    currency.name
-                                ),
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        },
-                        leadingIcon = if (isSelected) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        } else null,
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
-
-            // Permanent Currency Lock Notice Card
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                ),
+            // Base Currency Dropdown (Permanent Lock)
+            ExposedDropdownMenuBox(
+                expanded = currencyDropdownExpanded,
+                onExpandedChange = { currencyDropdownExpanded = it },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(DesignTokens.Spacing16),
-                    verticalAlignment = Alignment.Top
+                OutlinedTextField(
+                    value = state.currency.displayName(),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(text = stringResource(R.string.create_circle_currency_label)) },
+                    leadingIcon = { Text("💱", fontSize = 18.sp) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = currencyDropdownExpanded) },
+                    shape = DesignTokens.InputShape,
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                )
+
+                ExposedDropdownMenu(
+                    expanded = currencyDropdownExpanded,
+                    onDismissRequest = { currencyDropdownExpanded = false }
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .padding(top = 2.dp)
-                    )
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing12))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.create_circle_currency_lock_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-                        Text(
-                            text = stringResource(R.string.create_circle_currency_lock_warning),
-                            style = MaterialTheme.typography.bodySmall
+                    Currency.entries.forEach { currency ->
+                        DropdownMenuItem(
+                            text = { Text(currency.displayName()) },
+                            onClick = {
+                                onAction(CreateCircleUiAction.CurrencySelected(currency))
+                                currencyDropdownExpanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+
+            Text(
+                text = stringResource(R.string.create_circle_currency_lock_warning),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
 
@@ -327,6 +332,8 @@ fun CreateCircleScreen(
                 onValueChange = { onAction(CreateCircleUiAction.DescriptionChanged(it)) },
                 label = { Text(text = stringResource(R.string.create_circle_description_label)) },
                 placeholder = { Text(text = stringResource(R.string.create_circle_description_placeholder)) },
+                leadingIcon = { Text("📝", fontSize = 18.sp) },
+                shape = DesignTokens.InputShape,
                 minLines = 3,
                 maxLines = 5,
                 isError = state.descriptionError != null,
@@ -348,7 +355,7 @@ fun CreateCircleScreen(
                                 250
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -356,40 +363,15 @@ fun CreateCircleScreen(
             )
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
-
-            // Submit Button
-            Button(
-                onClick = { onAction(CreateCircleUiAction.CreateClicked) },
-                enabled = state.isCreateEnabled,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
-                    Text(
-                        text = stringResource(R.string.create_circle_loading),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.create_circle_btn_submit),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
         }
     }
+}
+
+@Composable
+private fun Currency.displayName(): String = when (this) {
+    Currency.BDT -> stringResource(R.string.currency_option_bdt)
+    Currency.USD -> stringResource(R.string.currency_option_usd)
+    Currency.EUR -> stringResource(R.string.currency_option_eur)
 }
 
 @Preview(showBackground = true)

@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail
 
+import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,7 +27,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Shield
@@ -52,10 +56,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,11 +77,18 @@ import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.ExpenseCategory
+import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.VoidMetadata
+import com.fundcircle.app.presentation.components.ReversedBadge
+import com.fundcircle.app.presentation.components.RoleBadge
 import com.fundcircle.app.presentation.screens.detail.components.ReverseTransactionDialog
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.LocalFundCircleDarkTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
+import com.fundcircle.app.presentation.theme.TabularNumLarge
 import kotlinx.coroutines.flow.collectLatest
 import java.text.NumberFormat
 import java.util.Locale
@@ -146,35 +159,11 @@ fun TransactionDetailScreen(
                     }
                 },
                 actions = {
-                    if (uiState.isAdmin) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(end = DesignTokens.Spacing16)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.tx_detail_badge_admin),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    } else {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = DesignTokens.Spacing16)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.tx_detail_badge_member),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
+                    val role = if (uiState.isAdmin) MemberRole.ADMIN else MemberRole.MEMBER
+                    RoleBadge(
+                        role = role,
+                        modifier = Modifier.padding(end = DesignTokens.Spacing16)
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -286,9 +275,10 @@ fun TransactionDetailScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                    shape = DesignTokens.CardShape
                 ) {
                     Column(
                         modifier = Modifier
@@ -303,8 +293,7 @@ fun TransactionDetailScreen(
                             } else {
                                 stringResource(R.string.tx_detail_type_deposit)
                             }.uppercase(Locale.getDefault()),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            style = SectionHeaderStyle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
@@ -316,13 +305,16 @@ fun TransactionDetailScreen(
 
                         Text(
                             text = amountDisplay,
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontFamily = FontFamily.Default,
-                                fontFeatureSettings = "tnum"
+                            style = TabularNumLarge.copy(
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.ExtraBold
                             ),
-                            fontWeight = FontWeight.ExtraBold,
                             color = when {
-                                isVoid -> MaterialTheme.colorScheme.onSurfaceVariant
+                                isVoid -> if (LocalFundCircleDarkTheme.current) {
+                                    DesignTokens.ReversedStrikethroughDark
+                                } else {
+                                    DesignTokens.ReversedStrikethroughLight
+                                }
                                 uiState.isExpense -> MaterialTheme.colorScheme.error
                                 else -> MaterialTheme.colorScheme.primary
                             },
@@ -330,26 +322,11 @@ fun TransactionDetailScreen(
                         )
 
                         if (isVoid) {
-                            val reversedCd = stringResource(R.string.tx_detail_status_reversed_cd)
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier.semantics {
-                                    contentDescription = reversedCd
-                                }
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.tx_detail_status_reversed),
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            ReversedBadge()
                         } else {
                             val completedCd = stringResource(R.string.tx_detail_status_completed_cd)
                             Surface(
-                                shape = RoundedCornerShape(16.dp),
+                                shape = DesignTokens.PillShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.semantics {
@@ -358,8 +335,8 @@ fun TransactionDetailScreen(
                             ) {
                                 Text(
                                     text = stringResource(R.string.tx_detail_status_completed),
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -368,13 +345,18 @@ fun TransactionDetailScreen(
                 }
 
                 // 2. Transaction Specification Card
+                val clipboardManager = LocalClipboardManager.current
+                val shortRef = remember(uiState.txId, uiState.isExpense) {
+                    shortTransactionRef(uiState.txId, uiState.isExpense)
+                }
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    shape = RoundedCornerShape(16.dp)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    shape = DesignTokens.CardShape
                 ) {
                     Column(
                         modifier = Modifier
@@ -384,18 +366,51 @@ fun TransactionDetailScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.tx_detail_specs_title),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
+                            style = SectionHeaderStyle,
                             color = MaterialTheme.colorScheme.primary
                         )
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                        DetailRow(
-                            label = stringResource(R.string.tx_detail_id_label),
-                            value = uiState.txId,
-                            isMonospace = true
-                        )
+                        // Reference Code with Copy button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.tx_detail_id_label),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)
+                            ) {
+                                Text(
+                                    text = shortRef,
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontFamily = FontFamily.Default,
+                                        fontFeatureSettings = TABULAR_DIGITS
+                                    ),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                IconButton(
+                                    onClick = {
+                                        clipboardManager.setText(AnnotatedString(shortRef))
+                                    },
+                                    modifier = Modifier.size(DesignTokens.CompactTouchTarget)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = stringResource(R.string.tx_detail_copied_cd),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
 
                         if (uiState.isExpense) {
                             uiState.expense?.let { exp ->
@@ -467,102 +482,29 @@ fun TransactionDetailScreen(
                     }
                 }
 
-                // 3. Transparency Audit Disclosure Card (Shield Icon 🛡️)
-                AnimatedVisibility(
-                    visible = isVoid,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(DesignTokens.Spacing16),
-                            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing12)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Shield,
-                                    contentDescription = stringResource(R.string.tx_detail_audit_icon_cd),
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = stringResource(R.string.tx_detail_audit_title),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            }
-
-                            Text(
-                                text = stringResource(R.string.tx_detail_audit_explanation),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = 18.sp
-                            )
-
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                            voidMetadata?.let { meta ->
-                                DetailRow(
-                                    label = stringResource(R.string.tx_detail_audit_date_label),
-                                    value = DateUtils.formatDisplayDateTime(meta.voidedAt)
-                                )
-                                DetailRow(
-                                    label = stringResource(R.string.tx_detail_audit_by_label),
-                                    value = meta.voidedBy
-                                )
-                                DetailRow(
-                                    label = stringResource(R.string.tx_detail_audit_reason_label),
-                                    value = "\"${meta.reason}\""
-                                )
-                                DetailRow(
-                                    label = stringResource(R.string.tx_detail_audit_impact_label),
-                                    value = if (uiState.isExpense) {
-                                        stringResource(
-                                            R.string.tx_detail_audit_impact_expense_format,
-                                            uiState.currency.symbol,
-                                            formattedAmount
-                                        )
-                                    } else {
-                                        stringResource(
-                                            R.string.tx_detail_audit_impact_deposit_format,
-                                            uiState.currency.symbol,
-                                            formattedAmount
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // 4. Admin Action Button
+                // 3. Admin Action Button (Placed directly ABOVE the Transparency Audit Disclosure Card)
                 if (uiState.isAdmin && !uiState.isCircleLocked && !isVoid) {
                     Button(
                         onClick = { onAction(TransactionDetailUiAction.OpenReverseDialog) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
                         ),
+                        shape = DesignTokens.PillShape,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = DesignTokens.MinTouchTarget)
+                            .height(52.dp)
                     ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Undo,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
                         Text(
                             text = stringResource(R.string.tx_detail_btn_reverse),
-                            fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 } else if (uiState.isAdmin && uiState.isCircleLocked && !isVoid) {
@@ -587,6 +529,90 @@ fun TransactionDetailScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                    }
+                }
+
+                // 4. Permanent Transparency Audit Disclosure Card (Shield Icon 🛡️)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)),
+                    shape = DesignTokens.CardShape
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(DesignTokens.Spacing16),
+                        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing10)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = stringResource(R.string.tx_detail_audit_icon_cd),
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.tx_detail_audit_title),
+                                style = SectionHeaderStyle,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+
+                        Text(
+                            text = stringResource(R.string.tx_detail_audit_explanation),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 18.sp
+                        )
+
+                        // Reversal Metadata (Rendered when transaction has been voided)
+                        AnimatedVisibility(
+                            visible = isVoid && voidMetadata != null,
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut()
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing10)) {
+                                if (voidMetadata != null) {
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_date_label),
+                                        value = DateUtils.formatDisplayDateTime(voidMetadata.voidedAt)
+                                    )
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_by_label),
+                                        value = voidMetadata.voidedBy
+                                    )
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_reason_label),
+                                        value = "\"${voidMetadata.reason}\""
+                                    )
+                                    val impactText = if (uiState.isExpense) {
+                                        stringResource(
+                                            R.string.tx_detail_audit_impact_expense_format,
+                                            uiState.currency.symbol,
+                                            formattedAmount
+                                        )
+                                    } else {
+                                        stringResource(
+                                            R.string.tx_detail_audit_impact_deposit_format,
+                                            uiState.currency.symbol,
+                                            formattedAmount
+                                        )
+                                    }
+                                    DetailRow(
+                                        label = stringResource(R.string.tx_detail_audit_impact_label),
+                                        value = impactText
+                                    )
+                                }
+                            }
                         }
                     }
                 }

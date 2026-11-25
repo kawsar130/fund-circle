@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Lock
@@ -42,6 +43,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -70,9 +72,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
+import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.UserSession
+import com.fundcircle.app.presentation.components.CircleStatusBadge
+import com.fundcircle.app.presentation.components.LiveBadge
+import com.fundcircle.app.presentation.components.RoleBadge
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import com.fundcircle.app.presentation.theme.TabularNumMedium
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -81,6 +89,7 @@ fun CircleHubRoute(
     onNavigateToDashboard: (String) -> Unit,
     onNavigateToCreateCircle: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateToAuth: () -> Unit = {},
     viewModel: CircleHubViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -92,6 +101,7 @@ fun CircleHubRoute(
             when (effect) {
                 is CircleHubUiEffect.NavigateToDashboard -> onNavigateToDashboard(effect.fundId)
                 is CircleHubUiEffect.NavigateToCreateCircle -> onNavigateToCreateCircle()
+                is CircleHubUiEffect.NavigateToAuth -> onNavigateToAuth()
                 is CircleHubUiEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
@@ -121,88 +131,37 @@ fun CircleHubScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(R.string.hub_title),
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.hub_signed_in_label).uppercase(Locale.US),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = state.currentUser?.email ?: stringResource(R.string.hub_title),
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 },
                 actions = {
                     IconButton(
-                        onClick = { onAction(CircleHubUiAction.RefreshTriggered) },
+                        onClick = { onAction(CircleHubUiAction.SignOutClicked) },
                         modifier = Modifier.size(DesignTokens.MinTouchTarget)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.hub_refresh_content_description)
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = stringResource(R.string.settings_sign_out_title),
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing4))
-                    AssistChip(
-                        onClick = {},
-                        label = {
-                            Text(
-                                text = stringResource(R.string.hub_counter_badge, state.totalCircleCount),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        border = null,
-                        modifier = Modifier
-                            .defaultMinSize(minHeight = DesignTokens.CompactTouchTarget)
-                    )
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
-                    val avatarDesc = stringResource(R.string.hub_user_avatar_content_description)
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .semantics {
-                                contentDescription = avatarDesc
-                            }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            val initial = state.currentUser?.displayName?.takeIf { it.isNotBlank() }?.firstOrNull()?.uppercase()
-                                ?: state.currentUser?.email?.takeIf { it.isNotBlank() }?.firstOrNull()?.uppercase()
-                                ?: "U"
-                            Text(
-                                text = initial,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onAction(CircleHubUiAction.CreateCircleClicked) },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null
-                    )
-                },
-                text = {
-                    Text(
-                        text = stringResource(R.string.hub_btn_new_circle),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier
-                    .defaultMinSize(minHeight = DesignTokens.MinTouchTarget, minWidth = DesignTokens.MinTouchTarget)
-                    .padding(bottom = DesignTokens.Spacing8)
             )
         }
     ) { innerPadding ->
@@ -269,7 +228,7 @@ fun CircleHubScreen(
                             start = DesignTokens.Spacing16,
                             end = DesignTokens.Spacing16,
                             top = DesignTokens.Spacing16,
-                            bottom = 88.dp // Avoid FAB overlap
+                            bottom = DesignTokens.Spacing24
                         ),
                         verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing12)
                     ) {
@@ -280,9 +239,9 @@ fun CircleHubScreen(
                                     text = stringResource(
                                         R.string.hub_section_managed,
                                         state.managedCircles.size
-                                    ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.outline,
+                                    ).uppercase(Locale.US),
+                                    style = SectionHeaderStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(bottom = DesignTokens.Spacing4)
                                 )
                             }
@@ -309,9 +268,9 @@ fun CircleHubScreen(
                                     text = stringResource(
                                         R.string.hub_section_joined,
                                         state.joinedCircles.size
-                                    ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.outline,
+                                    ).uppercase(Locale.US),
+                                    style = SectionHeaderStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(bottom = DesignTokens.Spacing4)
                                 )
                             }
@@ -328,6 +287,27 @@ fun CircleHubScreen(
                                     modifier = Modifier.animateItem()
                                 )
                             }
+                        }
+
+                        // Bottom Action: Dashed Outlined Create Button
+                        item(key = "section_create_dashed") {
+                            Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                            OutlinedButton(
+                                onClick = { onAction(CircleHubUiAction.CreateCircleClicked) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = DesignTokens.CardShape,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.hub_create_circle_dashed_btn),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
                         }
                     }
                 }
@@ -361,159 +341,57 @@ fun CircleCard(
     val border = if (isActive) {
         BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
     } else {
-        BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
+        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
         border = border,
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(DesignTokens.CardShape)
             .clickable(onClick = onClick)
             .semantics { contentDescription = cardContentDescription }
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignTokens.Spacing16)
+                .padding(DesignTokens.Spacing16),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.weight(1f, fill = false)
             ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing6),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RoleBadge(role = if (isAdmin) MemberRole.ADMIN else MemberRole.MEMBER)
+                    if (circle.isLocked) {
+                        CircleStatusBadge(isLocked = true)
+                    }
+                    if (isActive) {
+                        LiveBadge()
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing6))
+
                 Text(
                     text = circle.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-
-                Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (isActive) {
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
-                                Text(
-                                    text = stringResource(R.string.hub_badge_active),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    if (circle.isLocked) {
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(2.dp))
-                                Text(
-                                    text = stringResource(R.string.hub_badge_locked),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(100.dp),
-                        color = if (isAdmin) {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        },
-                        contentColor = if (isAdmin) {
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    ) {
-                        Text(
-                            text = if (isAdmin) {
-                                stringResource(R.string.hub_badge_admin)
-                            } else {
-                                stringResource(R.string.hub_badge_member)
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-            }
-
-            if (!circle.description.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-                Text(
-                    text = circle.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
 
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.hub_balance_label),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Text(
-                        text = balanceLabel,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing2))
 
                 val membersCountText = if (circle.memberCount == 1) {
                     stringResource(R.string.hub_member_count_single)
@@ -521,12 +399,27 @@ fun CircleCard(
                     stringResource(R.string.hub_members_count, circle.memberCount)
                 }
                 Text(
-                    text = stringResource(
-                        R.string.hub_currency_and_members,
-                        circle.currency.name,
-                        membersCountText
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "$membersCountText • ${circle.currency.name} (${circle.currency.symbol})",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.width(DesignTokens.Spacing12))
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "${circle.currency.symbol} $formattedBalance",
+                    style = TabularNumMedium.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                )
+                Text(
+                    text = stringResource(R.string.hub_balance_label),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

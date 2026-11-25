@@ -73,7 +73,8 @@ class GenerateMonthlyReportUseCase @Inject constructor() {
                     totalExpenses = periodExpenses,
                     netChange = netChange,
                     closingBalance = closingBalance,
-                    transactionCount = txCount
+                    transactionCount = txCount,
+                    period = period
                 )
             }
             is ReportPeriod.AllTime -> {
@@ -94,7 +95,8 @@ class GenerateMonthlyReportUseCase @Inject constructor() {
                     totalExpenses = totalExpenses,
                     netChange = netChange,
                     closingBalance = netChange,
-                    transactionCount = deposits.size + expenses.size
+                    transactionCount = deposits.size + expenses.size,
+                    period = ReportPeriod.AllTime
                 )
             }
         }

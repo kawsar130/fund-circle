@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members.detail
 
+import com.fundcircle.app.presentation.common.extractInitials
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -7,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,8 +82,15 @@ import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.model.PaymentMethod
+import com.fundcircle.app.presentation.components.MemberStatusBadge
+import com.fundcircle.app.presentation.components.ReversedBadge
+import com.fundcircle.app.presentation.components.RoleBadge
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import com.fundcircle.app.presentation.theme.TabularNumLarge
+import com.fundcircle.app.presentation.theme.TabularNumMedium
+import com.fundcircle.app.presentation.theme.TabularNumSmall
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -178,32 +187,10 @@ fun MemberDetailScreen(
                     }
                 },
                 actions = {
-                    if (state.isAdmin) {
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.padding(end = DesignTokens.Spacing16)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Shield,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = stringResource(R.string.member_detail_badge_admin),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
+                    RoleBadge(
+                        role = if (state.isAdmin) MemberRole.ADMIN else MemberRole.MEMBER,
+                        modifier = Modifier.padding(end = DesignTokens.Spacing16)
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -286,116 +273,101 @@ fun MemberDetailScreen(
 
                 // Hero Member Profile Section
                 item(key = "hero_profile") {
-                    Column(
+                    Card(
+                        shape = DesignTokens.HeroCardShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing16),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8)
                     ) {
-                        // 64x64dp Avatar Container
-                        val initials = remember(member.name) { extractInitials(member.name) }
-                        Box(
+                        Column(
                             modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.secondaryContainer),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(DesignTokens.Spacing20),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = initials,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
-
-                        // Full Name
-                        Text(
-                            text = member.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-
-                        // Member ID Badge
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Text(
-                                text = stringResource(R.string.member_detail_id_format, member.memberId),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-
-                        // Status & Joined Date
-                        val joinedDate = remember(member.joinedAt) {
-                            DateUtils.formatDisplayDate(member.joinedAt)
-                        }
-                        val statusText = when (member.status) {
-                            MemberStatus.ACTIVE -> stringResource(R.string.members_roster_badge_active)
-                            MemberStatus.INACTIVE -> stringResource(R.string.members_roster_badge_inactive)
-                            MemberStatus.LEFT -> stringResource(R.string.members_roster_badge_left)
-                            MemberStatus.PENDING -> stringResource(R.string.members_roster_badge_pending)
-                        }
-                        Text(
-                            text = stringResource(
-                                R.string.member_detail_status_joined_format,
-                                statusText,
-                                joinedDate
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        // Contact Details Row
-                        if (member.phone.isNotBlank() || member.email.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                            // 60x60dp Avatar Container
+                            val initials = remember(member.name) { extractInitials(member.name) }
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (member.role == MemberRole.ADMIN) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.secondaryContainer
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
-                                if (member.phone.isNotBlank()) {
-                                    Icon(
-                                        imageVector = Icons.Default.Phone,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = member.phone,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                if (member.phone.isNotBlank() && member.email.isNotBlank()) {
-                                    Spacer(modifier = Modifier.width(DesignTokens.Spacing12))
-                                }
-                                if (member.email.isNotBlank()) {
-                                    Icon(
-                                        imageVector = Icons.Default.Email,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = member.email,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                Text(
+                                    text = initials,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (member.role == MemberRole.ADMIN) MaterialTheme.colorScheme.onPrimaryContainer
+                                    else MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+
+                            // Full Name
+                            Text(
+                                text = member.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+
+                            // Member ID Badge
+                            Surface(
+                                shape = DesignTokens.PillShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.member_detail_id_format, member.memberId),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+
+                            // Status & Joined Date
+                            val joinedDate = remember(member.joinedAt) {
+                                DateUtils.formatDisplayDate(member.joinedAt)
+                            }
+                            val statusText = when (member.status) {
+                                MemberStatus.ACTIVE -> stringResource(R.string.members_roster_badge_active)
+                                MemberStatus.INACTIVE -> stringResource(R.string.members_roster_badge_inactive)
+                                MemberStatus.LEFT -> stringResource(R.string.members_roster_badge_left)
+                                MemberStatus.PENDING -> stringResource(R.string.members_roster_badge_pending)
+                            }
+                            Text(
+                                text = stringResource(
+                                    R.string.member_detail_status_joined_format,
+                                    statusText,
+                                    joinedDate
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+
+                            // Role + Status Badges Row
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RoleBadge(role = member.role)
+                                MemberStatusBadge(status = member.status)
                             }
                         }
                     }
@@ -411,26 +383,26 @@ fun MemberDetailScreen(
                     ) {
                         // Card 1: Cumulative Deposits
                         Card(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = DesignTokens.CardShape,
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                             modifier = Modifier.weight(1f)
                         ) {
                             Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
                                 Text(
-                                    text = stringResource(R.string.member_detail_cumulative_deposits_label),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                    text = stringResource(R.string.member_detail_cumulative_deposits_label).uppercase(Locale.US),
+                                    style = SectionHeaderStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                                 val formattedDeposits = remember(member.totalContributed) {
                                     NumberFormat.getIntegerInstance(Locale.US).format(member.totalContributed)
                                 }
                                 Text(
                                     text = "${currency.symbol} $formattedDeposits",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                                    fontWeight = FontWeight.Bold,
+                                    style = TabularNumLarge,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -438,19 +410,20 @@ fun MemberDetailScreen(
 
                         // Card 2: Transactions Count
                         Card(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = DesignTokens.CardShape,
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                             modifier = Modifier.weight(1f)
                         ) {
                             Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
                                 Text(
-                                    text = stringResource(R.string.member_detail_transactions_count_label),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                    text = stringResource(R.string.member_detail_transactions_count_label).uppercase(Locale.US),
+                                    style = SectionHeaderStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                                 val activeCount = remember(state.deposits) {
                                     state.deposits.count { !it.isVoid }
                                 }
@@ -460,9 +433,8 @@ fun MemberDetailScreen(
                                     } else {
                                         stringResource(R.string.member_detail_deposit_count_plural, activeCount)
                                     },
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    style = TabularNumMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -473,10 +445,11 @@ fun MemberDetailScreen(
                 if (state.isAdmin || state.isSelf) {
                     item(key = "kyc_section") {
                         Card(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = DesignTokens.CardShape,
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
                             ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8)
@@ -488,9 +461,8 @@ fun MemberDetailScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.member_detail_kyc_section_title),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
+                                        text = stringResource(R.string.member_detail_kyc_section_title).uppercase(Locale.US),
+                                        style = SectionHeaderStyle,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     if (state.kyc != null && state.kyc.nidNumber.isNotBlank()) {
@@ -616,10 +588,9 @@ fun MemberDetailScreen(
                 // Section Header: Deposit History
                 item(key = "deposit_history_header") {
                     Text(
-                        text = stringResource(R.string.member_detail_section_deposits),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = stringResource(R.string.member_detail_section_deposits).uppercase(Locale.US),
+                        style = SectionHeaderStyle,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
@@ -871,11 +842,21 @@ private fun DepositItemRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val displayTitle = deposit.note?.takeIf { it.isNotBlank() }
+        ?: stringResource(R.string.tx_detail_type_deposit)
+    val formattedDate = remember(deposit.depositDate) {
+        DateUtils.formatDisplayDate(deposit.depositDate)
+    }
+    val formattedAmount = remember(deposit.amount) {
+        NumberFormat.getIntegerInstance(Locale.US).format(deposit.amount)
+    }
+
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
@@ -884,85 +865,62 @@ private fun DepositItemRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignTokens.Spacing12)
+                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)
         ) {
+            // Row 1: Title & Signed Amount
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Date • Payment Method
-                val formattedDate = remember(deposit.depositDate) {
-                    DateUtils.formatDisplayDate(deposit.depositDate)
-                }
                 Text(
-                    text = stringResource(
-                        R.string.member_detail_deposit_date_method_format,
-                        formattedDate,
-                        deposit.paymentMethod.displayName
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = displayTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = if (deposit.isVoid) TextDecoration.LineThrough else TextDecoration.None,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
 
-                // Amount
-                val formattedAmount = remember(deposit.amount) {
-                    NumberFormat.getIntegerInstance(Locale.US).format(deposit.amount)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (deposit.isVoid) {
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.padding(end = 6.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.tx_detail_status_reversed),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
 
+                if (deposit.isVoid) {
+                    ReversedBadge()
+                } else {
                     Text(
                         text = stringResource(
-                            R.string.member_detail_deposit_amount_format,
+                            R.string.ledger_deposit_amount_format,
                             currency.symbol,
                             formattedAmount
                         ),
-                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        style = TabularNumSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (deposit.isVoid) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary,
-                        textDecoration = if (deposit.isVoid) TextDecoration.LineThrough else TextDecoration.None
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
-            // Note if present
-            deposit.note?.let { note ->
-                if (note.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.member_detail_deposit_note_format, note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            // Row 2: Date • Payment Method
+            Text(
+                text = "$formattedDate • ${deposit.paymentMethod.displayName}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Row 3 (if void): Reversal audit note
+            if (deposit.isVoid) {
+                val reason = deposit.voidMetadata?.reason?.takeIf { it.isNotBlank() }
+                    ?: stringResource(R.string.badge_status_reversed)
+                Text(
+                    text = stringResource(R.string.tx_reversal_reason_format, formattedDate, reason),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
             }
         }
-    }
-}
-
-private fun extractInitials(name: String): String {
-    val parts = name.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
-    return when {
-        parts.isEmpty() -> "M"
-        parts.size == 1 -> parts[0].take(2).uppercase(Locale.US)
-        else -> "${parts[0].first()}${parts[1].first()}".uppercase(Locale.US)
     }
 }
 

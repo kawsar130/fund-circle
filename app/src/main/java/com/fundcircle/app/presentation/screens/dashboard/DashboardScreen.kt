@@ -5,6 +5,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -67,6 +70,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
@@ -77,8 +81,16 @@ import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.TransactionItem
 import com.fundcircle.app.presentation.common.asUiText
+import com.fundcircle.app.presentation.components.CircleStatusBadge
+import com.fundcircle.app.presentation.components.LiveBadge
+import com.fundcircle.app.presentation.components.ReversedBadge
+import com.fundcircle.app.presentation.screens.transaction.RecordTransactionMode
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
+import com.fundcircle.app.presentation.theme.TabularNumLarge
+import com.fundcircle.app.presentation.theme.TabularNumMedium
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -86,11 +98,12 @@ import java.util.Locale
 fun DashboardRoute(
     onNavigateToLedger: (String) -> Unit,
     onNavigateToTransactionDetail: (String, String, Boolean) -> Unit,
-    onNavigateToRecordTransaction: (String) -> Unit,
+    onNavigateToRecordTransaction: (String, RecordTransactionMode) -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToMembers: (String) -> Unit,
     onNavigateToReports: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    bottomBar: @Composable () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -104,7 +117,7 @@ fun DashboardRoute(
                 is DashboardUiEffect.NavigateToTransactionDetail -> {
                     onNavigateToTransactionDetail(effect.fundId, effect.txId, effect.isExpense)
                 }
-                is DashboardUiEffect.NavigateToRecordTransaction -> onNavigateToRecordTransaction(effect.fundId)
+                is DashboardUiEffect.NavigateToRecordTransaction -> onNavigateToRecordTransaction(effect.fundId, effect.initialMode)
                 is DashboardUiEffect.NavigateToSettings -> onNavigateToSettings(effect.fundId)
                 is DashboardUiEffect.NavigateToMembers -> onNavigateToMembers(effect.fundId)
                 is DashboardUiEffect.NavigateToReports -> onNavigateToReports(effect.fundId)
@@ -128,6 +141,7 @@ fun DashboardRoute(
         state = state,
         onAction = viewModel::onAction,
         snackbarHostState = snackbarHostState,
+        bottomBar = bottomBar,
         modifier = modifier
     )
 }
@@ -138,11 +152,13 @@ fun DashboardScreen(
     state: DashboardUiState,
     onAction: (DashboardUiAction) -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = bottomBar,
         topBar = {
             TopAppBar(
                 title = {
@@ -162,62 +178,9 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
-                    // Circle Status Badge (ACTIVE or LOCKED)
-                    if (state.circle != null) {
-                        val isLocked = state.circle.isLocked
-                        val badgeLabel = if (isLocked) {
-                            stringResource(R.string.dashboard_badge_locked)
-                        } else {
-                            stringResource(R.string.dashboard_badge_active)
-                        }
-                        val badgeCd = if (isLocked) {
-                            stringResource(R.string.dashboard_status_badge_locked_cd)
-                        } else {
-                            stringResource(R.string.dashboard_status_badge_active_cd)
-                        }
-                        val badgeContainerColor = if (isLocked) {
-                            MaterialTheme.colorScheme.errorContainer
-                        } else {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        }
-                        val badgeTextColor = if (isLocked) {
-                            MaterialTheme.colorScheme.onErrorContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = badgeContainerColor,
-                            contentColor = badgeTextColor,
-                            modifier = Modifier.semantics {
-                                contentDescription = badgeCd
-                            }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = badgeLabel,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(DesignTokens.Spacing4))
-                    }
-
-                    // Notification Action
                     IconButton(
                         onClick = { onAction(DashboardUiAction.OpenNotifications) },
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                        modifier = Modifier.defaultMinSize(minWidth = DesignTokens.MinTouchTarget, minHeight = DesignTokens.MinTouchTarget)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
@@ -225,35 +188,9 @@ fun DashboardScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-
-                    // Stakeholders Roster Action
-                    IconButton(
-                        onClick = { onAction(DashboardUiAction.NavigateToMembers) },
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Group,
-                            contentDescription = stringResource(R.string.members_roster_search_cd),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Financial Reports Engine Action
-                    IconButton(
-                        onClick = { onAction(DashboardUiAction.NavigateToReports) },
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Description,
-                            contentDescription = stringResource(R.string.dashboard_top_bar_reports_cd),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Settings Action (Clean Top Bar Rule: Settings tab with circle switch situated here)
                     IconButton(
                         onClick = { onAction(DashboardUiAction.NavigateToSettings) },
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                        modifier = Modifier.defaultMinSize(minWidth = DesignTokens.MinTouchTarget, minHeight = DesignTokens.MinTouchTarget)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -261,7 +198,6 @@ fun DashboardScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Spacer(modifier = Modifier.width(DesignTokens.Spacing4))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -273,7 +209,7 @@ fun DashboardScreen(
             if (state.isAdmin && state.circle?.isLocked == false) {
                 val fabCd = stringResource(R.string.dashboard_record_fab_cd)
                 ExtendedFloatingActionButton(
-                    onClick = { onAction(DashboardUiAction.NavigateToRecordTransaction) },
+                    onClick = { onAction(DashboardUiAction.NavigateToRecordTransaction(RecordTransactionMode.DEPOSIT)) },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -439,6 +375,21 @@ fun DashboardScreen(
                                 .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12)
                         )
                     }
+
+                    // Quick Action Pill Bar
+                    item(key = "quick_actions_bar") {
+                        DashboardQuickActionsBar(
+                            isAdmin = state.isAdmin,
+                            isLocked = circle.isLocked,
+                            onDepositClick = { onAction(DashboardUiAction.NavigateToRecordTransaction(RecordTransactionMode.DEPOSIT)) },
+                            onExpenseClick = { onAction(DashboardUiAction.NavigateToRecordTransaction(RecordTransactionMode.EXPENSE)) },
+                            onReportsClick = { onAction(DashboardUiAction.NavigateToReports) },
+                            onMembersClick = { onAction(DashboardUiAction.NavigateToMembers) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing4)
+                        )
+                    }
                 }
 
                 // Recent Transactions Section Header
@@ -529,17 +480,18 @@ fun HeroBalanceCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = DesignTokens.HeroCardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurface
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignTokens.Spacing16)
+                .padding(DesignTokens.Spacing20)
         ) {
             // Header: Label + LIVE status badge
             Row(
@@ -548,28 +500,16 @@ fun HeroBalanceCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.dashboard_hero_balance_label),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    text = stringResource(R.string.dashboard_hero_balance_label).uppercase(),
+                    style = SectionHeaderStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Text(
-                        text = stringResource(R.string.dashboard_badge_live),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = DesignTokens.Spacing8, vertical = 2.dp)
-                    )
-                }
+                LiveBadge()
             }
 
-            Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+            Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
-            // Main Balance Amount (32sp Bold, Tabular Digits)
+            // Main Balance Amount (34sp ExtraBold, Tabular Digits)
             val isNegative = circle.recordedBalance < 0L
             val absBalance = if (isNegative) -circle.recordedBalance else circle.recordedBalance
             val formattedBalance = remember(absBalance) {
@@ -591,16 +531,19 @@ fun HeroBalanceCard(
             val balanceColor = if (isNegative) {
                 MaterialTheme.colorScheme.error
             } else {
-                MaterialTheme.colorScheme.onPrimaryContainer
+                MaterialTheme.colorScheme.primary
             }
             Text(
                 text = balanceText,
-                style = MaterialTheme.typography.headlineLarge,
+                style = TabularNumLarge.copy(fontSize = 34.sp, fontWeight = FontWeight.ExtraBold),
                 color = balanceColor
             )
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
-            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f))
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                thickness = 0.5.dp
+            )
             Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
             // 2-Column Atomic Aggregates Row
@@ -613,7 +556,7 @@ fun HeroBalanceCard(
                     Text(
                         text = stringResource(R.string.dashboard_total_deposits_label),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
                     val formattedDeposits = remember(circle.totalDeposits) {
@@ -625,8 +568,7 @@ fun HeroBalanceCard(
                             circle.currency.symbol,
                             formattedDeposits
                         ),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
+                        style = TabularNumMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -638,7 +580,7 @@ fun HeroBalanceCard(
                     Text(
                         text = stringResource(R.string.dashboard_total_expenses_label),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
                     val formattedExpenses = remember(circle.totalExpenses) {
@@ -650,8 +592,7 @@ fun HeroBalanceCard(
                             circle.currency.symbol,
                             formattedExpenses
                         ),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
+                        style = TabularNumMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -706,130 +647,238 @@ fun TransactionItemCard(
         modifier = modifier
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
             .semantics { contentDescription = cd },
-        shape = RoundedCornerShape(12.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignTokens.Spacing12),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)
         ) {
-            // Indicator Icon (+ green for Deposit, - red for Expense, muted outline if Voided)
-            val indicatorBg = if (item.isVoid) {
-                MaterialTheme.colorScheme.surfaceContainerHighest
-            } else if (item.isExpense) {
-                MaterialTheme.colorScheme.errorContainer
-            } else {
-                MaterialTheme.colorScheme.primaryContainer
-            }
-            val indicatorTint = if (item.isVoid) {
-                MaterialTheme.colorScheme.outline
-            } else if (item.isExpense) {
-                MaterialTheme.colorScheme.onErrorContainer
-            } else {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            }
-
-            Surface(
-                shape = CircleShape,
-                color = indicatorBg,
-                modifier = Modifier.size(36.dp)
+            // Row 1: Title on left, Signed Amount (or REVERSED badge) on right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = if (item.isExpense) Icons.Default.Remove else Icons.Default.Add,
-                        contentDescription = null,
-                        tint = indicatorTint,
-                        modifier = Modifier.size(20.dp)
+                Text(
+                    text = displayTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = if (item.isVoid) TextDecoration.LineThrough else TextDecoration.None,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
+
+                if (item.isVoid) {
+                    ReversedBadge()
+                } else {
+                    val amountText = if (item.isExpense) {
+                        stringResource(R.string.dashboard_expense_amount_format, currency.symbol, formattedAmount)
+                    } else {
+                        stringResource(R.string.dashboard_deposit_amount_format, currency.symbol, formattedAmount)
+                    }
+
+                    val amountColor = if (item.isExpense) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+
+                    Text(
+                        text = amountText,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontFeatureSettings = TABULAR_DIGITS,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = amountColor
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(DesignTokens.Spacing12))
-
-            // Details: Title + Subtitle (Date • Payment Method localized)
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = displayTitle,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            // Row 2: Subtitle (Category / Purpose • Payment Method)
+            val row2Text = if (item.isVoid) {
+                val prefix = if (item.isExpense) "+" else "-"
+                stringResource(
+                    R.string.tx_reversal_original_format,
+                    currency.symbol,
+                    formattedAmount,
+                    prefix + currency.symbol,
+                    formattedAmount
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                val subtitleText = if (item.isExpense && item.category != null && item.title != item.category.displayName) {
+            } else {
+                if (item.isExpense && item.category != null && item.title != item.category.displayName) {
                     stringResource(
-                        R.string.dashboard_tx_subtitle_with_category,
-                        DateUtils.formatDisplayDate(item.timestamp),
+                        R.string.dashboard_tx_subtitle,
                         item.category.asUiText().asString(),
                         item.paymentMethod.asUiText().asString()
                     )
                 } else {
-                    stringResource(
-                        R.string.dashboard_tx_subtitle,
-                        DateUtils.formatDisplayDate(item.timestamp),
-                        item.paymentMethod.asUiText().asString()
+                    item.paymentMethod.asUiText().asString()
+                }
+            }
+            Text(
+                text = row2Text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Row 3: Timestamp & Status
+            val formattedDate = DateUtils.formatDisplayDate(item.timestamp)
+            val row3Text = if (item.isVoid) {
+                stringResource(R.string.tx_reversal_reason_format, formattedDate, stringResource(R.string.badge_status_reversed))
+            } else {
+                stringResource(R.string.tx_verified_format, formattedDate)
+            }
+            Text(
+                text = row3Text,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+/**
+ * Quick Action Pill Bar for instant navigation to Deposit, Expense, Reports, and Members.
+ */
+@Composable
+fun DashboardQuickActionsBar(
+    isAdmin: Boolean,
+    isLocked: Boolean,
+    onDepositClick: () -> Unit,
+    onExpenseClick: () -> Unit,
+    onReportsClick: () -> Unit,
+    onMembersClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isAdmin && !isLocked) {
+            Surface(
+                onClick = onDepositClick,
+                shape = DesignTokens.PillShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing6)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.dashboard_action_deposit),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Text(
-                    text = subtitleText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
 
-            Spacer(modifier = Modifier.width(DesignTokens.Spacing12))
-
-            // Amount Column (tnum, strikethrough if voided, REVERSED ↩ badge)
-            Column(
-                horizontalAlignment = Alignment.End
+            Surface(
+                onClick = onExpenseClick,
+                shape = DesignTokens.PillShape,
+                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
+                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
             ) {
-                val amountText = if (item.isExpense) {
-                    stringResource(R.string.dashboard_expense_amount_format, currency.symbol, formattedAmount)
-                } else {
-                    stringResource(R.string.dashboard_deposit_amount_format, currency.symbol, formattedAmount)
+                Row(
+                    modifier = Modifier.padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing6)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.dashboard_action_expense),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
+            }
+        }
 
-                val amountColor = if (item.isVoid) {
-                    MaterialTheme.colorScheme.outline
-                } else if (item.isExpense) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.primary
-                }
-
-                Text(
-                    text = amountText,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = amountColor,
-                    textDecoration = if (item.isVoid) TextDecoration.LineThrough else TextDecoration.None
+        Surface(
+            onClick = onReportsClick,
+            shape = DesignTokens.PillShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing6)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Description,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
                 )
+                Text(
+                    text = stringResource(R.string.dashboard_action_reports),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
 
-                // Invariant 4: If voided, show REVERSED badge
-                if (item.isVoid) {
-                    Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = MaterialTheme.colorScheme.errorContainer
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dashboard_badge_reversed),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
+        Surface(
+            onClick = onMembersClick,
+            shape = DesignTokens.PillShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing6)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Group,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = stringResource(R.string.dashboard_action_members),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
