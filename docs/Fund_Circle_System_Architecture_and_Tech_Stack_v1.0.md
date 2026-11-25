@@ -851,99 +851,40 @@ class MainActivity : ComponentActivity() {
 
 ### 4.1 Production Security Rules (`firestore.rules`)
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
+The deployed rules live in [`firestore.rules`](../firestore.rules) at the repository root. **That file is the source of truth**; this section summarises the model it enforces and is not a copy. The suite in [`firestore-tests/`](../firestore-tests/) (see §6.2) runs the app's real write paths and the main attacks against the Firestore emulator, and CI runs it on every pull request.
 
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function getUserEmail() {
-      return request.auth.token.email;
-    }
+**Identity**
+- A member's identity is their **lower-cased** Google account email (`request.auth.token.email.lower()`). Invited members are stored before they first sign in, so their member document ID is not their Auth UID. Every self-service check matches on email.
+- Membership is an $O(1)$ zero-read check: the caller's email is in `/funds/{fundId}.memberEmails`.
+- The admin matches by `adminId == request.auth.uid` (the circle creator) **or** by `adminEmail` (after an ownership transfer to an invited member whose UID was never known).
+- Member emails must be stored lower-case. An invite with `Bob@x.com` is rejected.
 
-    // Zero-read tenant authorization check via memberEmails array
-    function isCircleMember(fundData) {
-      return isAuthenticated() && (getUserEmail() in fundData.memberEmails);
-    }
+**`/funds/{fundId}` (aggregate document)**
+- **Create:** the fund ID matches, only known keys are present, the currency is `BDT | USD | EUR`, the caller is `adminId`/`adminEmail`, `memberEmails == [callerEmail]`, `memberCount == 1`, all totals are `0` and `isLocked == false`.
+- **Update:** caller is a member, and `fundId`, `currency` and `createdAt` never change. The write must also be exactly one of:
+  - *Deposit record:* only `totalDeposits`, `recordedBalance`, `updatedAt` and `lastTxId` change, both totals rise by the same delta ≥ 1, the circle is unlocked, and `lastTxId` names a deposit that does not exist before this write, exists after it, and has `amount == delta`.
+  - *Expense record (admin):* the same shape on `totalExpenses`, with the balance falling by the delta.
+  - *Deposit / expense reversal (admin):* totals move back by exactly the named ledger document's original `amount`, and that document flips from `isVoid == false` to `isVoid == true` in the same write.
+  - *Governance (admin):* only `name`, `description`, `isLocked`, `memberCount`, `memberEmails`, `adminId`, `adminEmail` and `updatedAt` change, and the new `adminEmail` must already be in `memberEmails`.
+- **Delete:** never.
 
-    function isCircleAdmin(fundData) {
-      return isAuthenticated() && request.auth.uid == fundData.adminId;
-    }
+**Ledger: `/funds/{fundId}/deposits/{id}` and `/expenses/{id}`**
+- **Create:** caller is a member (an admin for expenses), the circle is unlocked, the ID field matches the document ID, `amount` is an `int ≥ 1`, the date is not in the future (5 minutes of clock skew allowed), the document is not pre-voided, and the parent's `lastTxId` and total move by exactly `amount` in the same batch.
+- **Update:** the Transaction Reversal Protocol only. The admin may change `isVoid`, `voidReason` (≥ 5 chars), `voidedAt` and `voidedBy` (must be the caller's email), only from `false` to `true`, and only while the parent total falls by the original `amount`. Reversals are one-way: a document cannot be un-reversed or reversed twice.
+- **Delete:** never.
 
-    // Funds collection
-    match /funds/{fundId} {
-      allow read: if isCircleMember(resource.data);
-      allow create: if isAuthenticated() 
-                    && request.resource.data.adminId == request.auth.uid
-                    && request.resource.data.totalDeposits == 0
-                    && request.resource.data.totalExpenses == 0
-                    && request.resource.data.recordedBalance == 0;
-      allow update: if isCircleMember(resource.data)
-                    && (request.resource.data.currency == resource.data.currency); // Currency locked permanently
-      allow delete: if isCircleAdmin(resource.data)
-                    && resource.data.totalDeposits == 0 
-                    && resource.data.totalExpenses == 0;
+These two rules are inseparable by design. The ledger rule checks the parent with `getAfter`, and the parent rule checks the ledger document named by `lastTxId`. So a total cannot move without its ledger document, and a ledger document cannot be written without its total.
 
-      // Members subcollection
-      match /members/{userId} {
-        allow read: if isCircleMember(get(/databases/$(database)/documents/funds/$(fundId)).data);
-        allow write: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data);
+**Members: `/funds/{fundId}/members/{memberDocId}`**
+- **Create:** either the creator's own `ADMIN` document, written in the same batch as a new fund, or an admin invite of a `MEMBER` whose email is added to `memberEmails` in the same batch. `totalContributed` must be `0` and the email must be lower-case.
+- **Update:** the admin may change `role`, `status`, `name`, `phone`, `lastActiveAt` and `updatedAt`, but their own record must stay `ACTIVE` until ownership is transferred. A member may edit their own `name`/`phone` or set their own status to `LEFT`. The admin cannot leave.
+- **Delete:** never.
+- **KYC** (`.../kyc/identity`): readable and writable by the admin or the member themself. Only the admin may set `verifiedByAdmin = true`.
 
-        // Strictly Admin-Scoped KYC Identity PII
-        match /kyc/identity {
-          allow read, write: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data) 
-                             || (isAuthenticated() && request.auth.uid == userId);
-        }
-      }
-
-      // Deposits subcollection
-      match /deposits/{depositId} {
-        allow read: if isCircleMember(get(/databases/$(database)/documents/funds/$(fundId)).data);
-        allow create: if isCircleMember(get(/databases/$(database)/documents/funds/$(fundId)).data)
-                      && request.resource.data.amount is int
-                      && request.resource.data.amount >= 1
-                      && request.resource.data.depositDate <= request.time.toMillis();
-        allow update: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data)
-                      && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
-        allow delete: if false; // Financial records are immutable; reversal protocol only
-      }
-
-      // Expenses subcollection
-      match /expenses/{expenseId} {
-        allow read: if isCircleMember(get(/databases/$(database)/documents/funds/$(fundId)).data);
-        allow create: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data)
-                      && request.resource.data.amount is int
-                      && request.resource.data.amount >= 1
-                      && request.resource.data.expenseDate <= request.time.toMillis();
-        allow update: if isCircleAdmin(get(/databases/$(database)/documents/funds/$(fundId)).data)
-                      && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
-        allow delete: if false; // Financial records are immutable; reversal protocol only
-      }
-
-      // Audit logs
-      match /audit_logs/{logId} {
-        allow read: if isCircleMember(get(/databases/$(database)/documents/funds/$(fundId)).data);
-        allow create: if isAuthenticated();
-        allow update, delete: if false; // Append-only immutable log
-      }
-    }
-
-    // User Profile & Invitations
-    match /users/{userId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
-
-      match /invitations/{invitationId} {
-        allow read, write: if isAuthenticated() && request.auth.uid == userId;
-        allow create: if isAuthenticated(); // Allowed for other members to send invitations
-      }
-    }
-  }
-}
-```
+**Other paths**
+- `/funds/{fundId}/audit_logs/{id}`: members may append entries under their own `actorEmail`. Updates and deletes are denied.
+- `/users/{uid}` and `/users/{uid}/invitations/{id}`: owner only.
+- Every other path is denied by default.
 
 ---
 
@@ -1088,9 +1029,15 @@ The engineering workflow enforces a **70 / 20 / 10** testing pyramid:
 - **Use Case Business Logic Tests:** Validating whole-integer constraints, future date rejections, and reversal reason enforcement.
 - **Formatting Utilities Tests:** Validating `CurrencyText` whole-integer output (`৳ 1,450,000`, zero poisha) and `PrivacyMaskUtils` NID masking (`•••• •••• 9821`).
 
-### 6.2 Firebase Local Emulator Suite Integration Tests
-- Integration tests run against the local **Firebase Emulator Suite** (`localhost:8080` Firestore, `localhost:9099` Auth).
-- Verifies that `firestore.rules` reject unauthenticated writes, reject non-integer deposits, and enforce atomic balance updates.
+### 6.2 Firestore Security Rules Suite (Firebase Emulator)
+- Lives in [`firestore-tests/`](../firestore-tests/): a Node package (`@firebase/rules-unit-testing`, `node:test`) that loads the root `firestore.rules` into the Firestore emulator (`127.0.0.1:8089`, configured in the root `firebase.json`).
+- **ALLOW cases** replay the real client write paths from `data/datasource/remote/*Impl.kt`: create circle batch, invite, member deposit, admin expense, deposit and expense reversal in a transaction, lock toggle, ownership transfer, leave, deactivate, and own KYC read/write.
+- **DENY cases** cover the attacks: balance, admin or `memberEmails` edits, totals moved without a ledger document or with a mismatched amount, decimal or future-dated amounts, writes to a locked circle, double or undone reversals, edits and deletes of ledger, member or fund documents, currency changes, stranger reads and writes, self-verified KYC, and uppercase invite emails.
+- Run locally (Node 20+ and Java 11+ on `PATH`):
+  ```bash
+  cd firestore-tests && npm ci && npm run test:emulator
+  ```
+- CI runs the same suite in the `firestore-rules-tests` job of `.github/workflows/ci.yml`. **If you change a client write path or `firestore.rules`, update the matching case in the same commit.**
 
 ### 6.3 Automated Screenshot Regression Tests (Roborazzi)
 - Headless Compose screenshot tests for all 14 screens in both **Light** and **Dark** mode.
@@ -1103,6 +1050,8 @@ The engineering workflow enforces a **70 / 20 / 10** testing pyramid:
 Fund Circle employs **GitHub Actions** and **Fastlane** for continuous integration and automated Google Play deployment.
 
 ### 7.1 Pull Request Quality Gate (`.github/workflows/ci.yml`)
+
+> The live workflow also runs the Firestore rules suite (`firestore-rules-tests` job, §6.2). The YAML below is the original sketch of the Gradle gate; the workflow file is authoritative.
 
 ```yaml
 name: Fund Circle PR Quality Gate
