@@ -19,8 +19,10 @@ import com.fundcircle.app.domain.usecase.RecordDepositUseCase
 import com.fundcircle.app.domain.usecase.RecordExpenseUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -270,5 +272,99 @@ class RecordTransactionViewModelTest {
 
         assertThat(viewModel.uiState.value.generalError)
             .isEqualTo(UiText.StringResource(R.string.dashboard_locked_notice))
+    }
+
+    @Test
+    fun initialize_withExpenseModeOnSameFund_switchesModeAndResetsTransientFields() = runTest {
+        advanceUntilIdle()
+
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("5000"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateNote("Previous note"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateDescription("ab"))
+        viewModel.onAction(RecordTransactionUiAction.SelectMode(RecordTransactionMode.EXPENSE))
+        viewModel.onAction(RecordTransactionUiAction.Submit) // triggers descriptionError
+
+        viewModel.onAction(
+            RecordTransactionUiAction.Initialize(
+                fundId = testFundId,
+                initialMode = RecordTransactionMode.EXPENSE
+            )
+        )
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(viewModel.fundId).isEqualTo(testFundId)
+        assertThat(state.mode).isEqualTo(RecordTransactionMode.EXPENSE)
+        assertThat(state.amountInput).isEmpty()
+        assertThat(state.note).isEmpty()
+        assertThat(state.description).isEmpty()
+        assertThat(state.paidBy).isEmpty()
+        assertThat(state.descriptionError).isNull()
+        assertThat(state.amountError).isNull()
+    }
+
+    @Test
+    fun initialize_againWithSameSessionKey_afterRotation_keepsFormInput() = runTest {
+        advanceUntilIdle()
+        viewModel.onAction(RecordTransactionUiAction.Initialize(testFundId, sessionKey = "sheet-1"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("7500"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateNote("Half of March"))
+
+        // Activity recreation re-runs the sheet's LaunchedEffect with the saved key.
+        viewModel.onAction(RecordTransactionUiAction.Initialize(testFundId, sessionKey = "sheet-1"))
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.amountInput).isEqualTo("7500")
+        assertThat(viewModel.uiState.value.note).isEqualTo("Half of March")
+    }
+
+    @Test
+    fun initialize_withNewSessionKey_resetsEveryFieldIncludingSelections() = runTest {
+        val secondMember = sampleMember.copy(userId = "mem-2", memberId = "FC-002", name = "Second")
+        membersFlow.value = listOf(sampleMember, secondMember)
+        advanceUntilIdle()
+        viewModel.onAction(RecordTransactionUiAction.Initialize(testFundId, sessionKey = "sheet-1"))
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("7500"))
+        viewModel.onAction(RecordTransactionUiAction.SelectMember(secondMember))
+        viewModel.onAction(RecordTransactionUiAction.SelectPaymentMethod(PaymentMethod.BANK_TRANSFER))
+        viewModel.onAction(RecordTransactionUiAction.SelectCategory(ExpenseCategory.TRAVEL_AND_TRANSPORTATION))
+
+        viewModel.onAction(RecordTransactionUiAction.Initialize(testFundId, sessionKey = "sheet-2"))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.amountInput).isEmpty()
+        assertThat(state.selectedMember).isEqualTo(sampleMember)
+        assertThat(state.paymentMethod).isEqualTo(PaymentMethod.CASH)
+        assertThat(state.category).isEqualTo(ExpenseCategory.OFFICE_AND_ADMINISTRATION)
+    }
+
+    @Test
+    fun submit_tappedTwiceBeforeTheFirstSaveFinishes_recordsOnlyOneDeposit() = runTest {
+        advanceUntilIdle()
+        coEvery { recordDepositUseCase(any(), any(), any()) } returns Result.success(Unit)
+
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("50000"))
+        viewModel.onAction(RecordTransactionUiAction.Submit)
+        viewModel.onAction(RecordTransactionUiAction.Submit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { recordDepositUseCase(any(), any(), any()) }
+    }
+
+    @Test
+    fun initialize_whileASaveIsInFlight_doesNotReEnableSubmit() = runTest {
+        advanceUntilIdle()
+        val gate = CompletableDeferred<Result<Unit>>()
+        coEvery { recordDepositUseCase(any(), any(), any()) } coAnswers { gate.await() }
+
+        viewModel.onAction(RecordTransactionUiAction.UpdateAmount("50000"))
+        viewModel.onAction(RecordTransactionUiAction.Submit)
+        advanceUntilIdle()
+        viewModel.onAction(RecordTransactionUiAction.Initialize(testFundId, sessionKey = "sheet-9"))
+
+        assertThat(viewModel.uiState.value.isSubmitting).isTrue()
+        gate.complete(Result.success(Unit))
+        advanceUntilIdle()
     }
 }

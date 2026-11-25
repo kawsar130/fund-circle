@@ -127,9 +127,14 @@ class DashboardViewModel @Inject constructor(
                     )
                 }
             }
-            DashboardUiAction.NavigateToRecordTransaction -> {
+            is DashboardUiAction.NavigateToRecordTransaction -> {
                 if (fundId.isNotBlank()) {
-                    sendEffect(DashboardUiEffect.NavigateToRecordTransaction(fundId))
+                    sendEffect(
+                        DashboardUiEffect.NavigateToRecordTransaction(
+                            fundId = fundId,
+                            initialMode = action.initialMode
+                        )
+                    )
                 }
             }
             DashboardUiAction.NavigateToSettings -> {

@@ -39,7 +39,16 @@ data class RecordTransactionUiState(
 ) : UiState
 
 sealed interface RecordTransactionUiAction : UiAction {
-    data class Initialize(val fundId: String) : RecordTransactionUiAction
+    /**
+     * Opens a fresh form. [sessionKey] identifies one opening of the sheet and survives
+     * configuration changes, so re-sending the same key (e.g. after rotation) keeps the
+     * user's input; a new key resets the form. A null key always resets.
+     */
+    data class Initialize(
+        val fundId: String,
+        val initialMode: RecordTransactionMode = RecordTransactionMode.DEPOSIT,
+        val sessionKey: String? = null
+    ) : RecordTransactionUiAction
     data class SelectMode(val mode: RecordTransactionMode) : RecordTransactionUiAction
     data class UpdateAmount(val amount: String) : RecordTransactionUiAction
     data class UpdateDate(val epochMs: Long) : RecordTransactionUiAction

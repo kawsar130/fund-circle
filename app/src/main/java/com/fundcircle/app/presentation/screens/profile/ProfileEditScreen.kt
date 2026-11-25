@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.profile
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,10 +29,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -44,7 +49,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -59,6 +66,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import java.util.Locale
 
 /**
  * Screen 11: Edit My Profile / Self-Service KYC Screen (CUJ-07).
@@ -220,118 +229,184 @@ fun ProfileEditScreen(
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
 
-                // Section 1: Personal Information
-                Text(
-                    text = stringResource(R.string.profile_edit_section_personal),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-
-                // Full Name (Read-Only from Circle Membership)
-                OutlinedTextField(
-                    value = state.fullName,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(text = stringResource(R.string.profile_edit_name_label)) },
-                    supportingText = {
-                        Text(text = stringResource(R.string.profile_edit_name_helper))
-                    },
-                    singleLine = true,
+                // Section 1: Personal Information Card
+                Card(
+                    shape = DesignTokens.CardShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
+                        Text(
+                            text = stringResource(R.string.profile_edit_section_personal).uppercase(Locale.US),
+                            style = SectionHeaderStyle,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+                        // Full Name (Read-Only from Circle Membership)
+                        OutlinedTextField(
+                            value = state.fullName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(text = stringResource(R.string.profile_edit_name_label)) },
+                            supportingText = {
+                                Text(text = stringResource(R.string.profile_edit_name_helper))
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                // National Identity Number (NID)
-                OutlinedTextField(
-                    value = state.nidNumber,
-                    onValueChange = { onAction(ProfileEditUiAction.NidChanged(it)) },
-                    label = { Text(text = stringResource(R.string.profile_edit_nid_label)) },
-                    placeholder = { Text(text = stringResource(R.string.profile_edit_nid_placeholder)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                    isError = state.nidError != null,
-                    supportingText = {
-                        if (state.nidError != null) {
-                            Text(state.nidError.asString())
-                        } else {
-                            Text(stringResource(R.string.profile_edit_nid_helper))
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+
+                        // Mobile Phone Number (From Member Record)
+                        OutlinedTextField(
+                            value = state.member?.phone.orEmpty(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(text = stringResource(R.string.profile_edit_phone_label)) },
+                            placeholder = { Text(text = stringResource(R.string.profile_edit_phone_placeholder)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+
+                        // National Identity Number (NID)
+                        OutlinedTextField(
+                            value = state.nidNumber,
+                            onValueChange = { onAction(ProfileEditUiAction.NidChanged(it)) },
+                            label = { Text(text = stringResource(R.string.profile_edit_nid_label)) },
+                            placeholder = { Text(text = stringResource(R.string.profile_edit_nid_placeholder)) },
+                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                            isError = state.nidError != null,
+                            supportingText = {
+                                if (state.nidError != null) {
+                                    Text(state.nidError.asString())
+                                } else {
+                                    Text(stringResource(R.string.profile_edit_nid_helper))
+                                }
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Masked NID Indicator if available
+                        if (state.maskedNid.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.profile_edit_masked_nid_label, state.maskedNid),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Masked NID Indicator if available
-                if (state.maskedNid.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.profile_edit_masked_nid_label, state.maskedNid),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
 
-                // Section 2: Beneficiary / Nominee Information
-                Text(
-                    text = stringResource(R.string.profile_edit_section_nominee),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-
-                // Nominee Full Name
-                OutlinedTextField(
-                    value = state.nomineeName,
-                    onValueChange = { onAction(ProfileEditUiAction.NomineeNameChanged(it)) },
-                    label = { Text(text = stringResource(R.string.profile_edit_nominee_name_label)) },
-                    placeholder = { Text(text = stringResource(R.string.profile_edit_nominee_name_placeholder)) },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    isError = state.nomineeNameError != null,
-                    supportingText = state.nomineeNameError?.let { { Text(it.asString()) } },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
-
-                // Nominee Relationship
-                OutlinedTextField(
-                    value = state.nomineeRelation,
-                    onValueChange = { onAction(ProfileEditUiAction.NomineeRelationChanged(it)) },
-                    label = { Text(text = stringResource(R.string.profile_edit_relation_label)) },
-                    placeholder = { Text(text = stringResource(R.string.profile_edit_relation_placeholder)) },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    isError = state.nomineeRelationError != null,
-                    supportingText = state.nomineeRelationError?.let { { Text(it.asString()) } },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
-
-                // Nominee Contact Phone
-                OutlinedTextField(
-                    value = state.nomineePhone,
-                    onValueChange = { onAction(ProfileEditUiAction.NomineePhoneChanged(it)) },
-                    label = { Text(text = stringResource(R.string.profile_edit_nominee_phone_label)) },
-                    placeholder = { Text(text = stringResource(R.string.profile_edit_nominee_phone_placeholder)) },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Done
+                // Section 2: Beneficiary / Nominee Information Card
+                Card(
+                    shape = DesignTokens.CardShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { onAction(ProfileEditUiAction.Save) }
-                    ),
-                    isError = state.nomineePhoneError != null,
-                    supportingText = state.nomineePhoneError?.let { { Text(it.asString()) } },
-                    singleLine = true,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
+                        Text(
+                            text = stringResource(R.string.profile_edit_section_nominee).uppercase(Locale.US),
+                            style = SectionHeaderStyle,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+
+                        // Nominee Full Name
+                        OutlinedTextField(
+                            value = state.nomineeName,
+                            onValueChange = { onAction(ProfileEditUiAction.NomineeNameChanged(it)) },
+                            label = { Text(text = stringResource(R.string.profile_edit_nominee_name_label)) },
+                            placeholder = { Text(text = stringResource(R.string.profile_edit_nominee_name_placeholder)) },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            isError = state.nomineeNameError != null,
+                            supportingText = state.nomineeNameError?.let { { Text(it.asString()) } },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+
+                        // Nominee Relationship Dropdown
+                        var relationExpanded by remember { mutableStateOf(false) }
+                        val relationOptions = listOf(
+                            stringResource(R.string.profile_edit_relation_spouse),
+                            stringResource(R.string.profile_edit_relation_parent),
+                            stringResource(R.string.profile_edit_relation_sibling),
+                            stringResource(R.string.profile_edit_relation_child),
+                            stringResource(R.string.profile_edit_relation_partner),
+                            stringResource(R.string.profile_edit_relation_other)
+                        )
+
+                        ExposedDropdownMenuBox(
+                            expanded = relationExpanded,
+                            onExpandedChange = { relationExpanded = it },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = state.nomineeRelation,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(text = stringResource(R.string.profile_edit_relation_label)) },
+                                placeholder = { Text(text = stringResource(R.string.profile_edit_relation_placeholder)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = relationExpanded) },
+                                isError = state.nomineeRelationError != null,
+                                supportingText = state.nomineeRelationError?.let { { Text(it.asString()) } },
+                                modifier = Modifier
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                    .fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = relationExpanded,
+                                onDismissRequest = { relationExpanded = false }
+                            ) {
+                                relationOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option) },
+                                        onClick = {
+                                            onAction(ProfileEditUiAction.NomineeRelationChanged(option))
+                                            relationExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+
+                        // Nominee Contact Phone
+                        OutlinedTextField(
+                            value = state.nomineePhone,
+                            onValueChange = { onAction(ProfileEditUiAction.NomineePhoneChanged(it)) },
+                            label = { Text(text = stringResource(R.string.profile_edit_nominee_phone_label)) },
+                            placeholder = { Text(text = stringResource(R.string.profile_edit_nominee_phone_placeholder)) },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { onAction(ProfileEditUiAction.Save) }
+                            ),
+                            isError = state.nomineePhoneError != null,
+                            supportingText = state.nomineePhoneError?.let { { Text(it.asString()) } },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
 
                 // General Error Banner
                 state.generalError?.let { error ->
@@ -352,14 +427,14 @@ fun ProfileEditScreen(
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing32))
 
-                // Primary Save Action Button
+                // Primary Save Action Button (52dp Pill Shape)
                 Button(
                     onClick = { onAction(ProfileEditUiAction.Save) },
                     enabled = !state.isSaving,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = DesignTokens.PillShape,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                        .height(52.dp)
                 ) {
                     if (state.isSaving) {
                         CircularProgressIndicator(
@@ -370,7 +445,7 @@ fun ProfileEditScreen(
                         Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
                         Text(
                             text = stringResource(R.string.profile_edit_saving),
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.titleMedium
                         )
                     } else {
                         Icon(
@@ -381,7 +456,7 @@ fun ProfileEditScreen(
                         Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
                         Text(
                             text = stringResource(R.string.profile_edit_save_btn),
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }

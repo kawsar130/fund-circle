@@ -10,6 +10,7 @@ import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.UserSession
 import com.fundcircle.app.domain.usecase.ObserveUserCirclesUseCase
 import com.fundcircle.app.domain.usecase.SetActiveCircleUseCase
+import com.fundcircle.app.domain.usecase.SignOutUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,6 +34,7 @@ class CircleHubViewModelTest {
     private val sessionLocalDataSource: SessionLocalDataSource = mockk(relaxed = true)
     private val setActiveCircleUseCase: SetActiveCircleUseCase = mockk(relaxed = true)
     private val networkMonitor: NetworkMonitor = mockk(relaxed = true)
+    private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
 
     private val isOnlineFlow = MutableStateFlow(true)
     private val circlesFlow = MutableStateFlow<List<FundCircle>>(emptyList())
@@ -96,13 +98,26 @@ class CircleHubViewModelTest {
             observeUserCirclesUseCase = observeUserCirclesUseCase,
             sessionLocalDataSource = sessionLocalDataSource,
             setActiveCircleUseCase = setActiveCircleUseCase,
-            networkMonitor = networkMonitor
+            networkMonitor = networkMonitor,
+            signOutUseCase = signOutUseCase
         )
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun signOutClicked_callsSignOutAndEmitsNavigateToAuth() = runTest {
+        viewModel.uiEffect.test {
+            viewModel.onAction(CircleHubUiAction.SignOutClicked)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { signOutUseCase() }
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(CircleHubUiEffect.NavigateToAuth)
+        }
     }
 
     @Test

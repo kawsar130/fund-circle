@@ -12,6 +12,7 @@ import com.fundcircle.app.domain.model.UserSession
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveRecentTransactionsUseCase
+import com.fundcircle.app.presentation.screens.transaction.RecordTransactionMode
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
@@ -239,9 +240,31 @@ class DashboardViewModelTest {
         advanceUntilIdle()
 
         viewModel.uiEffect.test {
-            viewModel.onAction(DashboardUiAction.NavigateToRecordTransaction)
+            viewModel.onAction(DashboardUiAction.NavigateToRecordTransaction())
             val effect = awaitItem()
-            assertThat(effect).isEqualTo(DashboardUiEffect.NavigateToRecordTransaction(testFundId))
+            assertThat(effect).isEqualTo(
+                DashboardUiEffect.NavigateToRecordTransaction(
+                    fundId = testFundId,
+                    initialMode = RecordTransactionMode.DEPOSIT
+                )
+            )
+        }
+    }
+
+    @Test
+    fun navigateToRecordTransactionExpense_emitsNavigateToRecordEffectWithExpenseMode() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.uiEffect.test {
+            viewModel.onAction(DashboardUiAction.NavigateToRecordTransaction(RecordTransactionMode.EXPENSE))
+            val effect = awaitItem()
+            assertThat(effect).isEqualTo(
+                DashboardUiEffect.NavigateToRecordTransaction(
+                    fundId = testFundId,
+                    initialMode = RecordTransactionMode.EXPENSE
+                )
+            )
         }
     }
 

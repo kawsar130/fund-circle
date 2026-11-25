@@ -26,10 +26,12 @@ sealed interface CircleHubUiAction : UiAction {
     data object CreateCircleClicked : CircleHubUiAction
     data object RefreshTriggered : CircleHubUiAction
     data object DismissError : CircleHubUiAction
+    data object SignOutClicked : CircleHubUiAction
 }
 
 sealed interface CircleHubUiEffect : UiEffect {
     data class NavigateToDashboard(val fundId: String) : CircleHubUiEffect
     data object NavigateToCreateCircle : CircleHubUiEffect
+    data object NavigateToAuth : CircleHubUiEffect
     data class ShowSnackbar(val message: UiText) : CircleHubUiEffect
 }

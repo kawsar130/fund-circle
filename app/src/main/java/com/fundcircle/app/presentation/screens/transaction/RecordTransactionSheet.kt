@@ -1,7 +1,10 @@
 package com.fundcircle.app.presentation.screens.transaction
 
+import java.util.UUID
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,16 +39,16 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -78,8 +81,11 @@ import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.model.PaymentMethod
+import com.fundcircle.app.presentation.components.SegmentedControl
+import com.fundcircle.app.presentation.components.SegmentedItem
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +93,7 @@ fun RecordTransactionSheet(
     fundId: String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    initialMode: RecordTransactionMode = RecordTransactionMode.DEPOSIT,
     onTransactionSaved: () -> Unit = {},
     onShowSnackbar: ((com.fundcircle.app.core.common.UiText) -> Unit)? = null,
     viewModel: RecordTransactionViewModel = hiltViewModel()
@@ -95,9 +102,17 @@ fun RecordTransactionSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
 
-    LaunchedEffect(fundId) {
+    // One key per opening of the sheet; rememberSaveable keeps it across rotation.
+    val sheetSessionKey = rememberSaveable { UUID.randomUUID().toString() }
+    LaunchedEffect(fundId, initialMode) {
         if (fundId.isNotBlank()) {
-            viewModel.onAction(RecordTransactionUiAction.Initialize(fundId))
+            viewModel.onAction(
+                RecordTransactionUiAction.Initialize(
+                    fundId = fundId,
+                    initialMode = initialMode,
+                    sessionKey = sheetSessionKey
+                )
+            )
         }
     }
 
@@ -165,10 +180,15 @@ fun RecordTransactionContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val dynamicTitle = if (state.mode == RecordTransactionMode.DEPOSIT) {
+                stringResource(R.string.modal_add_tx_title_deposit)
+            } else {
+                stringResource(R.string.modal_add_tx_title_expense)
+            }
             Text(
-                text = stringResource(R.string.modal_add_tx_title),
+                text = dynamicTitle,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
@@ -186,38 +206,22 @@ fun RecordTransactionContent(
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
-        // Mode Switcher (Segmented Tab Row)
-        PrimaryTabRow(
-            selectedTabIndex = state.mode.ordinal,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            contentColor = MaterialTheme.colorScheme.primary,
+        // Mode Switcher (Containerized SegmentedControl)
+        SegmentedControl(
+            items = listOf(
+                SegmentedItem(title = stringResource(R.string.modal_add_tx_tab_deposit)),
+                SegmentedItem(
+                    title = stringResource(R.string.modal_add_tx_tab_expense),
+                    activeContentColor = MaterialTheme.colorScheme.error
+                )
+            ),
+            selectedIndex = state.mode.ordinal,
+            onItemSelected = { index ->
+                val mode = if (index == 0) RecordTransactionMode.DEPOSIT else RecordTransactionMode.EXPENSE
+                onAction(RecordTransactionUiAction.SelectMode(mode))
+            },
             modifier = Modifier.fillMaxWidth()
-        ) {
-            Tab(
-                selected = state.mode == RecordTransactionMode.DEPOSIT,
-                onClick = { onAction(RecordTransactionUiAction.SelectMode(RecordTransactionMode.DEPOSIT)) },
-                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                text = {
-                    Text(
-                        text = stringResource(R.string.modal_add_tx_tab_deposit),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = if (state.mode == RecordTransactionMode.DEPOSIT) FontWeight.Bold else FontWeight.Medium
-                    )
-                }
-            )
-            Tab(
-                selected = state.mode == RecordTransactionMode.EXPENSE,
-                onClick = { onAction(RecordTransactionUiAction.SelectMode(RecordTransactionMode.EXPENSE)) },
-                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                text = {
-                    Text(
-                        text = stringResource(R.string.modal_add_tx_tab_expense),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = if (state.mode == RecordTransactionMode.EXPENSE) FontWeight.Bold else FontWeight.Medium
-                    )
-                }
-            )
-        }
+        )
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing16))
 
@@ -450,7 +454,7 @@ private fun DepositForm(
                 Text(
                     text = "${state.currency.symbol} ",
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.primary
                 )
             },
             supportingText = {
@@ -507,37 +511,34 @@ private fun DepositForm(
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
-        // 4. Payment Method
-        ExposedDropdownMenuBox(
-            expanded = methodDropdownExpanded,
-            onExpandedChange = { methodDropdownExpanded = it },
-            modifier = Modifier.fillMaxWidth()
+        // 4. Payment Method (Selectable Chips)
+        Text(
+            text = stringResource(R.string.modal_add_tx_payment_method_label),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(DesignTokens.Spacing6))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                value = state.paymentMethod.displayName,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.modal_add_tx_payment_method_label)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = methodDropdownExpanded) },
-                modifier = Modifier
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                    .fillMaxWidth()
-            )
-
-            ExposedDropdownMenu(
-                expanded = methodDropdownExpanded,
-                onDismissRequest = { methodDropdownExpanded = false }
-            ) {
-                PaymentMethod.entries.forEach { method ->
-                    DropdownMenuItem(
-                        text = { Text(method.displayName) },
-                        onClick = {
-                            onAction(RecordTransactionUiAction.SelectPaymentMethod(method))
-                            methodDropdownExpanded = false
-                        },
-                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                    )
-                }
+            PaymentMethod.entries.forEach { method ->
+                val isSelected = state.paymentMethod == method
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onAction(RecordTransactionUiAction.SelectPaymentMethod(method)) },
+                    label = {
+                        Text(
+                            text = if (isSelected) "${method.displayName} ✓" else method.displayName,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                    colors = FilterChipDefaults.filterChipColors()
+                )
             }
         }
 
@@ -562,14 +563,14 @@ private fun DepositForm(
         Button(
             onClick = { onAction(RecordTransactionUiAction.Submit) },
             enabled = !state.isSubmitting && !state.isCircleLocked,
-            shape = RoundedCornerShape(12.dp),
+            shape = DesignTokens.PillShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = DesignTokens.MinTouchTarget)
+                .height(52.dp)
         ) {
             if (state.isSubmitting) {
                 CircularProgressIndicator(
@@ -582,7 +583,7 @@ private fun DepositForm(
             } else {
                 Text(
                     text = stringResource(R.string.modal_add_tx_btn_post_deposit),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -599,7 +600,6 @@ private fun ExpenseForm(
     modifier: Modifier = Modifier
 ) {
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
-    var methodDropdownExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         // 1. Expense Date (<= Today)
@@ -650,7 +650,7 @@ private fun ExpenseForm(
                 Text(
                     text = "${state.currency.symbol} ",
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.error
                 )
             },
             supportingText = {
@@ -675,14 +675,14 @@ private fun ExpenseForm(
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
-        // 3. Expense Category (8 Predefined Categories)
+        // 3. Expense Category (8 Predefined Categories with Emojis)
         ExposedDropdownMenuBox(
             expanded = categoryDropdownExpanded,
             onExpandedChange = { categoryDropdownExpanded = it },
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = state.category.displayName,
+                value = "${state.category.iconEmoji()} ${state.category.displayName}",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(stringResource(R.string.modal_add_tx_category_label)) },
@@ -698,7 +698,7 @@ private fun ExpenseForm(
             ) {
                 ExpenseCategory.entries.forEach { category ->
                     DropdownMenuItem(
-                        text = { Text(category.displayName) },
+                        text = { Text("${category.iconEmoji()} ${category.displayName}") },
                         onClick = {
                             onAction(RecordTransactionUiAction.SelectCategory(category))
                             categoryDropdownExpanded = false
@@ -732,37 +732,34 @@ private fun ExpenseForm(
 
         Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
 
-        // 5. Payment Method
-        ExposedDropdownMenuBox(
-            expanded = methodDropdownExpanded,
-            onExpandedChange = { methodDropdownExpanded = it },
-            modifier = Modifier.fillMaxWidth()
+        // 5. Payment Method (Selectable Chips)
+        Text(
+            text = stringResource(R.string.modal_add_tx_payment_method_label),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(DesignTokens.Spacing6))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                value = state.paymentMethod.displayName,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.modal_add_tx_payment_method_label)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = methodDropdownExpanded) },
-                modifier = Modifier
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                    .fillMaxWidth()
-            )
-
-            ExposedDropdownMenu(
-                expanded = methodDropdownExpanded,
-                onDismissRequest = { methodDropdownExpanded = false }
-            ) {
-                PaymentMethod.entries.forEach { method ->
-                    DropdownMenuItem(
-                        text = { Text(method.displayName) },
-                        onClick = {
-                            onAction(RecordTransactionUiAction.SelectPaymentMethod(method))
-                            methodDropdownExpanded = false
-                        },
-                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                    )
-                }
+            PaymentMethod.entries.forEach { method ->
+                val isSelected = state.paymentMethod == method
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onAction(RecordTransactionUiAction.SelectPaymentMethod(method)) },
+                    label = {
+                        Text(
+                            text = if (isSelected) "${method.displayName} ✓" else method.displayName,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                    colors = FilterChipDefaults.filterChipColors()
+                )
             }
         }
 
@@ -784,19 +781,19 @@ private fun ExpenseForm(
         Button(
             onClick = { onAction(RecordTransactionUiAction.Submit) },
             enabled = !state.isSubmitting && !state.isCircleLocked,
-            shape = RoundedCornerShape(12.dp),
+            shape = DesignTokens.PillShape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = DesignTokens.MinTouchTarget)
+                .height(52.dp)
         ) {
             if (state.isSubmitting) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.onError,
                     strokeWidth = 2.dp
                 )
                 Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
@@ -804,12 +801,23 @@ private fun ExpenseForm(
             } else {
                 Text(
                     text = stringResource(R.string.modal_add_tx_btn_post_expense),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
     }
+}
+
+private fun ExpenseCategory.iconEmoji(): String = when (this) {
+    ExpenseCategory.OFFICE_AND_ADMINISTRATION -> "🏢"
+    ExpenseCategory.TRAVEL_AND_TRANSPORTATION -> "🚗"
+    ExpenseCategory.BANK_AND_TRANSACTION_CHARGES -> "🏦"
+    ExpenseCategory.LEGAL_AND_DOCUMENTATION -> "⚖️"
+    ExpenseCategory.MEETINGS_AND_EVENTS -> "👥"
+    ExpenseCategory.UTILITIES_AND_COMMUNICATION -> "⚡"
+    ExpenseCategory.RENT_AND_MAINTENANCE -> "🏠"
+    ExpenseCategory.OTHERS -> "⋯"
 }
 
 @Preview(name = "Add Transaction - Deposit Mode", showBackground = true)
