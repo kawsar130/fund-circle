@@ -1,29 +1,34 @@
 package com.fundcircle.app.presentation.screens.detail.components
 
-import androidx.compose.foundation.background
+import com.fundcircle.app.presentation.common.shortTransactionRef
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,9 +43,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.fundcircle.app.R
 import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.domain.model.Currency
@@ -50,6 +58,7 @@ import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -107,59 +116,103 @@ fun ReverseTransactionDialog(
         deposit?.memberName?.ifBlank { deposit.memberEmail }?.takeIf { it.isNotBlank() }
     }
 
+    val displayTxId = shortTransactionRef(txId, isExpense)
+
     val summaryHeader = stringResource(
         R.string.dialog_reverse_summary_header,
-        txId,
+        displayTxId,
         typeLabel,
         paymentMethodName
     )
 
-    AlertDialog(
+    val confirmCd = stringResource(
+        if (isReversing) R.string.dialog_reverse_reversing else R.string.dialog_reverse_btn_confirm
+    )
+
+    Dialog(
         onDismissRequest = { if (!isReversing) onDismiss() },
-        icon = {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Undo,
-                contentDescription = stringResource(R.string.dialog_reverse_tx_icon_cd),
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(28.dp)
-            )
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.dialog_reverse_tx_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = DesignTokens.Spacing20)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = DesignTokens.Spacing4),
+                    .padding(DesignTokens.Spacing24),
                 verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing12)
             ) {
+                // Top Row: Circular Icon (Left) & Close Button (Right)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Undo,
+                                contentDescription = stringResource(R.string.dialog_reverse_tx_icon_cd),
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { if (!isReversing) onDismiss() },
+                        enabled = !isReversing,
+                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.dialog_reverse_close_cd),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Left-aligned Title
+                Text(
+                    text = stringResource(R.string.dialog_reverse_tx_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Body Description
                 Text(
                     text = stringResource(R.string.dialog_reverse_tx_body),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 18.sp
                 )
 
-                // Read-Only Transaction Summary Box
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(DesignTokens.Spacing12)
+                // Read-Only Transaction Summary Card
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)) {
+                    Column(
+                        modifier = Modifier.padding(DesignTokens.Spacing12),
+                        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)
+                    ) {
                         Text(
                             text = summaryHeader,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -179,7 +232,7 @@ fun ReverseTransactionDialog(
                                 ),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontFamily = FontFamily.Default,
-                                    fontFeatureSettings = "tnum"
+                                    fontFeatureSettings = TABULAR_DIGITS
                                 ),
                                 fontWeight = FontWeight.Bold,
                                 color = if (isExpense) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -220,7 +273,8 @@ fun ReverseTransactionDialog(
                     supportingText = {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
+                            verticalAlignment = Alignment.Top
                         ) {
                             Text(
                                 text = if (showError) {
@@ -229,65 +283,95 @@ fun ReverseTransactionDialog(
                                     stringResource(R.string.dialog_reverse_reason_helper)
                                 },
                                 color = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
                             )
                             Text(
                                 text = stringResource(R.string.char_counter_format, reason.length, 250),
-                                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TABULAR_DIGITS),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     }
                 )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                enabled = !isReversing,
-                modifier = Modifier.heightIn(min = DesignTokens.MinTouchTarget)
-            ) {
-                Text(text = stringResource(R.string.dialog_reverse_btn_keep))
-            }
-        },
-        confirmButton = {
-            val confirmCd = stringResource(
-                if (isReversing) R.string.dialog_reverse_reversing else R.string.dialog_reverse_btn_confirm
-            )
-            Button(
-                onClick = {
-                    hasAttemptedSubmit = true
-                    if (isReasonValid && !isReversing) {
-                        onConfirm(trimmedReason)
+
+                Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+
+                // Bottom Action Buttons: Keep Entry (flex 1) vs Confirm & Reverse (flex 1.5)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        enabled = !isReversing,
+                        shape = DesignTokens.PillShape,
+                        contentPadding = PaddingValues(
+                            horizontal = DesignTokens.Spacing12,
+                            vertical = DesignTokens.Spacing8
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.dialog_reverse_btn_keep),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-                },
-                enabled = isReasonValid && !isReversing,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                ),
-                modifier = Modifier
-                    .heightIn(min = DesignTokens.MinTouchTarget)
-                    .semantics {
-                        contentDescription = confirmCd
+
+                    Button(
+                        onClick = {
+                            hasAttemptedSubmit = true
+                            if (isReasonValid && !isReversing) {
+                                onConfirm(trimmedReason)
+                            }
+                        },
+                        enabled = isReasonValid && !isReversing,
+                        shape = DesignTokens.PillShape,
+                        contentPadding = PaddingValues(
+                            horizontal = DesignTokens.Spacing12,
+                            vertical = DesignTokens.Spacing8
+                        ),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ),
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                            .semantics {
+                                contentDescription = confirmCd
+                            }
+                    ) {
+                        if (isReversing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onError,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.dialog_reverse_btn_confirm),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
-            ) {
-                if (isReversing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onError,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.dialog_reverse_btn_confirm),
-                        fontWeight = FontWeight.SemiBold
-                    )
                 }
             }
-        },
-        modifier = modifier
-    )
+        }
+    }
 }
 
 @Preview(name = "Reverse Deposit Dialog - Light")

@@ -5,11 +5,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
@@ -52,12 +51,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -88,17 +85,22 @@ import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.PaymentMethod
+import com.fundcircle.app.presentation.components.ReversedBadge
+import com.fundcircle.app.presentation.components.SegmentedControl
+import com.fundcircle.app.presentation.components.SegmentedItem
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
 import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
 fun TransactionsLedgerRoute(
-    onNavigateBack: () -> Unit,
     onNavigateToTransactionDetail: (String, String, Boolean) -> Unit,
     onOpenAddTransactionSheet: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     viewModel: LedgerViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -135,6 +137,7 @@ fun TransactionsLedgerRoute(
         state = state,
         onAction = viewModel::onAction,
         snackbarHostState = snackbarHostState,
+        bottomBar = bottomBar,
         modifier = modifier
     )
 }
@@ -145,13 +148,15 @@ fun TransactionsLedgerScreen(
     state: LedgerUiState,
     onAction: (LedgerUiAction) -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = bottomBar,
         topBar = {
             Column {
                 TopAppBar(
@@ -161,17 +166,6 @@ fun TransactionsLedgerScreen(
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { onAction(LedgerUiAction.NavigateBack) },
-                            modifier = Modifier.defaultMinSize(minWidth = DesignTokens.MinTouchTarget, minHeight = DesignTokens.MinTouchTarget)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.ledger_back_cd)
-                            )
-                        }
                     },
                     actions = {
                         IconButton(
@@ -301,38 +295,28 @@ fun TransactionsLedgerScreen(
                     }
                 }
 
-                // Segmented Tab Row (M3 PrimaryTabRow)
-                PrimaryTabRow(
-                    selectedTabIndex = state.selectedTab.ordinal,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Tab(
-                        selected = state.selectedTab == LedgerTab.DEPOSITS,
-                        onClick = { onAction(LedgerUiAction.SelectTab(LedgerTab.DEPOSITS)) },
-                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        text = {
-                            Text(
-                                text = stringResource(R.string.ledger_tab_deposits, state.deposits.size),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = if (state.selectedTab == LedgerTab.DEPOSITS) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    )
-                    Tab(
-                        selected = state.selectedTab == LedgerTab.EXPENSES,
-                        onClick = { onAction(LedgerUiAction.SelectTab(LedgerTab.EXPENSES)) },
-                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        text = {
-                            Text(
-                                text = stringResource(R.string.ledger_tab_expenses, state.expenses.size),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = if (state.selectedTab == LedgerTab.EXPENSES) FontWeight.Bold else FontWeight.Medium
-                            )
-                        }
-                    )
-                }
+                // Segmented Tab Row (Containerized SegmentedControl)
+                SegmentedControl(
+                    items = listOf(
+                        SegmentedItem(
+                            title = stringResource(R.string.ledger_tab_deposits_title),
+                            count = state.deposits.size
+                        ),
+                        SegmentedItem(
+                            title = stringResource(R.string.ledger_tab_expenses_title),
+                            count = state.expenses.size,
+                            activeContentColor = MaterialTheme.colorScheme.error
+                        )
+                    ),
+                    selectedIndex = state.selectedTab.ordinal,
+                    onItemSelected = { index ->
+                        val tab = LedgerTab.entries[index]
+                        onAction(LedgerUiAction.SelectTab(tab))
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing8)
+                )
 
                 // Horizontal Filter Chips Row
                 Row(
@@ -343,21 +327,65 @@ fun TransactionsLedgerScreen(
                     horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterChip(
-                        selected = state.filterPaymentMethod == null,
-                        onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(null)) },
-                        label = { Text(stringResource(R.string.ledger_filter_all_methods)) },
-                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        colors = FilterChipDefaults.filterChipColors()
-                    )
-                    PaymentMethod.entries.forEach { method ->
+                    if (state.selectedTab == LedgerTab.DEPOSITS) {
+                        // Deposits View: All Dates + Payment Method Filters
                         FilterChip(
-                            selected = state.filterPaymentMethod == method,
-                            onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(method)) },
-                            label = { Text(method.displayName) },
+                            selected = true,
+                            onClick = { /* Date range selector */ },
+                            label = { Text(stringResource(R.string.ledger_filter_all_dates)) },
                             modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
                             colors = FilterChipDefaults.filterChipColors()
                         )
+                        FilterChip(
+                            selected = state.filterPaymentMethod == null,
+                            onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(null)) },
+                            label = { Text(stringResource(R.string.ledger_filter_all_methods)) },
+                            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                            colors = FilterChipDefaults.filterChipColors()
+                        )
+                        PaymentMethod.entries.forEach { method ->
+                            FilterChip(
+                                selected = state.filterPaymentMethod == method,
+                                onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(method)) },
+                                label = { Text(method.displayName) },
+                                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                colors = FilterChipDefaults.filterChipColors()
+                            )
+                        }
+                    } else {
+                        // Expenses View: Category Chips + Payment Method Filters
+                        FilterChip(
+                            selected = state.filterCategory == null,
+                            onClick = { onAction(LedgerUiAction.FilterByCategory(null)) },
+                            label = { Text(stringResource(R.string.ledger_filter_all_categories)) },
+                            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                            colors = FilterChipDefaults.filterChipColors()
+                        )
+                        ExpenseCategory.entries.forEach { category ->
+                            FilterChip(
+                                selected = state.filterCategory == category,
+                                onClick = { onAction(LedgerUiAction.FilterByCategory(category)) },
+                                label = { Text(category.displayName) },
+                                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                colors = FilterChipDefaults.filterChipColors()
+                            )
+                        }
+                        FilterChip(
+                            selected = state.filterPaymentMethod == null,
+                            onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(null)) },
+                            label = { Text(stringResource(R.string.ledger_filter_all_methods)) },
+                            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                            colors = FilterChipDefaults.filterChipColors()
+                        )
+                        PaymentMethod.entries.forEach { method ->
+                            FilterChip(
+                                selected = state.filterPaymentMethod == method,
+                                onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(method)) },
+                                label = { Text(method.displayName) },
+                                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                colors = FilterChipDefaults.filterChipColors()
+                            )
+                        }
                     }
                 }
             }
@@ -550,14 +578,12 @@ private fun DepositItemCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
     val formattedAmount = remember(deposit.amount) {
         NumberFormat.getIntegerInstance(Locale.US).format(deposit.amount)
     }
     val formattedDate = remember(deposit.depositDate) {
         DateUtils.formatDisplayDate(deposit.depositDate)
     }
-    val subtitleText = "$formattedDate • ${deposit.paymentMethod.displayName}"
     val a11yDesc = if (deposit.isVoid) {
         stringResource(R.string.dashboard_tx_card_reversed_cd, deposit.memberName, currency.symbol, formattedAmount)
     } else {
@@ -569,7 +595,9 @@ private fun DepositItemCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = DesignTokens.CardShape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
@@ -580,43 +608,32 @@ private fun DepositItemCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignTokens.Spacing16)
+                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)
         ) {
+            // Row 1: Contributor Title on left, Amount or REVERSED badge on right
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Contributor Title & Subtitle
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = deposit.memberName.ifBlank { deposit.memberEmail },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = subtitleText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = deposit.memberName.ifBlank { deposit.memberEmail },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = if (deposit.isVoid) TextDecoration.LineThrough else TextDecoration.None,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
 
                 Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
 
-                // Amount and optional Reversed badge
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    val amountColor = if (deposit.isVoid) {
-                        if (isDark) DesignTokens.ReversedStrikethroughDark else DesignTokens.ReversedStrikethroughLight
-                    } else {
-                        if (isDark) DesignTokens.DepositCreditDark else DesignTokens.DepositCreditLight
-                    }
-
+                if (deposit.isVoid) {
+                    ReversedBadge()
+                } else {
+                    val amountColor = MaterialTheme.colorScheme.primary
                     Text(
                         text = stringResource(
                             R.string.ledger_deposit_amount_format,
@@ -624,35 +641,52 @@ private fun DepositItemCard(
                             formattedAmount
                         ),
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            textDecoration = if (deposit.isVoid) TextDecoration.LineThrough else TextDecoration.None
+                            fontFeatureSettings = TABULAR_DIGITS,
+                            fontWeight = FontWeight.Bold
                         ),
                         color = amountColor
                     )
-
-                    if (deposit.isVoid) {
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-                        ReversedBadge()
-                    }
                 }
             }
 
-            // Note (Optional)
-            if (!deposit.note.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    thickness = 0.5.dp
+            // Row 2: Subtitle / Purpose & Payment Method (or Original & Reversal if void)
+            val row2Text = if (deposit.isVoid) {
+                stringResource(
+                    R.string.tx_reversal_original_format,
+                    currency.symbol,
+                    formattedAmount,
+                    "-" + currency.symbol,
+                    formattedAmount
                 )
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-                Text(
-                    text = stringResource(R.string.ledger_note_prefix, deposit.note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+            } else {
+                if (!deposit.note.isNullOrBlank()) {
+                    "${deposit.note} • ${deposit.paymentMethod.displayName}"
+                } else {
+                    deposit.paymentMethod.displayName
+                }
             }
+            Text(
+                text = row2Text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Row 3: Timestamp & Status
+            val row3Text = if (deposit.isVoid) {
+                val reason = deposit.voidMetadata?.reason?.takeIf { it.isNotBlank() } ?: stringResource(R.string.badge_status_reversed)
+                stringResource(R.string.tx_reversal_reason_format, formattedDate, reason)
+            } else {
+                stringResource(R.string.tx_verified_format, formattedDate)
+            }
+            Text(
+                text = row3Text,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -664,14 +698,12 @@ private fun ExpenseItemCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
     val formattedAmount = remember(expense.amount) {
         NumberFormat.getIntegerInstance(Locale.US).format(expense.amount)
     }
     val formattedDate = remember(expense.expenseDate) {
         DateUtils.formatDisplayDate(expense.expenseDate)
     }
-    val subtitleText = "$formattedDate • ${expense.paymentMethod.displayName} • ${expense.category.displayName}"
     val displayTitle = expense.description.ifBlank { expense.category.displayName }
     val a11yDesc = if (expense.isVoid) {
         stringResource(R.string.dashboard_tx_card_reversed_cd, displayTitle, currency.symbol, formattedAmount)
@@ -684,7 +716,9 @@ private fun ExpenseItemCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = DesignTokens.CardShape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
@@ -695,43 +729,32 @@ private fun ExpenseItemCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DesignTokens.Spacing16)
+                .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing4)
         ) {
+            // Row 1: Title on left, Amount or REVERSED badge on right
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Description and Subtitle
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = displayTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = subtitleText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = displayTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textDecoration = if (expense.isVoid) TextDecoration.LineThrough else TextDecoration.None,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
 
                 Spacer(modifier = Modifier.width(DesignTokens.Spacing8))
 
-                // Amount and optional Reversed badge
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    val amountColor = if (expense.isVoid) {
-                        if (isDark) DesignTokens.ReversedStrikethroughDark else DesignTokens.ReversedStrikethroughLight
-                    } else {
-                        if (isDark) DesignTokens.ExpenseDebitDark else DesignTokens.ExpenseDebitLight
-                    }
-
+                if (expense.isVoid) {
+                    ReversedBadge()
+                } else {
+                    val amountColor = MaterialTheme.colorScheme.error
                     Text(
                         text = stringResource(
                             R.string.ledger_expense_amount_format,
@@ -739,56 +762,51 @@ private fun ExpenseItemCard(
                             formattedAmount
                         ),
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            textDecoration = if (expense.isVoid) TextDecoration.LineThrough else TextDecoration.None
+                            fontFeatureSettings = TABULAR_DIGITS,
+                            fontWeight = FontWeight.Bold
                         ),
                         color = amountColor
                     )
-
-                    if (expense.isVoid) {
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
-                        ReversedBadge()
-                    }
                 }
             }
 
-            // Paid By / Category (Optional)
-            if (expense.paidBy.isNotBlank()) {
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    thickness = 0.5.dp
+            // Row 2: Subtitle (Category • Payment Method)
+            val row2Text = if (expense.isVoid) {
+                stringResource(
+                    R.string.tx_reversal_original_format,
+                    currency.symbol,
+                    formattedAmount,
+                    "+" + currency.symbol,
+                    formattedAmount
                 )
-                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-                Text(
-                    text = stringResource(R.string.ledger_paid_by_prefix, expense.paidBy),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            } else {
+                "${expense.category.displayName} • ${expense.paymentMethod.displayName}"
             }
-        }
-    }
-}
+            Text(
+                text = row2Text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-@Composable
-private fun ReversedBadge(modifier: Modifier = Modifier) {
-    val a11yDesc = stringResource(R.string.ledger_reversed_badge_cd)
-    Surface(
-        color = MaterialTheme.colorScheme.errorContainer,
-        shape = RoundedCornerShape(4.dp),
-        modifier = modifier.semantics {
-            contentDescription = a11yDesc
+            // Row 3: Timestamp & Status / Paid to/by
+            val row3Text = if (expense.isVoid) {
+                val reason = expense.voidMetadata?.reason?.takeIf { it.isNotBlank() } ?: stringResource(R.string.badge_status_reversed)
+                stringResource(R.string.tx_reversal_reason_format, formattedDate, reason)
+            } else if (expense.paidBy.isNotBlank()) {
+                stringResource(R.string.ledger_paid_by_prefix, expense.paidBy) + " • " + formattedDate
+            } else {
+                stringResource(R.string.tx_verified_format, formattedDate)
+            }
+            Text(
+                text = row3Text,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
-    ) {
-        Text(
-            text = stringResource(R.string.ledger_reversed_badge),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,12 +20,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Person
@@ -41,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -72,17 +75,22 @@ import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.model.MemberStatus
+import com.fundcircle.app.presentation.components.CurrencyLockBadge
+import com.fundcircle.app.presentation.components.LiveBadge
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
+import com.fundcircle.app.presentation.theme.LocalFundCircleDarkTheme
+import com.fundcircle.app.presentation.theme.SectionHeaderStyle
+import java.util.Locale
 
 @Composable
 fun SettingsRoute(
     fundId: String,
-    onNavigateBack: () -> Unit,
     onNavigateToHub: () -> Unit,
     onNavigateToProfile: (String) -> Unit,
-    onNavigateToAuth: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -94,7 +102,6 @@ fun SettingsRoute(
             when (effect) {
                 is SettingsUiEffect.NavigateToHub -> onNavigateToHub()
                 is SettingsUiEffect.NavigateToProfile -> onNavigateToProfile(effect.fundId)
-                is SettingsUiEffect.NavigateToAuth -> onNavigateToAuth()
                 is SettingsUiEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(effect.message.asString(context))
                 }
@@ -114,6 +121,7 @@ fun SettingsRoute(
         onAction = viewModel::onAction,
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
+        bottomBar = bottomBar,
         modifier = modifier
     )
 }
@@ -123,13 +131,15 @@ fun SettingsRoute(
 fun SettingsScreen(
     state: SettingsUiState,
     onAction: (SettingsUiAction) -> Unit,
-    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    onNavigateBack: () -> Unit = {},
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = bottomBar,
         topBar = {
             TopAppBar(
                 title = {
@@ -138,17 +148,6 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.size(DesignTokens.MinTouchTarget)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.settings_back_cd)
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -180,18 +179,14 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 
-                // Section 1: WORKSPACE NAVIGATION (Clean Top Bar Rule)
-                item(key = "section_workspace_header") {
-                    SettingsSectionHeader(title = stringResource(R.string.settings_section_workspace))
-                }
-
+                // 1. Workspace Switcher Card
                 item(key = "item_switch_circle") {
                     Card(
                         onClick = { onAction(SettingsUiAction.ClickSwitchCircle) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = DesignTokens.CardShape,
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -203,27 +198,28 @@ fun SettingsScreen(
                                 .padding(DesignTokens.Spacing16),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.SwapHoriz,
-                                contentDescription = null,
-                                modifier = Modifier.size(28.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
                             Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_switch_circle_card_category),
+                                    style = SectionHeaderStyle,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(R.string.settings_switch_circle_title),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(R.string.settings_switch_circle_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
                                 )
                             }
                             Icon(
-                                imageVector = Icons.Default.ChevronRight,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
                                 modifier = Modifier.size(24.dp),
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer
@@ -232,40 +228,68 @@ fun SettingsScreen(
                     }
                 }
 
-                item(key = "spacer_sec_1") {
-                    Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
+                item(key = "spacer_switcher_profile") {
+                    Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
                 }
 
-                // Section 2: MY MEMBERSHIP
-                item(key = "section_membership_header") {
-                    SettingsSectionHeader(title = stringResource(R.string.settings_section_membership))
-                }
-
+                // 2. Membership & Profile Card
                 item(key = "item_my_profile") {
                     val memberIdLabel = state.currentMember?.memberId?.takeIf { it.isNotBlank() } ?: "FC-001"
-                    SettingsActionCard(
-                        icon = Icons.Default.Person,
-                        title = stringResource(R.string.settings_my_profile_title, memberIdLabel),
-                        subtitle = stringResource(R.string.settings_my_profile_subtitle),
-                        onClick = { onAction(SettingsUiAction.ClickMyProfile) }
-                    )
+                    Card(
+                        onClick = { onAction(SettingsUiAction.ClickMyProfile) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                        shape = DesignTokens.CardShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(DesignTokens.Spacing16),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_my_profile_title, memberIdLabel),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.settings_my_profile_subtitle),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "✏️",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
                 }
 
                 item(key = "spacer_profile_currency") {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 
-                // Base Currency Permanence Card (Invariant 1)
+                // 3. Base Currency Permanence Card (Invariant 1)
                 item(key = "item_base_currency") {
                     val currency = state.circle?.currency ?: Currency.BDT
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = DesignTokens.CardShape,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     ) {
                         Row(
                             modifier = Modifier
@@ -273,126 +297,40 @@ fun SettingsScreen(
                                 .padding(DesignTokens.Spacing16),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.AccountBalanceWallet,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.settings_base_currency_title),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(R.string.settings_base_currency_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Surface(
-                                shape = RoundedCornerShape(100.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            ) {
-                                Text(
-                                    text = stringResource(
-                                        R.string.settings_base_currency_badge,
-                                        currency.name,
-                                        currency.symbol
-                                    ),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
-                            }
+                            CurrencyLockBadge(currency = currency)
                         }
                     }
                 }
 
-                item(key = "spacer_profile_leave") {
+                item(key = "spacer_currency_theme") {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 
-                item(key = "item_leave_circle") {
-                    val leaveSubtitle = if (state.isAdmin) {
-                        stringResource(R.string.settings_leave_admin_disabled)
-                    } else {
-                        stringResource(R.string.settings_leave_circle_subtitle)
-                    }
-                    SettingsActionCard(
-                        icon = Icons.AutoMirrored.Filled.ExitToApp,
-                        title = stringResource(R.string.settings_leave_circle_title),
-                        subtitle = leaveSubtitle,
-                        onClick = { onAction(SettingsUiAction.OpenLeaveDialog) }
-                    )
-                }
-
-                // Section 3: CIRCLE GOVERNANCE (Admin Only)
-                if (state.isAdmin) {
-                    item(key = "spacer_sec_2") {
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
-                    }
-
-                    item(key = "section_governance_header") {
-                        SettingsSectionHeader(title = stringResource(R.string.settings_section_governance))
-                    }
-
-                    item(key = "item_transfer_admin") {
-                        SettingsActionCard(
-                            icon = Icons.Default.AdminPanelSettings,
-                            title = stringResource(R.string.settings_transfer_admin_title),
-                            subtitle = stringResource(R.string.settings_transfer_admin_subtitle),
-                            onClick = { onAction(SettingsUiAction.OpenTransferAdminDialog) }
-                        )
-                    }
-
-                    item(key = "spacer_transfer_lock") {
-                        Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
-                    }
-
-                    item(key = "item_lock_circle") {
-                        val lockTitle = if (state.isCircleLocked) {
-                            stringResource(R.string.settings_unlock_circle_title)
-                        } else {
-                            stringResource(R.string.settings_lock_circle_title)
-                        }
-                        val lockSubtitle = if (state.isCircleLocked) {
-                            stringResource(R.string.settings_unlock_circle_subtitle)
-                        } else {
-                            stringResource(R.string.settings_lock_circle_subtitle)
-                        }
-                        val lockIcon = if (state.isCircleLocked) Icons.Default.LockOpen else Icons.Default.Lock
-
-                        SettingsActionCard(
-                            icon = lockIcon,
-                            title = lockTitle,
-                            subtitle = lockSubtitle,
-                            onClick = { onAction(SettingsUiAction.OpenLockDialog) }
-                        )
-                    }
-                }
-
-                item(key = "spacer_sec_3") {
-                    Spacer(modifier = Modifier.height(DesignTokens.Spacing24))
-                }
-
-                // Section 4: APP PREFERENCES & ACCOUNT
-                item(key = "section_preferences_header") {
-                    SettingsSectionHeader(title = stringResource(R.string.settings_section_preferences))
-                }
-
+                // 4. Color Theme Card
                 item(key = "item_dark_theme") {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = DesignTokens.CardShape,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     ) {
                         Row(
                             modifier = Modifier
@@ -400,28 +338,26 @@ fun SettingsScreen(
                                 .padding(DesignTokens.Spacing16),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.DarkMode,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.settings_dark_theme_title),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(R.string.settings_dark_theme_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            val isDarkActive = state.darkThemeOverride ?: LocalFundCircleDarkTheme.current
                             Switch(
-                                checked = state.isDarkTheme,
-                                onCheckedChange = { onAction(SettingsUiAction.ToggleDarkTheme) }
+                                checked = isDarkActive,
+                                onCheckedChange = { enabled ->
+                                    onAction(SettingsUiAction.SetDarkTheme(enabled))
+                                }
                             )
                         }
                     }
@@ -431,16 +367,17 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 
-                // Firestore 100MB Offline Disk Cache Quota Indicator (Invariant 5)
+                // 5. Firestore 100MB Offline Disk Cache Quota Indicator (Invariant 5)
                 item(key = "item_offline_cache") {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = DesignTokens.CardShape,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     ) {
                         Row(
                             modifier = Modifier
@@ -448,53 +385,148 @@ fun SettingsScreen(
                                 .padding(DesignTokens.Spacing16),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.CloudDone,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(DesignTokens.Spacing16))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.settings_offline_cache_title),
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = stringResource(R.string.settings_offline_cache_subtitle),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Surface(
-                                shape = RoundedCornerShape(100.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.settings_offline_cache_badge),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
+                            LiveBadge()
                         }
                     }
                 }
 
-                item(key = "spacer_cache_signout") {
+                item(key = "spacer_cache_governance") {
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                 }
 
-                item(key = "item_sign_out") {
-                    SettingsActionCard(
-                        icon = Icons.AutoMirrored.Filled.Logout,
-                        title = stringResource(R.string.settings_sign_out_title),
-                        subtitle = stringResource(R.string.settings_sign_out_subtitle),
-                        onClick = { onAction(SettingsUiAction.OpenSignOutDialog) },
-                        isDestructive = true
-                    )
+                // 6. Administration (Danger Zone)
+                if (state.isAdmin) {
+                    item(key = "item_governance_admin") {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = DesignTokens.CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                        ) {
+                            Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
+                                Text(
+                                    text = stringResource(R.string.settings_governance_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+                                Text(
+                                    text = stringResource(R.string.settings_governance_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing8)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { onAction(SettingsUiAction.OpenLeaveDialog) },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.settings_btn_leave_circle),
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
+                                    Button(
+                                        onClick = { onAction(SettingsUiAction.OpenLockDialog) },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.error,
+                                            contentColor = MaterialTheme.colorScheme.onError
+                                        )
+                                    ) {
+                                        val lockButtonText = if (state.isCircleLocked) {
+                                            stringResource(R.string.settings_dialog_unlock_confirm)
+                                        } else {
+                                            stringResource(R.string.settings_btn_archive_circle)
+                                        }
+                                        Text(
+                                            text = lockButtonText,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
+                                OutlinedButton(
+                                    onClick = { onAction(SettingsUiAction.OpenTransferAdminDialog) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.settings_btn_transfer_leader),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    item(key = "item_membership_non_admin") {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = DesignTokens.CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        ) {
+                            Column(modifier = Modifier.padding(DesignTokens.Spacing16)) {
+                                Text(
+                                    text = stringResource(R.string.settings_membership_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
+                                Text(
+                                    text = stringResource(R.string.settings_membership_subtitle),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
+                                OutlinedButton(
+                                    onClick = { onAction(SettingsUiAction.OpenLeaveDialog) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.settings_btn_leave_circle),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 item(key = "spacer_bottom") {
@@ -611,54 +643,13 @@ fun SettingsScreen(
             }
         )
     }
-
-    if (state.showSignOutDialog) {
-        AlertDialog(
-            onDismissRequest = { onAction(SettingsUiAction.DismissDialogs) },
-            title = {
-                Text(
-                    text = stringResource(R.string.settings_dialog_sign_out_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.settings_dialog_sign_out_body),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { onAction(SettingsUiAction.ConfirmSignOut) },
-                    enabled = !state.isActionInProgress,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                ) {
-                    Text(stringResource(R.string.settings_dialog_sign_out_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { onAction(SettingsUiAction.DismissDialogs) },
-                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
-                ) {
-                    Text(stringResource(R.string.settings_dialog_cancel))
-                }
-            }
-        )
-    }
 }
 
 @Composable
 fun SettingsSectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
-        text = title,
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Bold,
+        text = title.uppercase(Locale.US),
+        style = SectionHeaderStyle,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier.padding(vertical = DesignTokens.Spacing8)
     )
@@ -678,13 +669,18 @@ fun SettingsActionCard(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-        shape = RoundedCornerShape(16.dp),
+        shape = DesignTokens.CardShape,
         colors = CardDefaults.cardColors(
             containerColor = if (isDestructive) {
                 MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                MaterialTheme.colorScheme.surfaceContainer
             }
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isDestructive) MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
         )
     ) {
         Row(

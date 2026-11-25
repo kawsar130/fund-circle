@@ -1,12 +1,9 @@
 <resources>
     <string name="app_name">Fund Circle</string>
     <string name="auth_subtitle">Transparent Capital Management</string>
-    <string name="auth_feature_1">Multi-tenant investment syndicates</string>
-    <string name="auth_feature_2">Immutable, versioned financial audit trail</string>
-    <string name="auth_feature_3">Real-time shared deposits and expenses</string>
-    <string name="auth_feature_4">Instant on-device CSV ledger export</string>
-    <string name="auth_btn_continue_google">Continue with Google</string>
-    <string name="auth_terms_notice">By continuing, you agree to the Terms of Service &amp; Privacy Policy</string>
+    <string name="auth_description">Immutable pooled-capital ledgers, real-time stakeholder transparency, and verified fiduciary governance.</string>
+    <string name="auth_btn_continue_google">Continue with Google One-Tap</string>
+    <string name="auth_credential_manager_notice">Zero passwords. Instant cryptographic sign-in via Android Credential Manager.</string>
     <string name="auth_error_sign_in_failed">Google Sign-In failed. Please try again.</string>
     <string name="auth_error_cancelled">Sign-in was cancelled.</string>
     <string name="auth_error_network">Network connection unavailable. Please check your internet connection.</string>
@@ -19,40 +16,32 @@
 
     <!-- Circle Hub (Screen 02) -->
     <string name="hub_title">My Fund Circles</string>
-    <string name="hub_counter_badge">%1$d/5 Circles</string>
+    <string name="hub_signed_in_label">Signed In</string>
     <string name="hub_section_managed">CIRCLES I MANAGE (%1$d/5)</string>
     <string name="hub_section_joined">CIRCLES I JOINED (%1$d)</string>
-    <string name="hub_badge_admin">ADMIN</string>
-    <string name="hub_badge_member">MEMBER</string>
-    <string name="hub_badge_locked">LOCKED</string>
-    <string name="hub_badge_active">ACTIVE</string>
     <string name="hub_member_count_single">1 Member</string>
     <string name="hub_members_count">%1$d Members</string>
-    <string name="hub_currency_and_members">%1$s • %2$s</string>
-    <string name="hub_balance_label">Balance:</string>
+    <string name="hub_balance_label">Balance</string>
     <string name="hub_balance_format">%1$s %2$s</string>
-    <string name="hub_btn_new_circle">New Circle</string>
     <string name="hub_empty_title">No Fund Circles Yet</string>
     <string name="hub_empty_subtitle">Create your first circle or wait for an invitation to join one.</string>
     <string name="hub_btn_create_first">Create Fund Circle</string>
     <string name="hub_limit_reached_toast">You have reached the maximum limit of 5 circles.</string>
-    <string name="hub_user_avatar_content_description">User Avatar</string>
     <string name="hub_circle_card_content_description">%1$s circle card, balance %2$s</string>
-    <string name="hub_refresh_content_description">Refresh circles</string>
     <string name="hub_offline_warning">Viewing Offline Cache</string>
     <string name="hub_error_loading">Failed to load circles. Please check your connection.</string>
 
     <!-- Create Circle (Screen 03) -->
-    <string name="create_circle_title">Create Fund Circle</string>
+    <string name="create_circle_title">New Fund Circle</string>
     <string name="create_circle_subtitle">Set up an isolated ledger for your investment group.</string>
     <string name="create_circle_name_label">Circle Name *</string>
     <string name="create_circle_name_placeholder">e.g., Green Valley Property Pool</string>
     <string name="create_circle_name_error">Circle name must be between 3 and 50 characters.</string>
-    <string name="create_circle_currency_label">Primary Currency *</string>
-    <string name="create_circle_currency_helper">Locked permanently after first transaction</string>
-    <string name="create_circle_currency_option">%1$s %2$s</string>
-    <string name="create_circle_currency_lock_title">Permanent Currency Lock</string>
-    <string name="create_circle_currency_lock_warning">Base currency cannot be changed once transactions exist. All deposits and expenses will be recorded in this currency.</string>
+    <string name="create_circle_currency_label">Base Currency (Permanent Lock) *</string>
+    <string name="create_circle_currency_lock_warning">⚠️ Currency cannot be changed after creation. All pool ledgers will operate in this currency.</string>
+    <string name="currency_option_bdt">Bangladeshi Taka (BDT - ৳)</string>
+    <string name="currency_option_usd">US Dollar (USD - $)</string>
+    <string name="currency_option_eur">Euro (EUR - €)</string>
     <string name="create_circle_description_label">Description / Purpose (Optional)</string>
     <string name="create_circle_description_placeholder">e.g., Joint land acquisition and development pool.</string>
     <string name="create_circle_description_error">Description cannot exceed 250 characters.</string>
@@ -83,28 +72,24 @@
     <string name="expense_category_others">Others</string>
 
     <!-- Circle Home Dashboard (Screen 04) -->
-    <string name="dashboard_hero_balance_label">OVERALL RECORDED BALANCE</string>
-    <string name="dashboard_badge_live">LIVE</string>
+    <string name="dashboard_hero_balance_label">RECORDED POOL BALANCE</string>
     <string name="dashboard_total_deposits_label">Total Deposits</string>
     <string name="dashboard_total_expenses_label">Total Expenses</string>
     <string name="dashboard_deposit_amount_format">+ %1$s %2$s</string>
     <string name="dashboard_expense_amount_format">- %1$s %2$s</string>
     <string name="dashboard_balance_format">%1$s %2$s</string>
     <string name="dashboard_negative_balance_format">- %1$s %2$s</string>
-    <string name="dashboard_badge_reversed">REVERSED ↩</string>
-    <string name="dashboard_badge_active">ACTIVE</string>
-    <string name="dashboard_badge_locked">LOCKED</string>
-    <string name="dashboard_status_badge_active_cd">Circle status: Active</string>
-    <string name="dashboard_status_badge_locked_cd">Circle status: Locked</string>
     <string name="dashboard_locked_notice">This circle is locked. New transactions cannot be recorded.</string>
     <string name="dashboard_recent_transactions_header">Recent Transactions</string>
     <string name="dashboard_btn_view_all">View All</string>
+    <string name="dashboard_action_deposit">+ Deposit</string>
+    <string name="dashboard_action_expense">- Expense</string>
+    <string name="dashboard_action_reports">Reports</string>
+    <string name="dashboard_action_members">Members</string>
     <string name="dashboard_empty_transactions_title">No Transactions Yet</string>
-    <string name="dashboard_empty_transactions_subtitle">Record the first deposit to initialize your circle\'s financial pool.</string>
     <string name="dashboard_empty_transactions_subtitle_admin">Record the first deposit to initialize your circle\'s financial pool.</string>
     <string name="dashboard_empty_transactions_subtitle_member">When the circle administrator records transactions, they will appear here.</string>
     <string name="dashboard_btn_record_transaction">Record Transaction</string>
-    <string name="dashboard_offline_warning">Viewing Offline Cache</string>
     <string name="viewing_offline_cache">Viewing Offline Cache</string>
     <string name="dashboard_error_loading">Failed to load circle data. Please try again.</string>
     <string name="dashboard_top_bar_settings_cd">Circle Settings</string>
@@ -113,11 +98,6 @@
     <string name="dashboard_tx_card_cd">%1$s, %2$s %3$s</string>
     <string name="dashboard_tx_card_reversed_cd">Reversed, %1$s, %2$s %3$s</string>
     <string name="dashboard_tx_subtitle">%1$s • %2$s</string>
-    <string name="dashboard_tx_subtitle_with_category">%1$s • %2$s • %3$s</string>
-    <string name="dashboard_deposit_prefix">+</string>
-    <string name="dashboard_expense_prefix">-</string>
-    <string name="dashboard_deposit_type_badge">DEP</string>
-    <string name="dashboard_expense_type_badge">EXP</string>
     <string name="dashboard_deposit_default_title">Member Deposit</string>
     <string name="dashboard_expense_default_title">Operating Expense</string>
     <string name="dashboard_retry_btn">Retry</string>
@@ -130,12 +110,17 @@
 
     <!-- Screen 05: Transactions Ledger -->
     <string name="ledger_title">Transactions Ledger</string>
-    <string name="ledger_tab_deposits">Deposits (%1$d)</string>
-    <string name="ledger_tab_expenses">Expenses (%1$d)</string>
+    <string name="ledger_tab_deposits_title">Deposits</string>
+    <string name="ledger_tab_expenses_title">Expenses</string>
     <string name="ledger_search_placeholder">Search transactions…</string>
     <string name="ledger_search_cd">Search transactions</string>
     <string name="ledger_clear_search_cd">Clear search</string>
     <string name="ledger_filter_all_methods">All Methods</string>
+    <string name="ledger_filter_all_categories">All Categories ▼</string>
+    <string name="ledger_filter_all_dates">All Dates ▼</string>
+    <string name="tx_reversal_original_format">Original: %1$s %2$s • Reversal: %3$s %4$s</string>
+    <string name="tx_reversal_reason_format">%1$s • Reason: %2$s</string>
+    <string name="tx_verified_format">%1$s • Verified</string>
     <string name="ledger_fab_record">Record</string>
     <string name="ledger_fab_record_cd">Record transaction</string>
     <string name="ledger_empty_deposits_title">No Deposits Found</string>
@@ -143,19 +128,16 @@
     <string name="ledger_empty_expenses_title">No Expenses Found</string>
     <string name="ledger_empty_expenses_subtitle">No expenses match the selected filter or search query.</string>
     <string name="ledger_offline_warning">Viewing Offline Cache</string>
-    <string name="ledger_back_cd">Navigate back</string>
-    <string name="ledger_reversed_badge">REVERSED ↩</string>
-    <string name="ledger_reversed_badge_cd">Reversed transaction</string>
-    <string name="ledger_note_prefix">Note: %1$s</string>
     <string name="ledger_paid_by_prefix">Paid by: %1$s</string>
     <string name="ledger_deposit_amount_format">+ %1$s %2$s</string>
     <string name="ledger_expense_amount_format">- %1$s %2$s</string>
 
     <!-- Screen 07: Add Transaction Modal Sheet -->
-    <string name="modal_add_tx_title">Record Financial Transaction</string>
+    <string name="modal_add_tx_title_deposit">Record Deposit (+)</string>
+    <string name="modal_add_tx_title_expense">Record Expense (-)</string>
     <string name="modal_add_tx_close_cd">Close modal</string>
-    <string name="modal_add_tx_tab_deposit">Deposit (Member)</string>
-    <string name="modal_add_tx_tab_expense">Expense</string>
+    <string name="modal_add_tx_tab_deposit">Deposit (+)</string>
+    <string name="modal_add_tx_tab_expense">Expense (-)</string>
     <string name="modal_add_tx_stakeholder_label">Select Contributing Stakeholder *</string>
     <string name="modal_add_tx_deposit_amount_label">Deposit Amount (%1$s) *</string>
     <string name="modal_add_tx_expense_amount_label">Expense Amount (%1$s) *</string>
@@ -171,8 +153,8 @@
     <string name="modal_add_tx_description_placeholder">e.g., Office supplies and report printing papers</string>
     <string name="modal_add_tx_paid_by_label">Paid By / Vendor (Optional)</string>
     <string name="modal_add_tx_paid_by_placeholder">e.g., Apex Properties Ltd.</string>
-    <string name="modal_add_tx_btn_post_deposit">Post Deposit to Firm Ledger</string>
-    <string name="modal_add_tx_btn_post_expense">Post Expense to Firm Ledger</string>
+    <string name="modal_add_tx_btn_post_deposit">Save &amp; Post Deposit</string>
+    <string name="modal_add_tx_btn_post_expense">Record Group Expense</string>
     <string name="modal_add_tx_posting">Posting to Firm Ledger…</string>
     <string name="modal_add_tx_select_date_cd">Select transaction date</string>
     <string name="modal_add_tx_select_stakeholder_placeholder">Choose member…</string>
@@ -181,10 +163,8 @@
     <string name="error_amount_required">Amount must be a whole positive integer >= 1.</string>
     <string name="error_future_date">Transaction date cannot be in the future.</string>
     <string name="error_member_required">Please select a contributing stakeholder.</string>
-    <string name="error_description_required">Description is required.</string>
     <string name="error_description_too_short">Description must be at least 3 characters.</string>
     <string name="error_description_too_long">Description cannot exceed 250 characters.</string>
-    <string name="error_note_too_long">Note cannot exceed 250 characters.</string>
     <string name="modal_add_tx_success_deposit">Deposit recorded successfully.</string>
     <string name="modal_add_tx_success_expense">Expense recorded successfully.</string>
     <string name="date_picker_ok">OK</string>
@@ -194,14 +174,10 @@
     <!-- Screen 06: Transaction Details & Audit Card -->
     <string name="tx_detail_title">Transaction Details</string>
     <string name="tx_detail_back_cd">Navigate back</string>
-    <string name="tx_detail_badge_admin">Admin View</string>
-    <string name="tx_detail_badge_member">Member View</string>
     <string name="tx_detail_type_deposit">Capital Contribution</string>
     <string name="tx_detail_type_expense">Operational Expense</string>
     <string name="tx_detail_status_completed">COMPLETED &amp; POSTED</string>
-    <string name="tx_detail_status_reversed">REVERSED ↩</string>
     <string name="tx_detail_status_completed_cd">Status: Completed and posted</string>
-    <string name="tx_detail_status_reversed_cd">Status: Reversed</string>
     <string name="tx_detail_specs_title">TRANSACTION SPECIFICATIONS</string>
     <string name="tx_detail_id_label">Transaction ID</string>
     <string name="tx_detail_contributor_label">Contributor</string>
@@ -221,6 +197,7 @@
     <string name="tx_detail_error_loading">Failed to load transaction details.</string>
     <string name="tx_detail_error_already_voided">This transaction has already been reversed.</string>
     <string name="tx_detail_offline_warning">Viewing Offline Cache</string>
+    <string name="tx_detail_copied_cd">Transaction ID copied to clipboard</string>
 
     <!-- Transparency Audit Disclosure Card (Shield Icon) -->
     <string name="tx_detail_audit_title">TRANSPARENCY AUDIT NOTE</string>
@@ -247,20 +224,18 @@
     <string name="dialog_reverse_reason_helper">Must provide explanatory reason (5-250 characters).</string>
     <string name="dialog_reverse_reason_error">Reason must be between 5 and 250 characters.</string>
     <string name="dialog_reverse_btn_keep">Keep Entry</string>
-    <string name="dialog_reverse_btn_confirm">Confirm &amp; Reverse Balance</string>
+    <string name="dialog_reverse_btn_confirm">Confirm &amp; Reverse</string>
+    <string name="dialog_reverse_close_cd">Close reverse dialog</string>
     <string name="dialog_reverse_reversing">Reversing transaction…</string>
 
     <!-- Package C: Membership & Profiles -->
 
     <!-- Screen 08: Stakeholders Roster -->
     <string name="members_roster_title">Stakeholders Roster (%1$d)</string>
-    <string name="members_roster_back_cd">Navigate back</string>
     <string name="members_roster_search_placeholder">Search by name, phone, or Member ID…</string>
     <string name="members_roster_search_cd">Search stakeholders</string>
     <string name="members_roster_clear_search_cd">Clear search query</string>
     <string name="members_roster_profile_action_cd">Edit My Profile</string>
-    <string name="members_roster_badge_admin">ADMIN</string>
-    <string name="members_roster_badge_member">MEMBER</string>
     <string name="members_roster_badge_active">ACTIVE</string>
     <string name="members_roster_badge_inactive">INACTIVE</string>
     <string name="members_roster_badge_left">LEFT</string>
@@ -281,13 +256,8 @@
     <!-- Screen 09: Member Details & Individual Ledger -->
     <string name="member_detail_title">Member Profile</string>
     <string name="member_detail_back_cd">Navigate back</string>
-    <string name="member_detail_badge_admin">Admin</string>
     <string name="member_detail_id_format">Member ID: %1$s</string>
     <string name="member_detail_status_joined_format">Status: %1$s • Joined: %2$s</string>
-    <string name="member_detail_status_format">Status: %1$s</string>
-    <string name="member_detail_joined_format">Joined: %1$s</string>
-    <string name="member_detail_phone_label">Phone Number</string>
-    <string name="member_detail_email_label">Email Address</string>
     <string name="member_detail_cumulative_deposits_label">Cumulative Deposits</string>
     <string name="member_detail_transactions_count_label">Transactions Count</string>
     <string name="member_detail_deposit_count_singular">1 Deposit</string>
@@ -295,9 +265,6 @@
     <string name="member_detail_section_deposits">Deposit History</string>
     <string name="member_detail_empty_deposits_title">No deposits recorded</string>
     <string name="member_detail_empty_deposits_subtitle">This member has not contributed any deposits yet.</string>
-    <string name="member_detail_deposit_date_method_format">%1$s • %2$s</string>
-    <string name="member_detail_deposit_amount_format">+ %1$s %2$s</string>
-    <string name="member_detail_deposit_note_format">Note: %1$s</string>
     <string name="member_detail_btn_deactivate">Deactivate Member</string>
     <string name="member_detail_btn_reactivate">Reactivate Member</string>
     <string name="member_detail_btn_mark_left">Mark as Left</string>
@@ -338,7 +305,6 @@
     <string name="add_member_sheet_email_error">Please enter a valid email address.</string>
     <string name="add_member_sheet_error_duplicate_email">This email is already a stakeholder in this circle.</string>
     <string name="add_member_sheet_explanation">An in-app invitation will be associated with this Google account.</string>
-    <string name="add_member_sheet_submit_btn">Send Invitation / Add Member</string>
     <string name="add_member_sheet_submitting">Adding member…</string>
     <string name="add_member_sheet_success">Member %1$s added successfully as %2$s.</string>
 
@@ -373,13 +339,9 @@
 
     <!-- Screen 12: Financial Reports Engine & Live Preview (CUJ-08) -->
     <string name="reports_title">Financial Reports Engine</string>
-    <string name="reports_back_cd">Navigate back</string>
     <string name="reports_section_period">REPORTING PERIOD</string>
     <string name="reports_period_month_year">Month &amp; Year</string>
     <string name="reports_period_all_time">All Time</string>
-    <string name="reports_selected_period_label">Selected Period</string>
-    <string name="reports_month_label">Month</string>
-    <string name="reports_year_label">Year</string>
     <string name="reports_section_report_type">REPORT TYPE</string>
     <string name="reports_type_monthly_summary">Monthly Financial Summary</string>
     <string name="reports_type_member_statement">Member-wise Deposit Statement</string>
@@ -390,14 +352,7 @@
     <string name="reports_preview_desc_deposit_history">Chronological deposit history with payment methods, status, and audit notes.</string>
     <string name="reports_preview_desc_expense_history">Chronological expense history with categories, paid-by details, and audit notes.</string>
     <string name="reports_preview_title">ON-SCREEN PREVIEW</string>
-    <string name="reports_preview_circle_label">Fund Circle: %1$s</string>
     <string name="reports_preview_statement_period">Statement for: %1$s</string>
-    <string name="reports_preview_opening_balance">Opening Balance:</string>
-    <string name="reports_preview_posted_deposits">Total Posted Deposits (%1$s):</string>
-    <string name="reports_preview_posted_expenses">Total Posted Expenses (%1$s):</string>
-    <string name="reports_preview_net_change">Net Monthly Change:</string>
-    <string name="reports_preview_net_change_all_time">Net Total Change:</string>
-    <string name="reports_preview_closing_balance">Closing Recorded Balance:</string>
     <string name="reports_preview_tx_count">Total Transactions: %1$d</string>
     <string name="reports_btn_export_csv">Export Ledger (CSV)</string>
     <string name="reports_exporting">Generating CSV…</string>
@@ -406,35 +361,27 @@
     <string name="reports_empty_preview">No transactions recorded for the selected period.</string>
 
     <!-- Screen 13: Settings & Circle Governance (CUJ-08) -->
-    <string name="settings_title">Settings &amp; Circle Options</string>
-    <string name="settings_back_cd">Navigate back</string>
-    <string name="settings_section_workspace">WORKSPACE NAVIGATION</string>
-    <string name="settings_switch_circle_title">Switch Fund Circle</string>
-    <string name="settings_switch_circle_subtitle">Return to Hub to switch or manage other circles</string>
-    <string name="settings_section_membership">MY MEMBERSHIP</string>
+    <string name="settings_title">Circle Settings</string>
+    <string name="settings_switch_circle_card_category">WORKSPACE SWITCHER</string>
+    <string name="settings_switch_circle_title">Switch Fund Circle 🔄</string>
+    <string name="settings_switch_circle_subtitle">Return to Hub to manage other circles</string>
     <string name="settings_base_currency_title">Base Currency</string>
     <string name="settings_base_currency_subtitle">Locked permanently to circle</string>
-    <string name="settings_base_currency_badge">%1$s (%2$s) 🔒</string>
-    <string name="settings_my_profile_title">My Profile (%1$s)</string>
-    <string name="settings_my_profile_subtitle">View personal and nominee information</string>
-    <string name="settings_leave_circle_title">Leave Fund Circle</string>
-    <string name="settings_leave_circle_subtitle">Step down and retain historical records only</string>
+    <string name="settings_my_profile_title">My Member Profile (%1$s)</string>
+    <string name="settings_my_profile_subtitle">Update Phone, National ID (NID), and Nominee</string>
     <string name="settings_leave_admin_disabled">Circle Admin cannot leave without transferring ownership first.</string>
-    <string name="settings_section_governance">CIRCLE GOVERNANCE (Admin Only)</string>
-    <string name="settings_transfer_admin_title">Transfer Admin Ownership</string>
-    <string name="settings_transfer_admin_subtitle">Hand over circle leadership to another member</string>
-    <string name="settings_lock_circle_title">Archive / Lock Fund Circle</string>
-    <string name="settings_lock_circle_subtitle">Lock ledger to freeze new transactions</string>
-    <string name="settings_unlock_circle_title">Unlock Fund Circle</string>
-    <string name="settings_unlock_circle_subtitle">Re-enable new transaction recording</string>
-    <string name="settings_section_preferences">APP PREFERENCES &amp; ACCOUNT</string>
-    <string name="settings_dark_theme_title">Dark Theme</string>
-    <string name="settings_dark_theme_subtitle">Toggle light or dark appearance</string>
-    <string name="settings_offline_cache_title">Offline Disk Cache</string>
+    <string name="settings_governance_title">Circle Governance (Admin Only)</string>
+    <string name="settings_governance_desc">Admin actions require zero active financial liability.</string>
+    <string name="settings_btn_leave_circle">Leave Circle</string>
+    <string name="settings_btn_archive_circle">Archive Circle</string>
+    <string name="settings_btn_transfer_leader">Transfer Leadership 🛡️</string>
+    <string name="settings_membership_title">Circle Membership</string>
+    <string name="settings_membership_subtitle">Voluntary exit retains historical records in the circle ledger.</string>
+    <string name="settings_dark_theme_title">Color Theme</string>
+    <string name="settings_dark_theme_subtitle">Toggle light / dark appearance</string>
+    <string name="settings_offline_cache_title">100 MB Persistent Disk Cache</string>
     <string name="settings_offline_cache_subtitle">100 MB persistent offline cache active</string>
-    <string name="settings_offline_cache_badge">100 MB 🟢</string>
     <string name="settings_sign_out_title">Sign Out of Google Account</string>
-    <string name="settings_sign_out_subtitle">Sign out of your session on this device</string>
 
     <!-- Settings Dialogs -->
     <string name="settings_dialog_leave_title">Leave Fund Circle?</string>
@@ -451,9 +398,6 @@
     <string name="settings_dialog_unlock_title">Unlock Fund Circle?</string>
     <string name="settings_dialog_unlock_body">Unlocking %1$s will allow members to record new deposits and expenses.</string>
     <string name="settings_dialog_unlock_confirm">Unlock Circle</string>
-    <string name="settings_dialog_sign_out_title">Sign Out?</string>
-    <string name="settings_dialog_sign_out_body">Are you sure you want to sign out of Fund Circle?</string>
-    <string name="settings_dialog_sign_out_confirm">Sign Out</string>
     <string name="settings_dialog_cancel">Cancel</string>
     <string name="settings_success_admin_transferred">Admin ownership transferred successfully.</string>
     <string name="settings_success_circle_locked">Fund circle locked successfully.</string>
@@ -462,8 +406,71 @@
     <string name="settings_error_transfer_failed">Failed to transfer admin ownership.</string>
     <string name="settings_error_lock_failed">Failed to update circle lock status.</string>
     <string name="settings_error_leave_failed">Failed to leave circle.</string>
-    <string name="settings_error_sign_out_failed">Failed to sign out.</string>
 
     <!-- Dashboard Top Bar Reports -->
-    <string name="dashboard_top_bar_reports_cd">Financial Reports Engine</string>
+
+    <!-- Atomic Badges & Micro-Components (Phase 1) -->
+    <string name="badge_role_admin">ADMIN 🛡️</string>
+    <string name="badge_role_stakeholder">STAKEHOLDER 👤</string>
+    <string name="badge_status_live">LIVE 🟢</string>
+    <string name="badge_status_active">ACTIVE ✓</string>
+    <string name="badge_status_inactive">INACTIVE ⏱</string>
+    <string name="badge_status_locked">LOCKED 🔒</string>
+    <string name="badge_status_left">LEFT ✕</string>
+    <string name="badge_status_pending">PENDING ⏳</string>
+    <string name="badge_reversed_pill">REVERSED ↩</string>
+    <string name="badge_status_reversed">REVERSED ↩</string>
+    <string name="badge_currency_locked">%1$s (%2$s) 🔒</string>
+
+    <!-- Badge Accessibility Content Descriptions -->
+    <string name="badge_role_admin_cd">Circle role: Administrator</string>
+    <string name="badge_role_stakeholder_cd">Circle role: Stakeholder</string>
+    <string name="badge_status_live_cd">Circle balance is live and synchronized</string>
+    <string name="badge_status_active_cd">Status: Active</string>
+    <string name="badge_status_inactive_cd">Status: Inactive</string>
+    <string name="badge_status_locked_cd">Status: Locked</string>
+    <string name="badge_status_left_cd">Status: Left circle</string>
+    <string name="badge_status_pending_cd">Status: Pending</string>
+    <string name="badge_reversed_pill_cd">Transaction has been reversed and voided</string>
+    <string name="badge_currency_locked_cd">Base currency %1$s is permanently locked</string>
+
+    <!-- Bottom Navigation Bar (Phase 2) -->
+    <string name="nav_home">Home</string>
+    <string name="nav_members">Members</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_settings">Settings</string>
+
+    <string name="nav_home_cd">Home tab, active circle dashboard</string>
+    <string name="nav_members_cd">Members tab, stakeholders roster</string>
+    <string name="nav_transactions_cd">Transactions tab, circle ledger</string>
+    <string name="nav_reports_cd">Reports tab, financial reports engine</string>
+    <string name="nav_settings_cd">Settings tab, circle governance and preferences</string>
+
+    <!-- Phase 5 Visual Fidelity Strings -->
+    <string name="add_member_sheet_role_label">Assigned Circle Role</string>
+    <string name="add_member_sheet_role_desc">Stakeholders have full read transparency across all live ledgers, aggregate balances, and audit records. Only the Circle Creator is Admin.</string>
+    <string name="add_member_sheet_btn_send">Send Invitation</string>
+
+    <string name="profile_edit_phone_label">Mobile Phone Number *</string>
+    <string name="profile_edit_phone_placeholder">01712345678</string>
+    <string name="profile_edit_relation_spouse">Spouse</string>
+    <string name="profile_edit_relation_parent">Parent</string>
+    <string name="profile_edit_relation_sibling">Sibling</string>
+    <string name="profile_edit_relation_child">Child</string>
+    <string name="profile_edit_relation_partner">Business Partner</string>
+    <string name="profile_edit_relation_other">Other</string>
+
+
+    <string name="reports_preview_opening">Opening Balance:</string>
+    <string name="reports_preview_deposits">Deposits:</string>
+    <string name="reports_preview_expenses">Expenses:</string>
+    <string name="reports_preview_deposits_for_month">Deposits (%1$s):</string>
+    <string name="reports_preview_expenses_for_month">Expenses (%1$s):</string>
+    <string name="reports_period_month_year_value">%1$s %2$d</string>
+    <string name="reports_preview_net">Net Surplus:</string>
+    <string name="reports_preview_net_deficit">Net Deficit:</string>
+    <string name="reports_preview_closing">Closing Balance:</string>
+
+    <string name="hub_create_circle_dashed_btn">+ Create New Fund Circle</string>
 </resources>

@@ -2,6 +2,7 @@ package com.fundcircle.app.presentation.screens.settings
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.fundcircle.app.core.theme.ThemePreferenceManager
 import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
@@ -13,15 +14,16 @@ import com.fundcircle.app.domain.repository.FundRepository
 import com.fundcircle.app.domain.usecase.LeaveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleMembersUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
-import com.fundcircle.app.domain.usecase.SignOutUseCase
 import com.fundcircle.app.domain.usecase.TransferAdminOwnershipUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -40,8 +42,9 @@ class SettingsViewModelTest {
     private val fundRepository: FundRepository = mockk(relaxed = true)
     private val leaveCircleUseCase: LeaveCircleUseCase = mockk(relaxed = true)
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase = mockk(relaxed = true)
-    private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
+    private val themePreferenceManager: ThemePreferenceManager = mockk(relaxed = true)
+    private val darkThemeOverrideFlow = MutableStateFlow<Boolean?>(null)
 
     private val testDispatcher = StandardTestDispatcher()
     private val testFundId = "circle-123"
@@ -111,6 +114,7 @@ class SettingsViewModelTest {
         every { observeCircleUseCase(testFundId) } returns flowOf(sampleCircle)
         every { observeCircleMembersUseCase(testFundId) } returns flowOf(listOf(adminMember, regularMember))
         every { authRepository.userSession } returns flowOf(sampleAdminSession)
+        every { themePreferenceManager.darkThemeOverride } returns darkThemeOverrideFlow
     }
 
     @After
@@ -127,8 +131,8 @@ class SettingsViewModelTest {
             fundRepository = fundRepository,
             leaveCircleUseCase = leaveCircleUseCase,
             transferAdminOwnershipUseCase = transferAdminOwnershipUseCase,
-            signOutUseCase = signOutUseCase,
-            authRepository = authRepository
+            authRepository = authRepository,
+            themePreferenceManager = themePreferenceManager
         )
     }
 
@@ -307,24 +311,24 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `Sign Out calls signOutUseCase and navigates to Auth`() = runTest {
-        coEvery { signOutUseCase() } returns Result.success(Unit)
+    fun `SetDarkTheme delegates to ThemePreferenceManager and updates uiState override`() = runTest {
+        every { themePreferenceManager.setDarkTheme(any()) } answers {
+            darkThemeOverrideFlow.value = firstArg()
+        }
 
         val viewModel = createViewModel()
         advanceUntilIdle()
+        assertThat(viewModel.uiState.value.darkThemeOverride).isNull()
 
-        viewModel.onAction(SettingsUiAction.OpenSignOutDialog)
-        assertThat(viewModel.uiState.value.showSignOutDialog).isTrue()
+        viewModel.onAction(SettingsUiAction.SetDarkTheme(true))
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.darkThemeOverride).isTrue()
 
-        viewModel.uiEffect.test {
-            viewModel.onAction(SettingsUiAction.ConfirmSignOut)
-            advanceUntilIdle()
+        viewModel.onAction(SettingsUiAction.SetDarkTheme(false))
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.darkThemeOverride).isFalse()
 
-            val effect = awaitItem()
-            assertThat(effect).isEqualTo(SettingsUiEffect.NavigateToAuth)
-            assertThat(viewModel.uiState.value.showSignOutDialog).isFalse()
-        }
-
-        coVerify(exactly = 1) { signOutUseCase() }
+        verify(exactly = 1) { themePreferenceManager.setDarkTheme(true) }
+        verify(exactly = 1) { themePreferenceManager.setDarkTheme(false) }
     }
 }

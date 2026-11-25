@@ -231,6 +231,22 @@ class LedgerViewModelTest {
     }
 
     @Test
+    fun filterByCategory_filtersExpensesOnly() = runTest {
+        advanceUntilIdle()
+
+        viewModel.onAction(LedgerUiAction.FilterByCategory(ExpenseCategory.TRAVEL_AND_TRANSPORTATION))
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.expenses).containsExactly(expense2)
+        assertThat(viewModel.uiState.value.deposits).containsExactly(deposit1, deposit2)
+
+        viewModel.onAction(LedgerUiAction.FilterByCategory(null))
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.expenses).containsExactly(expense1, expense2)
+    }
+
+    @Test
     fun clickTransaction_emitsNavigateToDetailEffect() = runTest {
         viewModel.uiEffect.test {
             viewModel.onAction(LedgerUiAction.ClickTransaction(txId = "dep-1", isExpense = false))
