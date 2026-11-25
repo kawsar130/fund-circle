@@ -167,9 +167,10 @@ class SettingsViewModel @Inject constructor(
 
         setState { copy(isActionInProgress = true) }
         viewModelScope.launch {
+            // Invited members' documents are keyed by a generated ID, not their Auth UID.
             val result = leaveCircleUseCase(
                 fundId = fundId,
-                userId = state.currentUserId,
+                userId = state.currentMember?.userId ?: state.currentUserId,
                 circle = circle
             )
             if (result.isSuccess) {

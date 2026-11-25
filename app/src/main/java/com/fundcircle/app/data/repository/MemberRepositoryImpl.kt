@@ -9,6 +9,7 @@ import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.MemberKyc
 import com.fundcircle.app.domain.model.MemberRole
+import com.fundcircle.app.domain.model.normalizedEmail
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.MemberRepository
 import com.google.firebase.FirebaseNetworkException
@@ -84,7 +85,7 @@ class MemberRepositoryImpl @Inject constructor(
             val memberDto = CircleMemberDto(
                 userId = userId,
                 memberId = memberId,
-                email = email,
+                email = email.normalizedEmail(),
                 name = name,
                 phone = phone,
                 role = MemberRole.MEMBER.name,

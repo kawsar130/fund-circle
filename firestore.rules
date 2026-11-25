@@ -143,101 +143,344 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // ---------------------------------------------------------------
+    // Identity helpers
+    // ---------------------------------------------------------------
+    // Email (lower-cased) is the member identity. Invited members are
+    // stored before they ever sign in, so their member document ID cannot
+    // be their Auth UID; every self-service check therefore matches on
+    // the verified Google account email.
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function getUserEmail() {
-      return request.auth.token.email;
+
+    function hasEmail() {
+      return isAuthenticated() && request.auth.token.email is string;
     }
 
-    // Zero-read tenant authorization check via memberEmails array
-    function isCircleMember(fundData) {
-      return isAuthenticated() && (getUserEmail() in fundData.memberEmails);
+    function myEmail() {
+      return request.auth.token.email.lower();
     }
 
-    function isCircleAdmin(fundData) {
-      return isAuthenticated() && request.auth.uid == fundData.adminId;
+    function fundPath(fundId) {
+      return /databases/$(database)/documents/funds/$(fundId);
     }
 
-    // Safely retrieves parent fund document for standalone reads and atomic batch operations
-    function getFundData(fundId) {
-      return exists(/databases/$(database)/documents/funds/$(fundId))
-        ? get(/databases/$(database)/documents/funds/$(fundId)).data
-        : getAfter(/databases/$(database)/documents/funds/$(fundId)).data;
+    function txPath(fundId, collection, txId) {
+      return /databases/$(database)/documents/funds/$(fundId)/$(collection)/$(txId);
     }
 
-    // Funds collection
+    function memberPath(fundId, memberDocId) {
+      return /databases/$(database)/documents/funds/$(fundId)/members/$(memberDocId);
+    }
+
+    // Zero-read tenant authorization (Invariant 3)
+    function isMemberOf(fund) {
+      return hasEmail()
+        && (myEmail() in fund.memberEmails || request.auth.token.email in fund.memberEmails);
+    }
+
+    // Admin is identified by UID (circle creator) or by email (after an
+    // ownership transfer to an invited member whose UID was never known).
+    function isAdminOf(fund) {
+      return hasEmail()
+        && (request.auth.uid == fund.adminId || myEmail() == fund.adminEmail.lower());
+    }
+
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function isWholeAmount(value) {
+      return value is int && value >= 1;
+    }
+
+    // Allow 5 minutes of device clock skew; the client already rejects future dates.
+    function notInFuture(epochMs) {
+      return epochMs is int && epochMs <= request.time.toMillis() + 300000;
+    }
+
+    // ---------------------------------------------------------------
+    // /funds/{fundId} — parent aggregate document
+    // ---------------------------------------------------------------
+    // Aggregates may only move together with the exact ledger document
+    // that justifies the change. Every aggregate write names that document
+    // in `lastTxId`, and the ledger rule checks the reverse direction, so
+    // a deposit/expense/void and its increment are inseparable (Invariant 2).
+
+    function validNewFund(fundId) {
+      let d = request.resource.data;
+      return hasEmail()
+        && d.keys().hasOnly(['fundId', 'name', 'description', 'currency', 'adminId', 'adminEmail',
+                             'memberEmails', 'memberCount', 'totalDeposits', 'totalExpenses',
+                             'recordedBalance', 'isLocked', 'createdAt', 'updatedAt'])
+        && d.fundId == fundId
+        && d.name is string && d.name.size() > 0
+        && d.currency in ['BDT', 'USD', 'EUR']
+        && d.adminId == request.auth.uid
+        && d.adminEmail == myEmail()
+        && d.memberEmails == [myEmail()]
+        && d.memberCount == 1
+        && d.totalDeposits == 0
+        && d.totalExpenses == 0
+        && d.recordedBalance == 0
+        && d.isLocked == false;
+    }
+
+    // A member records a deposit: totals rise by exactly the new deposit's amount.
+    function isDepositRecord(fundId) {
+      let before = resource.data;
+      let after = request.resource.data;
+      let path = txPath(fundId, 'deposits', after.lastTxId);
+      let delta = after.totalDeposits - before.totalDeposits;
+      return changed().hasOnly(['totalDeposits', 'recordedBalance', 'updatedAt', 'lastTxId'])
+        && before.isLocked == false
+        && delta >= 1
+        && after.recordedBalance - before.recordedBalance == delta
+        && !exists(path)
+        && existsAfter(path)
+        && getAfter(path).data.amount == delta;
+    }
+
+    // The admin records an expense: expenses rise and balance falls by its amount.
+    function isExpenseRecord(fundId) {
+      let before = resource.data;
+      let after = request.resource.data;
+      let path = txPath(fundId, 'expenses', after.lastTxId);
+      let delta = after.totalExpenses - before.totalExpenses;
+      return isAdminOf(before)
+        && changed().hasOnly(['totalExpenses', 'recordedBalance', 'updatedAt', 'lastTxId'])
+        && before.isLocked == false
+        && delta >= 1
+        && before.recordedBalance - after.recordedBalance == delta
+        && !exists(path)
+        && existsAfter(path)
+        && getAfter(path).data.amount == delta;
+    }
+
+    // The admin reverses a deposit: totals fall by the deposit's original amount,
+    // and only while that deposit flips from active to void in the same write.
+    function isDepositVoid(fundId) {
+      let before = resource.data;
+      let after = request.resource.data;
+      let path = txPath(fundId, 'deposits', after.lastTxId);
+      let delta = before.totalDeposits - after.totalDeposits;
+      return isAdminOf(before)
+        && changed().hasOnly(['totalDeposits', 'recordedBalance', 'updatedAt', 'lastTxId'])
+        && before.isLocked == false
+        && delta >= 1
+        && before.recordedBalance - after.recordedBalance == delta
+        && get(path).data.get('isVoid', false) == false
+        && getAfter(path).data.isVoid == true
+        && get(path).data.amount == delta;
+    }
+
+    // The admin reverses an expense: expenses fall and balance is restored.
+    function isExpenseVoid(fundId) {
+      let before = resource.data;
+      let after = request.resource.data;
+      let path = txPath(fundId, 'expenses', after.lastTxId);
+      let delta = before.totalExpenses - after.totalExpenses;
+      return isAdminOf(before)
+        && changed().hasOnly(['totalExpenses', 'recordedBalance', 'updatedAt', 'lastTxId'])
+        && before.isLocked == false
+        && delta >= 1
+        && after.recordedBalance - before.recordedBalance == delta
+        && get(path).data.get('isVoid', false) == false
+        && getAfter(path).data.isVoid == true
+        && get(path).data.amount == delta;
+    }
+
+    // The admin manages profile, lock, membership list and ownership transfer.
+    // Aggregates, currency and identity fields are untouchable here.
+    function isAdminGovernance() {
+      let after = request.resource.data;
+      return isAdminOf(resource.data)
+        && changed().hasOnly(['name', 'description', 'isLocked', 'memberCount', 'memberEmails',
+                              'adminId', 'adminEmail', 'updatedAt'])
+        && after.name is string && after.name.size() > 0
+        && after.isLocked is bool
+        && after.memberEmails is list
+        && after.memberCount is int && after.memberCount >= 1
+        && after.adminEmail is string
+        && (after.adminEmail in after.memberEmails || after.adminEmail.lower() in after.memberEmails);
+    }
+
     match /funds/{fundId} {
-      allow read: if isCircleMember(resource.data);
-      allow create: if isAuthenticated() 
-                    && request.resource.data.adminId == request.auth.uid
-                    && request.resource.data.totalDeposits == 0
-                    && request.resource.data.totalExpenses == 0
-                    && request.resource.data.recordedBalance == 0;
-      allow update: if isCircleMember(resource.data)
-                    && (request.resource.data.currency == resource.data.currency); // Currency locked permanently
-      allow delete: if isCircleAdmin(resource.data)
-                    && resource.data.totalDeposits == 0 
-                    && resource.data.totalExpenses == 0;
+      allow read: if isMemberOf(resource.data);
+      allow create: if validNewFund(fundId);
+      allow update: if isMemberOf(resource.data)
+                    && !changed().hasAny(['fundId', 'currency', 'createdAt']) // Currency locked permanently
+                    && (isDepositRecord(fundId)
+                        || isExpenseRecord(fundId)
+                        || isDepositVoid(fundId)
+                        || isExpenseVoid(fundId)
+                        || isAdminGovernance());
+      allow delete: if false; // Zero hard deletes (Invariant 4)
 
+      // -------------------------------------------------------------
       // Members subcollection
-      match /members/{userId} {
-        allow read: if isCircleMember(getFundData(fundId));
-        allow write: if isCircleAdmin(getFundData(fundId))
-                     || (isAuthenticated() && request.auth.uid == userId); // Allow voluntary exit (status update)
+      // -------------------------------------------------------------
+      function memberKeysValid(d) {
+        return d.keys().hasOnly(['userId', 'memberId', 'email', 'name', 'phone', 'role', 'status',
+                                 'totalContributed', 'joinedAt', 'lastActiveAt', 'updatedAt'])
+          && d.role in ['ADMIN', 'MEMBER']
+          && d.status in ['PENDING', 'ACTIVE', 'INACTIVE', 'LEFT']
+          && d.email is string && d.email == d.email.lower()
+          && d.totalContributed == 0;
+      }
 
-        // Strictly Admin-Scoped KYC Identity PII
-        match /kyc/identity {
-          allow read, write: if isCircleAdmin(getFundData(fundId)) 
-                             || (isAuthenticated() && request.auth.uid == userId);
+      // Circle creation batch: the creator's own ADMIN member document.
+      function isCreatorMemberCreate(memberDocId) {
+        let d = request.resource.data;
+        return hasEmail()
+          && !exists(fundPath(fundId))
+          && getAfter(fundPath(fundId)).data.adminId == request.auth.uid
+          && memberDocId == request.auth.uid
+          && d.userId == memberDocId
+          && d.role == 'ADMIN'
+          && d.email == myEmail()
+          && memberKeysValid(d);
+      }
+
+      // Admin invites a MEMBER whose email is added to memberEmails in the same batch.
+      function isInviteCreate(memberDocId) {
+        let d = request.resource.data;
+        return isAdminOf(get(fundPath(fundId)).data)
+          && d.userId == memberDocId
+          && d.role == 'MEMBER'
+          && d.email in getAfter(fundPath(fundId)).data.memberEmails
+          && memberKeysValid(d);
+      }
+
+      // The admin manages other members; their own record must stay ACTIVE
+      // until ownership has been transferred.
+      function isAdminMemberUpdate() {
+        let fund = get(fundPath(fundId)).data;
+        let after = request.resource.data;
+        return isAdminOf(fund)
+          && changed().hasOnly(['role', 'status', 'lastActiveAt', 'updatedAt', 'name', 'phone'])
+          && after.role in ['ADMIN', 'MEMBER']
+          && after.status in ['PENDING', 'ACTIVE', 'INACTIVE', 'LEFT']
+          && (resource.data.email.lower() != fund.adminEmail.lower() || after.status == 'ACTIVE');
+      }
+
+      // A member may edit their own contact details or leave. The admin
+      // cannot leave without transferring ownership first.
+      function isSelfMemberUpdate() {
+        let fund = get(fundPath(fundId)).data;
+        return isMemberOf(fund)
+          && resource.data.email.lower() == myEmail()
+          && changed().hasOnly(['status', 'lastActiveAt', 'name', 'phone'])
+          && (!changed().hasAny(['status'])
+              || (request.resource.data.status == 'LEFT' && !isAdminOf(fund)));
+      }
+
+      function isMemberSelf(memberDocId) {
+        return hasEmail()
+          && exists(memberPath(fundId, memberDocId))
+          && get(memberPath(fundId, memberDocId)).data.email.lower() == myEmail();
+      }
+
+      match /members/{memberDocId} {
+        allow read: if isMemberOf(get(fundPath(fundId)).data);
+        allow create: if isCreatorMemberCreate(memberDocId) || isInviteCreate(memberDocId);
+        allow update: if isAdminMemberUpdate() || isSelfMemberUpdate();
+        allow delete: if false;
+
+        // Strictly Admin-or-owner KYC identity PII
+        match /kyc/{kycDocId} {
+          function kycKeysValid(d) {
+            return kycDocId == 'identity'
+              && d.keys().hasOnly(['userId', 'nidNumber', 'nomineeName', 'nomineePhone',
+                                   'nomineeRelation', 'verifiedByAdmin', 'updatedAt'])
+              && d.get('userId', memberDocId) == memberDocId;
+          }
+
+          allow read: if kycDocId == 'identity'
+                      && (isAdminOf(get(fundPath(fundId)).data) || isMemberSelf(memberDocId));
+          // Only the admin can mark identity as verified; an owner edit resets it.
+          allow create, update: if kycKeysValid(request.resource.data)
+                                && (isAdminOf(get(fundPath(fundId)).data)
+                                    || (isMemberSelf(memberDocId)
+                                        && request.resource.data.get('verifiedByAdmin', false) == false));
+          allow delete: if false;
         }
       }
 
-      // Deposits subcollection
+      // -------------------------------------------------------------
+      // Ledger subcollections (Invariants 1, 2, 4)
+      // -------------------------------------------------------------
+      function validLedgerCreate(txId, idField, dateField) {
+        let d = request.resource.data;
+        let fund = get(fundPath(fundId)).data;
+        return isMemberOf(fund)
+          && fund.isLocked == false
+          && d[idField] == txId
+          && d.fundId == fundId
+          && isWholeAmount(d.amount)
+          && notInFuture(d[dateField])
+          && d.get('isVoid', false) == false
+          && d.get('voidReason', null) == null
+          && d.get('voidedAt', null) == null
+          && d.get('voidedBy', null) == null
+          && getAfter(fundPath(fundId)).data.lastTxId == txId;
+      }
+
+      function validVoidUpdate(txId) {
+        let after = request.resource.data;
+        return isAdminOf(get(fundPath(fundId)).data)
+          && changed().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt'])
+          && resource.data.get('isVoid', false) == false
+          && after.isVoid == true
+          && after.voidReason is string && after.voidReason.size() >= 5
+          && after.voidedAt is int
+          && after.voidedBy is string && after.voidedBy.lower() == myEmail()
+          && getAfter(fundPath(fundId)).data.lastTxId == txId;
+      }
+
       match /deposits/{depositId} {
-        allow read: if isCircleMember(getFundData(fundId));
-        allow create: if isCircleMember(getFundData(fundId))
-                      && request.resource.data.amount is int
-                      && request.resource.data.amount >= 1
-                      && request.resource.data.depositDate <= request.time.toMillis();
-        allow update: if isCircleAdmin(getFundData(fundId))
-                      && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
+        allow read: if isMemberOf(get(fundPath(fundId)).data);
+        allow create: if validLedgerCreate(depositId, 'depositId', 'depositDate')
+                      && getAfter(fundPath(fundId)).data.totalDeposits
+                         == get(fundPath(fundId)).data.totalDeposits + request.resource.data.amount;
+        allow update: if validVoidUpdate(depositId)
+                      && getAfter(fundPath(fundId)).data.totalDeposits
+                         == get(fundPath(fundId)).data.totalDeposits - resource.data.amount;
         allow delete: if false; // Financial records are immutable; reversal protocol only
       }
 
-      // Expenses subcollection
       match /expenses/{expenseId} {
-        allow read: if isCircleMember(getFundData(fundId));
-        allow create: if isCircleAdmin(getFundData(fundId))
-                      && request.resource.data.amount is int
-                      && request.resource.data.amount >= 1
-                      && request.resource.data.expenseDate <= request.time.toMillis();
-        allow update: if isCircleAdmin(getFundData(fundId))
-                      && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isVoid', 'voidReason', 'voidedBy', 'voidedAt', 'correctionHistory']));
+        allow read: if isMemberOf(get(fundPath(fundId)).data);
+        allow create: if isAdminOf(get(fundPath(fundId)).data)
+                      && validLedgerCreate(expenseId, 'expenseId', 'expenseDate')
+                      && getAfter(fundPath(fundId)).data.totalExpenses
+                         == get(fundPath(fundId)).data.totalExpenses + request.resource.data.amount;
+        allow update: if validVoidUpdate(expenseId)
+                      && getAfter(fundPath(fundId)).data.totalExpenses
+                         == get(fundPath(fundId)).data.totalExpenses - resource.data.amount;
         allow delete: if false; // Financial records are immutable; reversal protocol only
       }
 
-      // Audit logs
+      // Append-only audit log, writable only by members of this circle.
       match /audit_logs/{logId} {
-        allow read: if isCircleMember(getFundData(fundId));
-        allow create: if isAuthenticated();
-        allow update, delete: if false; // Append-only immutable log
+        allow read: if isMemberOf(get(fundPath(fundId)).data);
+        allow create: if isMemberOf(get(fundPath(fundId)).data)
+                      && request.resource.data.get('actorEmail', myEmail()).lower() == myEmail();
+        allow update, delete: if false;
       }
     }
 
-    // User Profile & Invitations
+    // User profile & invitations: owner only
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
 
       match /invitations/{invitationId} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
-        allow create: if isAuthenticated();
       }
     }
 
-    // Default deny: All unmapped root paths are rejected
+    // Default deny: all unmapped paths are rejected
     match /{document=**} {
       allow read, write: if false;
     }

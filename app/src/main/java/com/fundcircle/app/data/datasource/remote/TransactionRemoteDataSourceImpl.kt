@@ -191,7 +191,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             mapOf(
                 FIELD_TOTAL_DEPOSITS to FieldValue.increment(deposit.amount),
                 FIELD_RECORDED_BALANCE to FieldValue.increment(deposit.amount),
-                FIELD_UPDATED_AT to System.currentTimeMillis()
+                FIELD_UPDATED_AT to System.currentTimeMillis(),
+                FIELD_LAST_TX_ID to deposit.depositId
             )
         )
 
@@ -214,7 +215,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             mapOf(
                 FIELD_TOTAL_EXPENSES to FieldValue.increment(expense.amount),
                 FIELD_RECORDED_BALANCE to FieldValue.increment(-expense.amount),
-                FIELD_UPDATED_AT to System.currentTimeMillis()
+                FIELD_UPDATED_AT to System.currentTimeMillis(),
+                FIELD_LAST_TX_ID to expense.expenseId
             )
         )
 
@@ -265,13 +267,15 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                 mapOf<String, Any>(
                     FIELD_TOTAL_EXPENSES to FieldValue.increment(-effectiveAmount),
                     FIELD_RECORDED_BALANCE to FieldValue.increment(effectiveAmount),
-                    FIELD_UPDATED_AT to now
+                    FIELD_UPDATED_AT to now,
+                    FIELD_LAST_TX_ID to transactionId
                 )
             } else {
                 mapOf<String, Any>(
                     FIELD_TOTAL_DEPOSITS to FieldValue.increment(-effectiveAmount),
                     FIELD_RECORDED_BALANCE to FieldValue.increment(-effectiveAmount),
-                    FIELD_UPDATED_AT to now
+                    FIELD_UPDATED_AT to now,
+                    FIELD_LAST_TX_ID to transactionId
                 )
             }
             transaction.update(fundRef, parentUpdates)
@@ -294,6 +298,9 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         private const val FIELD_TOTAL_EXPENSES = "totalExpenses"
         private const val FIELD_RECORDED_BALANCE = "recordedBalance"
         private const val FIELD_UPDATED_AT = "updatedAt"
+
+        /** Names the ledger document behind each aggregate change; firestore.rules verifies the pairing. */
+        private const val FIELD_LAST_TX_ID = "lastTxId"
         private const val FIELD_IS_VOID = "isVoid"
         private const val FIELD_VOID_REASON = "voidReason"
         private const val FIELD_VOIDED_BY = "voidedBy"

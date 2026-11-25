@@ -87,6 +87,9 @@ class TransactionRemoteDataSourceImplTest {
         assertThat(capturedMap).containsKey("recordedBalance")
         assertThat(capturedMap).containsKey("updatedAt")
 
+        // Security rules pair the aggregate change with this exact deposit document
+        assertThat(capturedMap["lastTxId"]).isEqualTo("dep-001")
+
         // 3. Verify batch commit
         verify { batch.commit() }
     }
@@ -178,6 +181,7 @@ class TransactionRemoteDataSourceImplTest {
         assertThat(parentUpdates).containsKey("totalDeposits")
         assertThat(parentUpdates).containsKey("recordedBalance")
         assertThat(parentUpdates).containsKey("updatedAt")
+        assertThat(parentUpdates["lastTxId"]).isEqualTo("dep-100")
     }
 
     @Test

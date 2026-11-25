@@ -106,6 +106,17 @@ class CircleHubViewModelTest {
     }
 
     @Test
+    fun circleTransferredToUserByEmail_isListedAsManaged() = runTest {
+        val transferred = joinedCircle.copy(id = "circle-3", adminId = "invite-uuid", adminEmail = "Kawsar@Example.com")
+        circlesFlow.value = listOf(managedCircle, joinedCircle, transferred)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.managedCircles).containsExactly(managedCircle, transferred)
+        assertThat(state.joinedCircles).containsExactly(joinedCircle)
+    }
+
+    @Test
     fun initialState_segregatesManagedAndJoinedCircles() = runTest {
         testDispatcher.scheduler.advanceUntilIdle()
 

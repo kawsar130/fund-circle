@@ -227,6 +227,23 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `Invited stakeholder leaves using their member document id, not their auth uid`() = runTest {
+        val invitedMember = regularMember.copy(userId = "invite-uuid-9")
+        every { observeCircleMembersUseCase(testFundId) } returns flowOf(listOf(adminMember, invitedMember))
+        every { authRepository.userSession } returns flowOf(sampleMemberSession)
+        coEvery { leaveCircleUseCase(testFundId, "invite-uuid-9", sampleCircle) } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onAction(SettingsUiAction.OpenLeaveDialog)
+        viewModel.onAction(SettingsUiAction.ConfirmLeaveCircle)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { leaveCircleUseCase(testFundId, "invite-uuid-9", sampleCircle) }
+    }
+
+    @Test
     fun `Transfer Admin Ownership executes atomic transfer and notifies user`() = runTest {
         coEvery {
             transferAdminOwnershipUseCase(

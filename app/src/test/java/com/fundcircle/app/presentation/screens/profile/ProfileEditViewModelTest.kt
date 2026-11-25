@@ -12,12 +12,13 @@ import com.fundcircle.app.domain.model.UserSession
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.GetMemberKycUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
-import com.fundcircle.app.domain.usecase.ObserveMemberUseCase
+import com.fundcircle.app.domain.usecase.ObserveCurrentMemberUseCase
 import com.fundcircle.app.domain.usecase.UpdateMemberKycUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +38,7 @@ class ProfileEditViewModelTest {
     private val getMemberKycUseCase: GetMemberKycUseCase = mockk(relaxed = true)
     private val updateMemberKycUseCase: UpdateMemberKycUseCase = mockk(relaxed = true)
     private val observeCircleUseCase: ObserveCircleUseCase = mockk(relaxed = true)
-    private val observeMemberUseCase: ObserveMemberUseCase = mockk(relaxed = true)
+    private val observeCurrentMemberUseCase: ObserveCurrentMemberUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
 
     private val testDispatcher = StandardTestDispatcher()
@@ -97,7 +98,7 @@ class ProfileEditViewModelTest {
         every { authRepository.userSession } returns MutableStateFlow(sampleSession)
         coEvery { authRepository.getActiveCircleId() } returns fundId
         every { observeCircleUseCase(fundId) } returns flowOf(sampleCircle)
-        every { observeMemberUseCase(fundId, userId) } returns flowOf(sampleMember)
+        every { observeCurrentMemberUseCase(fundId, userId, "rahim@example.com") } returns flowOf(sampleMember)
         coEvery { getMemberKycUseCase(fundId, userId) } returns Result.success(sampleKyc)
     }
 
@@ -112,7 +113,7 @@ class ProfileEditViewModelTest {
             getMemberKycUseCase = getMemberKycUseCase,
             updateMemberKycUseCase = updateMemberKycUseCase,
             observeCircleUseCase = observeCircleUseCase,
-            observeMemberUseCase = observeMemberUseCase,
+            observeCurrentMemberUseCase = observeCurrentMemberUseCase,
             authRepository = authRepository,
             savedStateHandle = savedStateHandle
         )
@@ -190,5 +191,26 @@ class ProfileEditViewModelTest {
 
         viewModel.onAction(ProfileEditUiAction.NomineePhoneChanged("01812345678999"))
         assertThat(viewModel.uiState.value.nomineePhone).isEqualTo("01812345678")
+    }
+
+    @Test
+    fun invitedMember_loadsAndSavesKycUnderTheirMemberDocument_notTheirAuthUid() = runTest {
+        val memberDocId = "invite-uuid-42"
+        val invitedMember = sampleMember.copy(userId = memberDocId)
+        every { observeCurrentMemberUseCase(fundId, userId, "rahim@example.com") } returns flowOf(invitedMember)
+        coEvery { getMemberKycUseCase(fundId, memberDocId) } returns Result.success(sampleKyc.copy(userId = memberDocId))
+        val savedKyc = slot<MemberKyc>()
+        coEvery { updateMemberKycUseCase(fundId, capture(savedKyc)) } returns Result.success(Unit)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.userId).isEqualTo(memberDocId)
+        assertThat(viewModel.uiState.value.nomineeName).isEqualTo("Nasrin Akter")
+
+        viewModel.onAction(ProfileEditUiAction.Save)
+        advanceUntilIdle()
+
+        assertThat(savedKyc.captured.userId).isEqualTo(memberDocId)
     }
 }
