@@ -1,6 +1,8 @@
 package com.fundcircle.app.domain.usecase
 
 import com.fundcircle.app.domain.model.FundCircleError
+import com.fundcircle.app.domain.model.WriteStatus
+import com.fundcircle.app.domain.repository.FundRepository
 import com.fundcircle.app.domain.repository.TransactionRepository
 import javax.inject.Inject
 
@@ -10,9 +12,11 @@ import javax.inject.Inject
  * Invariant 1: Validates originalAmount is a whole positive integer >= 1.
  * Invariant 2: Transactional atomic balance impact.
  * Invariant 4: Mandatory reason (5-250 chars) and admin attribution with zero hard deletes.
+ * A locked circle accepts no reversals.
  */
 class VoidTransactionUseCase @Inject constructor(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val fundRepository: FundRepository
 ) {
     suspend operator fun invoke(
         fundId: String,
@@ -21,7 +25,7 @@ class VoidTransactionUseCase @Inject constructor(
         originalAmount: Long,
         voidReason: String,
         adminEmail: String
-    ): Result<Unit> {
+    ): Result<WriteStatus> {
         val trimmedReason = voidReason.trim()
         if (trimmedReason.length !in 5..250) {
             return Result.failure(
@@ -45,6 +49,10 @@ class VoidTransactionUseCase @Inject constructor(
             return Result.failure(
                 FundCircleError.NotFound.ResourceNotFound
             )
+        }
+
+        if (fundRepository.isCircleKnownLocked(fundId)) {
+            return Result.failure(FundCircleError.Business.CircleLocked)
         }
 
         return transactionRepository.voidTransaction(

@@ -87,14 +87,23 @@ class CircleHubViewModel @Inject constructor(
             is CircleHubUiAction.CreateCircleClicked -> handleCreateCircleClicked()
             is CircleHubUiAction.RefreshTriggered -> observeCirclesAndSession()
             is CircleHubUiAction.DismissError -> setState { copy(errorMessage = null) }
-            is CircleHubUiAction.SignOutClicked -> handleSignOut()
+            is CircleHubUiAction.SignOutClicked -> setState { copy(showSignOutConfirm = true) }
+            is CircleHubUiAction.DismissSignOut -> setState { copy(showSignOutConfirm = false) }
+            is CircleHubUiAction.ConfirmSignOut -> handleSignOut()
         }
     }
 
     private fun handleSignOut() {
+        if (uiState.value.isSigningOut) return
+        setState { copy(isSigningOut = true) }
         viewModelScope.launch {
-            signOutUseCase()
-            sendEffect(CircleHubUiEffect.NavigateToAuth)
+            val result = signOutUseCase()
+            setState { copy(isSigningOut = false, showSignOutConfirm = false) }
+            if (result.isSuccess) {
+                sendEffect(CircleHubUiEffect.NavigateToAuth)
+            } else {
+                sendEffect(CircleHubUiEffect.ShowSnackbar(UiText.StringResource(R.string.hub_sign_out_failed)))
+            }
         }
     }
 

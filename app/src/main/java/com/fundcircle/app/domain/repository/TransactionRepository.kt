@@ -3,6 +3,7 @@ package com.fundcircle.app.domain.repository
 import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.TransactionItem
+import com.fundcircle.app.domain.model.WriteStatus
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -42,12 +43,12 @@ interface TransactionRepository {
     /**
      * Executes atomic batch insertion of a deposit and updates parent circle aggregates.
      */
-    suspend fun recordDeposit(fundId: String, deposit: Deposit): Result<Unit>
+    suspend fun recordDeposit(fundId: String, deposit: Deposit): Result<WriteStatus>
 
     /**
      * Executes atomic batch insertion of an expense and updates parent circle aggregates.
      */
-    suspend fun recordExpense(fundId: String, expense: Expense): Result<Unit>
+    suspend fun recordExpense(fundId: String, expense: Expense): Result<WriteStatus>
 
     /**
      * Executes atomic transactional reversal of a transaction and updates parent circle aggregates.
@@ -61,5 +62,5 @@ interface TransactionRepository {
         originalAmount: Long,
         voidReason: String,
         adminEmail: String
-    ): Result<Unit>
+    ): Result<WriteStatus>
 }

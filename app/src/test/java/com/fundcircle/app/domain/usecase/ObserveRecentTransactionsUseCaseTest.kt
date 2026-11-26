@@ -33,7 +33,6 @@ class ObserveRecentTransactionsUseCaseTest {
                 fundId = fundId,
                 isExpense = false,
                 title = "Alice",
-                subtitle = "12 Nov 2026 • Cash",
                 amount = 100_000L,
                 timestamp = 1_000L,
                 paymentMethod = PaymentMethod.CASH,

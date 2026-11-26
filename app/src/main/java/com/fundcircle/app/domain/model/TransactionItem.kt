@@ -10,7 +10,6 @@ data class TransactionItem(
     val fundId: String,
     val isExpense: Boolean,
     val title: String,
-    val subtitle: String,
     val amount: Long,
     val timestamp: Long,
     val paymentMethod: PaymentMethod,

@@ -40,6 +40,7 @@ sealed class FundCircleError(override val message: String) : Exception(message) 
     sealed class Business(override val message: String) : FundCircleError(message) {
         data object CircleLimitReached : Business("You have reached the maximum limit of 5 circles.")
         data object CannotDeleteActiveFund : Business("Circles with recorded deposits or expenses cannot be deleted.")
+        data object CircleLocked : Business("This circle is locked. New transactions and reversals are paused.")
     }
 
     sealed class NotFound(override val message: String) : FundCircleError(message) {
@@ -50,4 +51,7 @@ sealed class FundCircleError(override val message: String) : Exception(message) 
         data object OfflineNoCache : Network("Device is offline and requested data is not cached.")
         data object Timeout : Network("The operation timed out. Please check your network connection.")
     }
+
+    /** A backend failure with no specific domain meaning (for example a missing index). */
+    data class Unexpected(val code: String) : FundCircleError("Something went wrong ($code). Please try again.")
 }

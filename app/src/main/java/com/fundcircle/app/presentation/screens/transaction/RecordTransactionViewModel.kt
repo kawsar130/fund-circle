@@ -9,6 +9,7 @@ import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.FundCircleError
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.ObserveCircleMembersUseCase
@@ -287,9 +288,9 @@ class RecordTransactionViewModel @Inject constructor(
                     )
 
                     recordDepositUseCase(fundId, deposit).fold(
-                        onSuccess = {
+                        onSuccess = { status ->
                             setState { copy(isSubmitting = false) }
-                            sendEffect(RecordTransactionUiEffect.ShowSnackbar(UiText.StringResource(R.string.modal_add_tx_success_deposit)))
+                            sendEffect(RecordTransactionUiEffect.ShowSnackbar(savedMessage(status, R.string.modal_add_tx_success_deposit)))
                             sendEffect(RecordTransactionUiEffect.TransactionSaved)
                         },
                         onFailure = { error ->
@@ -318,9 +319,9 @@ class RecordTransactionViewModel @Inject constructor(
                     )
 
                     recordExpenseUseCase(fundId, expense).fold(
-                        onSuccess = {
+                        onSuccess = { status ->
                             setState { copy(isSubmitting = false) }
-                            sendEffect(RecordTransactionUiEffect.ShowSnackbar(UiText.StringResource(R.string.modal_add_tx_success_expense)))
+                            sendEffect(RecordTransactionUiEffect.ShowSnackbar(savedMessage(status, R.string.modal_add_tx_success_expense)))
                             sendEffect(RecordTransactionUiEffect.TransactionSaved)
                         },
                         onFailure = { error ->
@@ -337,8 +338,15 @@ class RecordTransactionViewModel @Inject constructor(
         }
     }
 
+    private fun savedMessage(status: WriteStatus, syncedMessage: Int): UiText = when (status) {
+        WriteStatus.SYNCED -> UiText.StringResource(syncedMessage)
+        WriteStatus.PENDING_SYNC -> UiText.StringResource(R.string.tx_saved_pending_sync)
+    }
+
     private fun mapErrorToUiText(error: Throwable): UiText = when (error) {
         is FundCircleError.Authorization -> UiText.StringResource(R.string.error_not_authorized)
+        is FundCircleError.Business.CircleLocked -> UiText.StringResource(R.string.error_circle_locked)
+        is FundCircleError.Unexpected -> UiText.StringResource(R.string.error_unexpected)
         is FundCircleError.Validation.InvalidAmount -> UiText.StringResource(R.string.error_amount_required)
         is FundCircleError.Validation.FutureDateNotAllowed -> UiText.StringResource(R.string.error_future_date)
         is FundCircleError.Validation.DescriptionTooShort -> UiText.StringResource(R.string.error_description_too_short)

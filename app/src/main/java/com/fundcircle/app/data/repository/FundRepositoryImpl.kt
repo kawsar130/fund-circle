@@ -172,9 +172,10 @@ class FundRepositoryImpl @Inject constructor(
             FirebaseFirestoreException.Code.PERMISSION_DENIED -> FundCircleError.Authorization.NotAuthorized
             FirebaseFirestoreException.Code.NOT_FOUND -> FundCircleError.NotFound.ResourceNotFound
             FirebaseFirestoreException.Code.ALREADY_EXISTS -> FundCircleError.Conflict.DuplicateEntry()
-            FirebaseFirestoreException.Code.FAILED_PRECONDITION -> FundCircleError.Conflict.CurrencyLocked
-            FirebaseFirestoreException.Code.UNAVAILABLE -> FundCircleError.Network.Timeout
-            else -> FundCircleError.Network.Timeout
+            FirebaseFirestoreException.Code.UNAVAILABLE,
+            FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> FundCircleError.Network.Timeout
+            // FAILED_PRECONDITION usually means a missing index, not a locked currency
+            else -> FundCircleError.Unexpected(code.name)
         }
         is FundCircleError -> this
         else -> this

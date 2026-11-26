@@ -7,6 +7,7 @@ import com.fundcircle.app.R
 import com.fundcircle.app.core.common.UiText
 import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.domain.model.FundCircleError
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
 import com.fundcircle.app.domain.usecase.ObserveDepositUseCase
@@ -207,18 +208,18 @@ class TransactionDetailViewModel @Inject constructor(
             )
 
             result.fold(
-                onSuccess = {
+                onSuccess = { status ->
                     setState {
                         copy(
                             isReversing = false,
                             showReverseDialog = false
                         )
                     }
-                    sendEffect(
-                        TransactionDetailUiEffect.ShowSnackbar(
-                            UiText.StringResource(R.string.tx_detail_reverse_success)
-                        )
-                    )
+                    val message = when (status) {
+                        WriteStatus.SYNCED -> R.string.tx_detail_reverse_success
+                        WriteStatus.PENDING_SYNC -> R.string.tx_detail_reverse_pending_sync
+                    }
+                    sendEffect(TransactionDetailUiEffect.ShowSnackbar(UiText.StringResource(message)))
                 },
                 onFailure = { error ->
                     val errorUiText = when (error) {
@@ -228,6 +229,12 @@ class TransactionDetailViewModel @Inject constructor(
                             UiText.StringResource(R.string.tx_detail_error_already_voided)
                         is FundCircleError.Authorization ->
                             UiText.StringResource(R.string.error_not_authorized)
+                        is FundCircleError.Business.CircleLocked ->
+                            UiText.StringResource(R.string.tx_detail_circle_locked_notice)
+                        is FundCircleError.Network ->
+                            UiText.StringResource(R.string.error_network_retry)
+                        is FundCircleError.Unexpected ->
+                            UiText.StringResource(R.string.error_unexpected)
                         else ->
                             if (!error.message.isNullOrBlank()) {
                                 UiText.DynamicString(error.message.orEmpty())

@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail.components
 
+import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -93,15 +94,15 @@ fun ReverseTransactionDialog(
     }
 
     val typeLabel = if (isExpense) {
-        expense?.category?.displayName ?: stringResource(R.string.tx_detail_type_expense)
+        expense?.category?.asUiText()?.asString() ?: stringResource(R.string.tx_detail_type_expense)
     } else {
         stringResource(R.string.modal_add_tx_tab_deposit)
     }
 
     val paymentMethodName = if (isExpense) {
-        expense?.paymentMethod?.displayName ?: ""
+        expense?.paymentMethod?.asUiText()?.asString() ?: ""
     } else {
-        deposit?.paymentMethod?.displayName ?: ""
+        deposit?.paymentMethod?.asUiText()?.asString() ?: ""
     }
 
     val recordedDate = if (isExpense) {

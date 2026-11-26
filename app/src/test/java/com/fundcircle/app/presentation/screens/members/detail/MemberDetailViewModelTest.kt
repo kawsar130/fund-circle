@@ -167,7 +167,7 @@ class MemberDetailViewModelTest {
     }
 
     @Test
-    fun loadDeposits_whenDepositIsVoid_updatesTotalContributedToActiveSumOnly() = runTest {
+    fun loadDeposits_keepsTheStoredMemberTotal_insteadOfSummingTheLedger() = runTest {
         val depositsWithVoid = listOf(
             sampleDeposits[0], // 150_000 active
             sampleDeposits[1].copy(isVoid = true) // 100_000 voided
@@ -177,8 +177,10 @@ class MemberDetailViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
+        // Invariant 2: the total comes from the member document, never from the deposit list
         val state = viewModel.uiState.value
-        assertThat(state.member?.totalContributed).isEqualTo(150_000L)
+        assertThat(state.deposits).hasSize(2)
+        assertThat(state.member?.totalContributed).isEqualTo(250_000L)
     }
 
     @Test

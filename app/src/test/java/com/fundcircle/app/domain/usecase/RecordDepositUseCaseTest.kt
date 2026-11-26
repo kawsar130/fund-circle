@@ -1,5 +1,6 @@
 package com.fundcircle.app.domain.usecase
 
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.PaymentMethod
@@ -24,7 +25,7 @@ class RecordDepositUseCaseTest {
 
     @Before
     fun setUp() {
-        useCase = RecordDepositUseCase(transactionRepository)
+        useCase = RecordDepositUseCase(transactionRepository, fundRepositoryWith(fundId))
     }
 
     @Test
@@ -96,9 +97,30 @@ class RecordDepositUseCaseTest {
     }
 
     @Test
+    fun invoke_rejectsDeposit_whenCircleIsLocked() = runTest {
+        useCase = RecordDepositUseCase(transactionRepository, fundRepositoryWith(fundId, isLocked = true))
+        val deposit = Deposit(
+            id = "",
+            fundId = fundId,
+            memberId = "mem-1",
+            memberEmail = "member@test.com",
+            memberName = "Test Member",
+            amount = 1_000L,
+            depositDate = now,
+            paymentMethod = PaymentMethod.CASH,
+            note = null
+        )
+
+        val result = useCase(fundId, deposit, currentTimeMillis = now)
+
+        assertThat(result.exceptionOrNull()).isEqualTo(FundCircleError.Business.CircleLocked)
+        coVerify(exactly = 0) { transactionRepository.recordDeposit(any(), any()) }
+    }
+
+    @Test
     fun invoke_generatesClientSideUuidIdempotencyKey_whenBlank() = runTest {
         val depositSlot = slot<Deposit>()
-        coEvery { transactionRepository.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(Unit)
+        coEvery { transactionRepository.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(WriteStatus.SYNCED)
 
         val depositWithoutId = Deposit(
             id = "",
@@ -126,7 +148,7 @@ class RecordDepositUseCaseTest {
     fun invoke_preservesProvidedId_whenAlreadyPresent() = runTest {
         val existingId = UUID.randomUUID().toString()
         val depositSlot = slot<Deposit>()
-        coEvery { transactionRepository.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(Unit)
+        coEvery { transactionRepository.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(WriteStatus.SYNCED)
 
         val depositWithId = Deposit(
             id = existingId,

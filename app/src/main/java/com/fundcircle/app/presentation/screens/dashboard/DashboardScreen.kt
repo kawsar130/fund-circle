@@ -618,11 +618,12 @@ fun TransactionItemCard(
         NumberFormat.getIntegerInstance(Locale.US).format(item.amount)
     }
 
+    // An expense with no description is titled by its (localized) category.
     val displayTitle = item.title.ifBlank {
-        if (item.isExpense) {
-            stringResource(R.string.dashboard_expense_default_title)
-        } else {
-            stringResource(R.string.dashboard_deposit_default_title)
+        when {
+            item.isExpense && item.category != null -> item.category.asUiText().asString()
+            item.isExpense -> stringResource(R.string.dashboard_expense_default_title)
+            else -> stringResource(R.string.dashboard_deposit_default_title)
         }
     }
 
@@ -716,7 +717,7 @@ fun TransactionItemCard(
                     formattedAmount
                 )
             } else {
-                if (item.isExpense && item.category != null && item.title != item.category.displayName) {
+                if (item.isExpense && item.category != null && item.title.isNotBlank()) {
                     stringResource(
                         R.string.dashboard_tx_subtitle,
                         item.category.asUiText().asString(),
@@ -961,7 +962,6 @@ private val previewTransactions = listOf(
         fundId = "circle-preview",
         isExpense = false,
         title = "Rahim Uddin",
-        subtitle = "12 Nov 2026 • Bank Transfer",
         amount = 100_000L,
         timestamp = 1_700_000_100_000L,
         paymentMethod = PaymentMethod.BANK_TRANSFER,
@@ -972,7 +972,6 @@ private val previewTransactions = listOf(
         fundId = "circle-preview",
         isExpense = true,
         title = "Office & Administration",
-        subtitle = "10 Nov 2026 • Stationery",
         amount = 12_000L,
         timestamp = 1_700_000_050_000L,
         paymentMethod = PaymentMethod.CASH,
@@ -984,7 +983,6 @@ private val previewTransactions = listOf(
         fundId = "circle-preview",
         isExpense = false,
         title = "Tanvir Ahmed",
-        subtitle = "08 Nov 2026 • Mobile Banking",
         amount = 50_000L,
         timestamp = 1_700_000_000_000L,
         paymentMethod = PaymentMethod.MOBILE_BANKING,

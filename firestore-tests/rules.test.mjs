@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { after, before, describe, test } from 'node:test';
 import { assertFails, assertSucceeds, initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import {
-  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, increment, query, runTransaction,
+  arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, increment, query,
   setDoc, setLogLevel, updateDoc, where, writeBatch,
 } from 'firebase/firestore';
 
@@ -65,7 +65,7 @@ async function seed(fundOverrides = {}) {
     });
     await setDoc(doc(db, `funds/${F}/members/invite-1`), {
       userId: 'invite-1', memberId: 'FC-002', email: 'member@x.com', name: 'Member', phone: '01700000000',
-      role: 'MEMBER', status: 'ACTIVE', totalContributed: 0, joinedAt: 1, lastActiveAt: 1,
+      role: 'MEMBER', status: 'ACTIVE', totalContributed: 500, depositCount: 1, joinedAt: 1, lastActiveAt: 1,
     });
     await setDoc(doc(db, `funds/${F}/deposits/dep-old`), {
       depositId: 'dep-old', fundId: F, memberId: 'invite-1', memberEmail: 'member@x.com', memberName: 'Member',
@@ -103,12 +103,19 @@ const newFundDoc = (id, overrides = {}) => ({
 
 // --- Client write paths (same shape as the Kotlin data sources) ---------------------------------
 
-function recordDeposit(db, id, amount, { depositAmount = amount, extra = {} } = {}) {
+function recordDeposit(db, id, amount, {
+  depositAmount = amount, memberAmount = amount, memberDoc = 'invite-1', touchMember = true, extra = {},
+} = {}) {
   const b = writeBatch(db);
   b.set(doc(db, `funds/${F}/deposits/${id}`), depositDoc(id, depositAmount, extra));
   b.update(doc(db, 'funds', F), {
     totalDeposits: increment(amount), recordedBalance: increment(amount), updatedAt: NOW(), lastTxId: id,
   });
+  if (touchMember) {
+    b.update(doc(db, `funds/${F}/members/${memberDoc}`), {
+      totalContributed: increment(memberAmount), depositCount: increment(1),
+    });
+  }
   return b.commit();
 }
 
@@ -121,16 +128,20 @@ function recordExpense(db, id, amount) {
   return b.commit();
 }
 
-function reverse(db, coll, id, amount, voidedBy = 'admin@x.com') {
-  return runTransaction(db, async (tx) => {
-    const ref = doc(db, `funds/${F}/${coll}/${id}`);
-    await tx.get(ref);
-    tx.update(ref, { isVoid: true, voidReason: 'Duplicate entry', voidedBy, voidedAt: NOW() });
-    const totals = coll === 'deposits'
-      ? { totalDeposits: increment(-amount), recordedBalance: increment(-amount) }
-      : { totalExpenses: increment(-amount), recordedBalance: increment(amount) };
-    tx.update(doc(db, 'funds', F), { ...totals, updatedAt: NOW(), lastTxId: id });
-  });
+// Same shape as voidTransaction: one batch; for a deposit it also lowers the member's totals.
+function reverse(db, coll, id, amount, voidedBy = 'admin@x.com', { touchMember = true, memberAmount = amount } = {}) {
+  const b = writeBatch(db);
+  b.update(doc(db, `funds/${F}/${coll}/${id}`), { isVoid: true, voidReason: 'Duplicate entry', voidedBy, voidedAt: NOW() });
+  const totals = coll === 'deposits'
+    ? { totalDeposits: increment(-amount), recordedBalance: increment(-amount) }
+    : { totalExpenses: increment(-amount), recordedBalance: increment(amount) };
+  b.update(doc(db, 'funds', F), { ...totals, updatedAt: NOW(), lastTxId: id });
+  if (coll === 'deposits' && touchMember) {
+    b.update(doc(db, `funds/${F}/members/invite-1`), {
+      totalContributed: increment(-memberAmount), depositCount: increment(-1),
+    });
+  }
+  return b.commit();
 }
 
 function invite(db, id, email) {
@@ -177,8 +188,10 @@ describe('app flows that must keep working', () => {
   });
   allow('admin invites member (member doc + count + arrayUnion)', () => invite(admin(), 'invite-2', 'third@x.com'));
   allow('member records deposit with matching increment', () => recordDeposit(member(), 'dep-new', 250));
+  allow('deposit for a member doc that has no depositCount yet', () =>
+    recordDeposit(member(), 'dep-new', 250, { memberDoc: 'adminUid', extra: { memberId: 'adminUid' } }));
   allow('admin records expense', () => recordExpense(admin(), 'exp-new', 40));
-  allow('admin reverses deposit (transaction)', () => reverse(admin(), 'deposits', 'dep-old', 500));
+  allow('admin reverses deposit (batch, member totals fall)', () => reverse(admin(), 'deposits', 'dep-old', 500));
   allow('admin reverses expense (transaction)', () => reverse(admin(), 'expenses', 'exp-old', 100));
   allow('admin toggles lock', () => updateDoc(doc(admin(), 'funds', F), { isLocked: true, updatedAt: NOW() }));
   allow('admin transfers ownership to invited member', () => {
@@ -249,6 +262,22 @@ describe('attacks that must be denied', () => {
     deny('reverse with decrement != original amount', () => reverse(admin(), 'deposits', 'dep-old', 50));
     deny('reverse while circle is locked', () => reverse(admin(), 'deposits', 'dep-old', 500),
       () => seed({ isLocked: true }));
+    deny('deposit without raising the member totals', () =>
+      recordDeposit(member(), 'd9', 100, { touchMember: false }));
+    deny('member total rises by a different amount', () =>
+      recordDeposit(member(), 'd9', 100, { memberAmount: 1000 }));
+    deny('deposit credited to another member', () => recordDeposit(member(), 'd9', 100, { memberDoc: 'adminUid' }));
+    deny('member bumps own totalContributed directly', () =>
+      updateDoc(doc(member(), `funds/${F}/members/invite-1`), { totalContributed: increment(10000) }));
+    deny('member bumps totals next to an existing deposit', async () => {
+      await unsafe(`funds/${F}`, { lastTxId: 'dep-old' });
+      return updateDoc(doc(member(), `funds/${F}/members/invite-1`),
+        { totalContributed: increment(500), depositCount: increment(1) });
+    });
+    deny('reverse a deposit without lowering the member totals', () =>
+      reverse(admin(), 'deposits', 'dep-old', 500, 'admin@x.com', { touchMember: false }));
+    deny('reverse lowers member total by a different amount', () =>
+      reverse(admin(), 'deposits', 'dep-old', 500, 'admin@x.com', { memberAmount: 50 }));
     deny('reverse without touching totals', () => updateDoc(doc(admin(), `funds/${F}/deposits/dep-old`),
       { isVoid: true, voidReason: 'Duplicate entry', voidedBy: 'admin@x.com', voidedAt: NOW() }));
   });
@@ -268,6 +297,16 @@ describe('attacks that must be denied', () => {
     deny('admin leaves without transferring', () =>
       updateDoc(doc(admin(), `funds/${F}/members/adminUid`), { status: 'LEFT', lastActiveAt: NOW() }));
     deny('invite with uppercase email', () => invite(admin(), 'invite-3', 'Bob@x.com'));
+    deny('invite with a preloaded deposit count', async () => {
+      const db = admin();
+      const b = writeBatch(db);
+      b.set(doc(db, `funds/${F}/members/invite-3`), {
+        userId: 'invite-3', memberId: 'FC-003', email: 'c@x.com', name: 'C', phone: '', role: 'MEMBER',
+        status: 'ACTIVE', totalContributed: 0, depositCount: 5, joinedAt: NOW(), lastActiveAt: NOW(),
+      });
+      b.update(doc(db, 'funds', F), { memberCount: increment(1), memberEmails: arrayUnion('c@x.com'), updatedAt: NOW() });
+      return b.commit();
+    });
     deny('admin deletes a member doc', () => deleteDoc(doc(admin(), `funds/${F}/members/invite-1`)));
     deny('write into another user profile', () => setDoc(doc(member(), 'users/adminUid'), { createdCircleCount: 0 }));
   });

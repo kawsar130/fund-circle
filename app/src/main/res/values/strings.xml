@@ -30,6 +30,11 @@
     <string name="hub_circle_card_content_description">%1$s circle card, balance %2$s</string>
     <string name="hub_offline_warning">Viewing Offline Cache</string>
     <string name="hub_error_loading">Failed to load circles. Please check your connection.</string>
+    <string name="hub_sign_out_dialog_title">Sign out?</string>
+    <string name="hub_sign_out_dialog_body">You will need to sign in with Google again to open your circles.</string>
+    <string name="hub_sign_out_dialog_confirm">Sign Out</string>
+    <string name="hub_sign_out_dialog_cancel">Cancel</string>
+    <string name="hub_sign_out_failed">Could not sign out. Please try again.</string>
 
     <!-- Create Circle (Screen 03) -->
     <string name="create_circle_title">New Fund Circle</string>
@@ -118,6 +123,10 @@
     <string name="ledger_filter_all_methods">All Methods</string>
     <string name="ledger_filter_all_categories">All Categories ▼</string>
     <string name="ledger_filter_all_dates">All Dates ▼</string>
+    <string name="ledger_filter_date_range">%1$s – %2$s</string>
+    <string name="ledger_date_range_title">Filter by date</string>
+    <string name="ledger_date_range_apply">Apply</string>
+    <string name="ledger_date_range_clear">Clear</string>
     <string name="tx_reversal_original_format">Original: %1$s %2$s • Reversal: %3$s %4$s</string>
     <string name="tx_reversal_reason_format">%1$s • Reason: %2$s</string>
     <string name="tx_verified_format">%1$s • Verified</string>
@@ -191,6 +200,7 @@
     <string name="tx_detail_recorded_by_label">Recorded By</string>
     <string name="tx_detail_recorded_at_label">Recorded At</string>
     <string name="tx_detail_btn_reverse">↩ Reverse Transaction (Admin Only)</string>
+    <string name="tx_detail_reverse_pending_sync">Reversal saved on this device. It will sync when you\'re back online.</string>
     <string name="tx_detail_circle_locked_notice">This circle is locked. Transactions cannot be reversed.</string>
     <string name="tx_detail_reverse_success">Transaction reversed successfully.</string>
     <string name="tx_detail_error_not_found">Transaction not found.</string>
@@ -473,4 +483,9 @@
     <string name="reports_preview_closing">Closing Balance:</string>
 
     <string name="hub_create_circle_dashed_btn">+ Create New Fund Circle</string>
+    <!-- Offline writes and shared errors -->
+    <string name="tx_saved_pending_sync">Saved on this device. It will sync when you\'re back online.</string>
+    <string name="error_circle_locked">This circle is locked. New transactions are paused.</string>
+    <string name="error_network_retry">Couldn\'t reach the server. Check your connection and try again.</string>
+    <string name="error_unexpected">Something went wrong. Please try again.</string>
 </resources>

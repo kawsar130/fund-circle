@@ -198,24 +198,35 @@ class LedgerCsvGenerator @Inject constructor() {
     }
 
     /**
-     * RFC 4180 field escaping rules:
-     * - If field contains comma, quote, or newline: enclose in double quotes.
-     * - Any double quote inside must be escaped with a second double quote ("").
+     * Escapes one free-text field for RFC 4180 and against spreadsheet formula injection.
+     *
+     * - A field starting with `=`, `+`, `-`, `@`, tab or carriage return would run as a formula in
+     *   Excel or Google Sheets, so it is prefixed with `'` (shown as text, never evaluated) and quoted.
+     * - A field containing a comma, quote or line break is enclosed in double quotes, with each
+     *   inner double quote doubled ("").
+     *
+     * Numeric amount columns are written directly and never pass through here, so a negative
+     * net change still reads as a number.
      */
     fun escapeCsv(value: String): String {
-        val containsSpecial = value.contains(',') ||
-                value.contains('"') ||
-                value.contains('\n') ||
-                value.contains('\r')
+        val isFormula = value.isNotEmpty() && value[0] in FORMULA_TRIGGERS
+        val safeValue = if (isFormula) "'$value" else value
+
+        val containsSpecial = isFormula ||
+                safeValue.contains(',') ||
+                safeValue.contains('"') ||
+                safeValue.contains('\n') ||
+                safeValue.contains('\r')
 
         return if (containsSpecial) {
-            "\"${value.replace("\"", "\"\"")}\""
+            "\"${safeValue.replace("\"", "\"\"")}\""
         } else {
-            value
+            safeValue
         }
     }
 
     companion object {
         const val UTF8_BOM = "\uFEFF"
+        private val FORMULA_TRIGGERS = setOf('=', '+', '-', '@', '\t', '\r')
     }
 }

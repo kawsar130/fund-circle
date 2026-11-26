@@ -1,5 +1,6 @@
 package com.fundcircle.app.domain.usecase
 
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.FundCircleError
@@ -25,7 +26,7 @@ class RecordExpenseUseCaseTest {
 
     @Before
     fun setUp() {
-        useCase = RecordExpenseUseCase(transactionRepository)
+        useCase = RecordExpenseUseCase(transactionRepository, fundRepositoryWith(fundId))
     }
 
     @Test
@@ -122,9 +123,31 @@ class RecordExpenseUseCaseTest {
     }
 
     @Test
+    fun invoke_rejectsExpense_whenCircleIsLocked() = runTest {
+        useCase = RecordExpenseUseCase(transactionRepository, fundRepositoryWith(fundId, isLocked = true))
+        val expense = Expense(
+            id = "",
+            fundId = fundId,
+            amount = 15_000L,
+            expenseDate = now,
+            category = ExpenseCategory.OFFICE_AND_ADMINISTRATION,
+            description = "Printer toner",
+            paymentMethod = PaymentMethod.CASH,
+            paidBy = "Vendor",
+            createdBy = "admin-uid",
+            creatorEmail = "admin@test.com"
+        )
+
+        val result = useCase(fundId, expense, currentTimeMillis = now)
+
+        assertThat(result.exceptionOrNull()).isEqualTo(FundCircleError.Business.CircleLocked)
+        coVerify(exactly = 0) { transactionRepository.recordExpense(any(), any()) }
+    }
+
+    @Test
     fun invoke_generatesClientSideUuidIdempotencyKey_whenBlank() = runTest {
         val expenseSlot = slot<Expense>()
-        coEvery { transactionRepository.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(Unit)
+        coEvery { transactionRepository.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(WriteStatus.SYNCED)
 
         val expenseWithoutId = Expense(
             id = "",
@@ -153,7 +176,7 @@ class RecordExpenseUseCaseTest {
     fun invoke_preservesProvidedId_whenAlreadyPresent() = runTest {
         val existingId = UUID.randomUUID().toString()
         val expenseSlot = slot<Expense>()
-        coEvery { transactionRepository.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(Unit)
+        coEvery { transactionRepository.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(WriteStatus.SYNCED)
 
         val expenseWithId = Expense(
             id = existingId,

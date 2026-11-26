@@ -113,6 +113,16 @@ class AuthRepositoryImplTest {
     }
 
     @Test
+    fun signOut_whenRemoteSignOutFails_stillClearsTheLocalSession() = runTest {
+        coEvery { authRemoteDataSource.signOut() } throws IllegalStateException("Firebase unavailable")
+
+        val result = repository.signOut()
+
+        assertThat(result.isFailure).isTrue()
+        verify(exactly = 1) { sessionLocalDataSource.clearSession() }
+    }
+
+    @Test
     fun getActiveCircleId_delegatesToLocalDataSource() = runTest {
         every { sessionLocalDataSource.getActiveCircleId() } returns "fund-target-123"
 

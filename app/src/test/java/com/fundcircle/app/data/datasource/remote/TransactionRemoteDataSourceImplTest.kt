@@ -1,7 +1,10 @@
 package com.fundcircle.app.data.datasource.remote
 
+import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.data.dto.DepositDto
 import com.fundcircle.app.data.dto.ExpenseDto
+import com.fundcircle.app.domain.model.WriteStatus
+import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.firestore.CollectionReference
@@ -9,7 +12,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Transaction
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.WriteBatch
 import io.mockk.every
 import io.mockk.mockk
@@ -17,6 +20,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -28,24 +32,36 @@ class TransactionRemoteDataSourceImplTest {
     private val batch: WriteBatch = mockk(relaxed = true)
     private val fundsCollection: CollectionReference = mockk(relaxed = true)
     private val fundDoc: DocumentReference = mockk(relaxed = true)
-    private val subCollection: CollectionReference = mockk(relaxed = true)
-    private val itemDoc: DocumentReference = mockk(relaxed = true)
+    private val depositsCollection: CollectionReference = mockk(relaxed = true)
+    private val expensesCollection: CollectionReference = mockk(relaxed = true)
+    private val membersCollection: CollectionReference = mockk(relaxed = true)
+    private val txDoc: DocumentReference = mockk(relaxed = true)
+    private val memberDoc: DocumentReference = mockk(relaxed = true)
+    private val networkMonitor: NetworkMonitor = mockk()
+    private val isOnline = MutableStateFlow(true)
 
     private lateinit var dataSource: TransactionRemoteDataSourceImpl
 
     private val fundId = "fund-test-100"
+    private val memberId = "mem-1"
 
     @Before
     fun setUp() {
         mockkStatic(FieldValue::class)
+        every { FieldValue.increment(any<Long>()) } answers { mockk(name = "increment(${firstArg<Long>()})") }
         every { firestore.batch() } returns batch
         every { firestore.collection("funds") } returns fundsCollection
         every { fundsCollection.document(fundId) } returns fundDoc
-        every { fundDoc.collection(any()) } returns subCollection
-        every { subCollection.document(any()) } returns itemDoc
+        every { fundDoc.collection("deposits") } returns depositsCollection
+        every { fundDoc.collection("expenses") } returns expensesCollection
+        every { fundDoc.collection("members") } returns membersCollection
+        every { depositsCollection.document(any()) } returns txDoc
+        every { expensesCollection.document(any()) } returns txDoc
+        every { membersCollection.document(memberId) } returns memberDoc
         every { batch.commit() } returns Tasks.forResult(null)
+        every { networkMonitor.isOnline } returns isOnline
 
-        dataSource = TransactionRemoteDataSourceImpl(firestore)
+        dataSource = TransactionRemoteDataSourceImpl(firestore, networkMonitor)
     }
 
     @After
@@ -53,110 +69,124 @@ class TransactionRemoteDataSourceImplTest {
         unmockkStatic(FieldValue::class)
     }
 
-    @Test
-    fun recordDeposit_executesAtomicBatchWrite_withParentFieldValueIncrements() = runTest {
-        val deposit = DepositDto(
-            depositId = "dep-001",
-            fundId = fundId,
-            memberId = "mem-1",
-            amount = 50_000L,
-            depositDate = 1_000L,
-            paymentMethod = "Cash"
-        )
+    private fun deposit(amount: Long = 50_000L) = DepositDto(
+        depositId = "dep-001",
+        fundId = fundId,
+        memberId = memberId,
+        amount = amount,
+        depositDate = 1_000L,
+        paymentMethod = "Cash"
+    )
 
-        val incrementDepositValue: FieldValue = mockk()
-        val incrementBalanceValue: FieldValue = mockk()
+    private fun expense() = ExpenseDto(
+        expenseId = "exp-001",
+        fundId = fundId,
+        amount = 12_000L,
+        expenseDate = 1_000L,
+        category = "Office & Administration",
+        description = "Stationery",
+        paymentMethod = "Cash"
+    )
 
-        every { FieldValue.increment(50_000L) } returns incrementDepositValue andThen incrementBalanceValue
-
-        val updateSlot = slot<Map<String, Any>>()
-        every { batch.update(fundDoc, capture(updateSlot)) } returns batch
-
-        val result = dataSource.recordDeposit(fundId, deposit)
-
-        assertThat(result.isSuccess).isTrue()
-
-        // 1. Verify batch.set on child document under /funds/{fundId}/deposits/{depositId}
-        verify { fundDoc.collection("deposits") }
-        verify { subCollection.document("dep-001") }
-        verify { batch.set(itemDoc, deposit) }
-
-        // 2. Invariant 2: Verify atomic parent updates with FieldValue.increment
-        val capturedMap = updateSlot.captured
-        assertThat(capturedMap).containsKey("totalDeposits")
-        assertThat(capturedMap).containsKey("recordedBalance")
-        assertThat(capturedMap).containsKey("updatedAt")
-
-        // Security rules pair the aggregate change with this exact deposit document
-        assertThat(capturedMap["lastTxId"]).isEqualTo("dep-001")
-
-        // 3. Verify batch commit
-        verify { batch.commit() }
+    private fun stubLedgerDoc(source: Source, isVoid: Boolean = false, exists: Boolean = true, amount: Long = 100_000L) {
+        val snapshot: DocumentSnapshot = mockk(relaxed = true)
+        every { snapshot.exists() } returns exists
+        every { snapshot.getBoolean("isVoid") } returns isVoid
+        every { snapshot.getLong("amount") } returns amount
+        every { snapshot.getString("memberId") } returns memberId
+        every { txDoc.get(source) } returns Tasks.forResult(snapshot)
     }
 
     @Test
-    fun recordExpense_executesAtomicBatchWrite_withParentNegativeBalanceIncrement() = runTest {
-        val expense = ExpenseDto(
-            expenseId = "exp-001",
-            fundId = fundId,
-            amount = 12_000L,
-            expenseDate = 1_000L,
-            category = "Office & Administration",
-            description = "Stationery",
-            paymentMethod = "Cash"
-        )
+    fun recordDeposit_writesDepositFundTotalsAndMemberTotalsInOneBatch() = runTest {
+        val depositSlot = slot<Any>()
+        val fundSlot = slot<Map<String, Any>>()
+        val memberSlot = slot<Map<String, Any>>()
+        every { batch.set(txDoc, capture(depositSlot)) } returns batch
+        every { batch.update(fundDoc, capture(fundSlot)) } returns batch
+        every { batch.update(memberDoc, capture(memberSlot)) } returns batch
 
-        val incrementExpenseValue: FieldValue = mockk()
-        val incrementBalanceValue: FieldValue = mockk()
+        val before = System.currentTimeMillis()
+        val result = dataSource.recordDeposit(fundId, deposit())
 
-        every { FieldValue.increment(12_000L) } returns incrementExpenseValue
-        every { FieldValue.increment(-12_000L) } returns incrementBalanceValue
+        assertThat(result.getOrNull()).isEqualTo(WriteStatus.SYNCED)
+        verify { depositsCollection.document("dep-001") }
 
-        val updateSlot = slot<Map<String, Any>>()
-        every { batch.update(fundDoc, capture(updateSlot)) } returns batch
+        // createdAt is when it was recorded, not the (possibly backdated) deposit date
+        val written = depositSlot.captured as DepositDto
+        assertThat(written.depositDate).isEqualTo(1_000L)
+        assertThat(written.createdAt).isAtLeast(before)
 
-        val result = dataSource.recordExpense(fundId, expense)
+        // Invariant 2: parent aggregates move by increment, paired with this deposit
+        assertThat(fundSlot.captured.keys)
+            .containsExactly("totalDeposits", "recordedBalance", "updatedAt", "lastTxId")
+        assertThat(fundSlot.captured["lastTxId"]).isEqualTo("dep-001")
 
-        assertThat(result.isSuccess).isTrue()
-
-        // 1. Verify batch.set on child document under /funds/{fundId}/expenses/{expenseId}
-        verify { fundDoc.collection("expenses") }
-        verify { subCollection.document("exp-001") }
-        verify { batch.set(itemDoc, expense) }
-
-        // 2. Invariant 2: Verify atomic parent updates with totalExpenses += amount and recordedBalance -= amount
-        val capturedMap = updateSlot.captured
-        assertThat(capturedMap).containsKey("totalExpenses")
-        assertThat(capturedMap).containsKey("recordedBalance")
-        assertThat(capturedMap).containsKey("updatedAt")
-
-        // 3. Verify batch commit
-        verify { batch.commit() }
+        // Member aggregates move in the same batch, so nothing scans the ledger
+        assertThat(memberSlot.captured.keys).containsExactly("totalContributed", "depositCount")
+        verify { FieldValue.increment(50_000L) }
+        verify { FieldValue.increment(1L) }
+        verify(exactly = 1) { batch.commit() }
     }
 
     @Test
-    fun voidTransaction_reversingDeposit_updatesChildMetadataAndParentAggregates() = runTest {
-        val firestoreTx: Transaction = mockk(relaxed = true)
-        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
+    fun recordExpense_updatesFundTotals_andLeavesMemberTotalsAlone() = runTest {
+        val expenseSlot = slot<Any>()
+        val fundSlot = slot<Map<String, Any>>()
+        every { batch.set(txDoc, capture(expenseSlot)) } returns batch
+        every { batch.update(fundDoc, capture(fundSlot)) } returns batch
 
-        every { firestore.runTransaction<Any>(any()) } answers {
-            val function = firstArg<Transaction.Function<Any>>()
-            val res = function.apply(firestoreTx)
-            Tasks.forResult(res)
-        }
+        val result = dataSource.recordExpense(fundId, expense())
 
-        every { firestoreTx.get(itemDoc) } returns txSnapshot
-        every { txSnapshot.exists() } returns true
-        every { txSnapshot.getBoolean("isVoid") } returns false
-        val decDepositValue: FieldValue = mockk()
-        val decBalanceValue: FieldValue = mockk()
-        every { txSnapshot.getLong("amount") } returns 100_000L
-        every { FieldValue.increment(-100_000L) } returns decDepositValue andThen decBalanceValue
+        assertThat(result.getOrNull()).isEqualTo(WriteStatus.SYNCED)
+        verify { expensesCollection.document("exp-001") }
+        assertThat((expenseSlot.captured as ExpenseDto).createdAt).isGreaterThan(1_000L)
+        assertThat(fundSlot.captured.keys)
+            .containsExactly("totalExpenses", "recordedBalance", "updatedAt", "lastTxId")
+        verify { FieldValue.increment(12_000L) }
+        verify { FieldValue.increment(-12_000L) }
+        verify(exactly = 0) { batch.update(memberDoc, any<Map<String, Any>>()) }
+    }
 
-        val childUpdateSlot = slot<Map<String, Any>>()
-        val parentUpdateSlot = slot<Map<String, Any>>()
-        every { firestoreTx.update(itemDoc, capture(childUpdateSlot)) } returns firestoreTx
-        every { firestoreTx.update(fundDoc, capture(parentUpdateSlot)) } returns firestoreTx
+    @Test
+    fun recordDeposit_whenOffline_returnsPendingSyncWithoutWaitingForTheServer() = runTest {
+        isOnline.value = false
+        // A commit made offline only completes once the device reconnects
+        every { batch.commit() } returns TaskCompletionSource<Void>().task
+
+        val result = dataSource.recordDeposit(fundId, deposit())
+
+        assertThat(result.getOrNull()).isEqualTo(WriteStatus.PENDING_SYNC)
+        verify(exactly = 1) { batch.commit() }
+    }
+
+    @Test
+    fun recordDeposit_whenServerNeverAcknowledges_returnsPendingSyncAfterTimeout() = runTest {
+        every { batch.commit() } returns TaskCompletionSource<Void>().task
+
+        val result = dataSource.recordDeposit(fundId, deposit())
+
+        assertThat(result.getOrNull()).isEqualTo(WriteStatus.PENDING_SYNC)
+    }
+
+    @Test
+    fun recordDeposit_whenServerRejectsTheWrite_returnsFailure() = runTest {
+        every { batch.commit() } returns Tasks.forException(IllegalStateException("PERMISSION_DENIED"))
+
+        val result = dataSource.recordDeposit(fundId, deposit())
+
+        assertThat(result.isFailure).isTrue()
+    }
+
+    @Test
+    fun voidTransaction_reversingDeposit_flipsDocAndLowersFundAndMemberTotals() = runTest {
+        stubLedgerDoc(Source.DEFAULT, amount = 100_000L)
+        val childSlot = slot<Map<String, Any>>()
+        val fundSlot = slot<Map<String, Any>>()
+        val memberSlot = slot<Map<String, Any>>()
+        every { batch.update(txDoc, capture(childSlot)) } returns batch
+        every { batch.update(fundDoc, capture(fundSlot)) } returns batch
+        every { batch.update(memberDoc, capture(memberSlot)) } returns batch
 
         val result = dataSource.voidTransaction(
             fundId = fundId,
@@ -167,48 +197,26 @@ class TransactionRemoteDataSourceImplTest {
             adminEmail = "admin@example.com"
         )
 
-        assertThat(result.isSuccess).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WriteStatus.SYNCED)
+        assertThat(childSlot.captured["isVoid"]).isEqualTo(true)
+        assertThat(childSlot.captured["voidReason"]).isEqualTo("Reversing accidental duplicate")
+        assertThat(childSlot.captured["voidedBy"]).isEqualTo("admin@example.com")
+        assertThat(childSlot.captured).containsKey("voidedAt")
 
-        // 1. Verify child document updates
-        val childUpdates = childUpdateSlot.captured
-        assertThat(childUpdates["isVoid"]).isEqualTo(true)
-        assertThat(childUpdates["voidReason"]).isEqualTo("Reversing accidental duplicate")
-        assertThat(childUpdates["voidedBy"]).isEqualTo("admin@example.com")
-        assertThat(childUpdates).containsKey("voidedAt")
-
-        // 2. Verify parent document updates
-        val parentUpdates = parentUpdateSlot.captured
-        assertThat(parentUpdates).containsKey("totalDeposits")
-        assertThat(parentUpdates).containsKey("recordedBalance")
-        assertThat(parentUpdates).containsKey("updatedAt")
-        assertThat(parentUpdates["lastTxId"]).isEqualTo("dep-100")
+        assertThat(fundSlot.captured.keys)
+            .containsExactly("totalDeposits", "recordedBalance", "updatedAt", "lastTxId")
+        assertThat(fundSlot.captured["lastTxId"]).isEqualTo("dep-100")
+        assertThat(memberSlot.captured.keys).containsExactly("totalContributed", "depositCount")
+        verify { FieldValue.increment(-100_000L) }
+        verify { FieldValue.increment(-1L) }
+        verify(exactly = 1) { batch.commit() }
     }
 
     @Test
-    fun voidTransaction_reversingExpense_updatesChildMetadataAndParentAggregates() = runTest {
-        val firestoreTx: Transaction = mockk(relaxed = true)
-        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
-
-        every { firestore.runTransaction<Any>(any()) } answers {
-            val function = firstArg<Transaction.Function<Any>>()
-            val res = function.apply(firestoreTx)
-            Tasks.forResult(res)
-        }
-
-        every { firestoreTx.get(itemDoc) } returns txSnapshot
-        every { txSnapshot.exists() } returns true
-        every { txSnapshot.getBoolean("isVoid") } returns false
-        every { txSnapshot.getLong("amount") } returns 25_000L
-
-        val decExpenseValue: FieldValue = mockk()
-        val incBalanceValue: FieldValue = mockk()
-        every { FieldValue.increment(-25_000L) } returns decExpenseValue
-        every { FieldValue.increment(25_000L) } returns incBalanceValue
-
-        val childUpdateSlot = slot<Map<String, Any>>()
-        val parentUpdateSlot = slot<Map<String, Any>>()
-        every { firestoreTx.update(itemDoc, capture(childUpdateSlot)) } returns firestoreTx
-        every { firestoreTx.update(fundDoc, capture(parentUpdateSlot)) } returns firestoreTx
+    fun voidTransaction_reversingExpense_restoresBalance_andLeavesMemberTotalsAlone() = runTest {
+        stubLedgerDoc(Source.DEFAULT, amount = 25_000L)
+        val fundSlot = slot<Map<String, Any>>()
+        every { batch.update(fundDoc, capture(fundSlot)) } returns batch
 
         val result = dataSource.voidTransaction(
             fundId = fundId,
@@ -220,34 +228,18 @@ class TransactionRemoteDataSourceImplTest {
         )
 
         assertThat(result.isSuccess).isTrue()
-
-        // 1. Verify child document updates
-        val childUpdates = childUpdateSlot.captured
-        assertThat(childUpdates["isVoid"]).isEqualTo(true)
-        assertThat(childUpdates["voidReason"]).isEqualTo("Wrong vendor billed")
-        assertThat(childUpdates["voidedBy"]).isEqualTo("admin@example.com")
-
-        // 2. Verify parent document updates
-        val parentUpdates = parentUpdateSlot.captured
-        assertThat(parentUpdates).containsKey("totalExpenses")
-        assertThat(parentUpdates).containsKey("recordedBalance")
-        assertThat(parentUpdates).containsKey("updatedAt")
+        assertThat(fundSlot.captured.keys)
+            .containsExactly("totalExpenses", "recordedBalance", "updatedAt", "lastTxId")
+        verify { FieldValue.increment(-25_000L) }
+        verify { FieldValue.increment(25_000L) }
+        verify(exactly = 0) { batch.update(memberDoc, any<Map<String, Any>>()) }
     }
 
     @Test
-    fun voidTransaction_whenAlreadyVoided_returnsFailureWithIllegalStateException() = runTest {
-        val firestoreTx: Transaction = mockk(relaxed = true)
-        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
-
-        every { firestore.runTransaction<Any>(any()) } answers {
-            val function = firstArg<Transaction.Function<Any>>()
-            val res = function.apply(firestoreTx)
-            Tasks.forResult(res)
-        }
-
-        every { firestoreTx.get(itemDoc) } returns txSnapshot
-        every { txSnapshot.exists() } returns true
-        every { txSnapshot.getBoolean("isVoid") } returns true
+    fun voidTransaction_whenOffline_readsFromCacheAndQueuesTheReversal() = runTest {
+        isOnline.value = false
+        stubLedgerDoc(Source.CACHE)
+        every { batch.commit() } returns TaskCompletionSource<Void>().task
 
         val result = dataSource.voidTransaction(
             fundId = fundId,
@@ -258,24 +250,31 @@ class TransactionRemoteDataSourceImplTest {
             adminEmail = "admin@example.com"
         )
 
-        assertThat(result.isFailure).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WriteStatus.PENDING_SYNC)
+        verify(exactly = 0) { txDoc.get(Source.DEFAULT) }
+    }
+
+    @Test
+    fun voidTransaction_whenAlreadyVoided_returnsFailureWithIllegalStateException() = runTest {
+        stubLedgerDoc(Source.DEFAULT, isVoid = true)
+
+        val result = dataSource.voidTransaction(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = "dep-100",
+            originalAmount = 100_000L,
+            voidReason = "Reversing duplicate",
+            adminEmail = "admin@example.com"
+        )
+
         assertThat(result.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
         assertThat(result.exceptionOrNull()?.message).contains("already reversed")
+        verify(exactly = 0) { batch.commit() }
     }
 
     @Test
     fun voidTransaction_whenDocumentNotFound_returnsFailureWithNoSuchElementException() = runTest {
-        val firestoreTx: Transaction = mockk(relaxed = true)
-        val txSnapshot: DocumentSnapshot = mockk(relaxed = true)
-
-        every { firestore.runTransaction<Any>(any()) } answers {
-            val function = firstArg<Transaction.Function<Any>>()
-            val res = function.apply(firestoreTx)
-            Tasks.forResult(res)
-        }
-
-        every { firestoreTx.get(itemDoc) } returns txSnapshot
-        every { txSnapshot.exists() } returns false
+        stubLedgerDoc(Source.DEFAULT, exists = false)
 
         val result = dataSource.voidTransaction(
             fundId = fundId,
@@ -286,7 +285,7 @@ class TransactionRemoteDataSourceImplTest {
             adminEmail = "admin@example.com"
         )
 
-        assertThat(result.isFailure).isTrue()
         assertThat(result.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
+        verify(exactly = 0) { batch.commit() }
     }
 }

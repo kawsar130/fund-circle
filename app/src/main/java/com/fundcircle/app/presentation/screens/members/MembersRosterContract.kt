@@ -16,7 +16,6 @@ data class MembersRosterUiState(
     val circle: FundCircle? = null,
     val members: List<CircleMember> = emptyList(),
     val filteredMembers: List<CircleMember> = emptyList(),
-    val depositCounts: Map<String, Int> = emptyMap(),
     val searchQuery: String = "",
     val isSearchActive: Boolean = false,
     val isAdmin: Boolean = false,

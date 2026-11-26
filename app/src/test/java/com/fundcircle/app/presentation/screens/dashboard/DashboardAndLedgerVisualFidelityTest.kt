@@ -88,7 +88,6 @@ class DashboardAndLedgerVisualFidelityTest {
             amount = 100000L,
             timestamp = 1700000000000L,
             title = "Rahim Uddin (FC-002)",
-            subtitle = "12 Nov 2026 • Bank Transfer",
             isExpense = false,
             isVoid = false,
             paymentMethod = PaymentMethod.BANK_TRANSFER
@@ -100,7 +99,6 @@ class DashboardAndLedgerVisualFidelityTest {
             amount = 3500L,
             timestamp = 1700000000000L,
             title = "Office Supplies",
-            subtitle = "10 Oct 2026 • Cash",
             isExpense = true,
             isVoid = true,
             paymentMethod = PaymentMethod.CASH,
