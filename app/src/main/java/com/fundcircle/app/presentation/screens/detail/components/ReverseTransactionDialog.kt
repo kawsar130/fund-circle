@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail.components
 
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.compose.foundation.BorderStroke
@@ -60,8 +61,6 @@ import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
-import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Screen 14: Reverse Transaction Dialog (dialog_reverse_tx).
@@ -90,7 +89,7 @@ fun ReverseTransactionDialog(
 
     val originalAmount = if (isExpense) expense?.amount ?: 0L else deposit?.amount ?: 0L
     val formattedAmount = remember(originalAmount) {
-        NumberFormat.getIntegerInstance(Locale.US).format(originalAmount)
+        AmountFormatter.format(originalAmount)
     }
 
     val typeLabel = if (isExpense) {

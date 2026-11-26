@@ -46,7 +46,7 @@ fun BrandLogo(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
-                    text = "FC",
+                    text = stringResource(R.string.brand_logo_monogram),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = (size.value * 0.44f).sp,

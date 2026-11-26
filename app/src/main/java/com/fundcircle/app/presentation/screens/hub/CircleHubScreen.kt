@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -72,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.MemberRole
@@ -83,7 +85,6 @@ import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import com.fundcircle.app.presentation.theme.SectionHeaderStyle
 import com.fundcircle.app.presentation.theme.TabularNumMedium
-import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
@@ -377,7 +378,7 @@ fun CircleCard(
     modifier: Modifier = Modifier
 ) {
     val formattedBalance = remember(circle.recordedBalance) {
-        NumberFormat.getIntegerInstance(Locale.US).format(circle.recordedBalance)
+        AmountFormatter.format(circle.recordedBalance)
     }
     val balanceLabel = stringResource(
         R.string.hub_balance_format,
@@ -445,13 +446,18 @@ fun CircleCard(
 
                 Spacer(modifier = Modifier.height(DesignTokens.Spacing2))
 
-                val membersCountText = if (circle.memberCount == 1) {
-                    stringResource(R.string.hub_member_count_single)
-                } else {
-                    stringResource(R.string.hub_members_count, circle.memberCount)
-                }
+                val membersCountText = pluralStringResource(
+                    R.plurals.hub_members_count,
+                    circle.memberCount,
+                    circle.memberCount
+                )
                 Text(
-                    text = "$membersCountText • ${circle.currency.name} (${circle.currency.symbol})",
+                    text = stringResource(
+                        R.string.hub_members_currency_line,
+                        membersCountText,
+                        circle.currency.name,
+                        circle.currency.symbol
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

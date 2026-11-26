@@ -87,6 +87,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.Deposit
@@ -100,7 +101,6 @@ import com.fundcircle.app.presentation.components.SegmentedItem
 import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -701,7 +701,7 @@ private fun DepositItemCard(
     modifier: Modifier = Modifier
 ) {
     val formattedAmount = remember(deposit.amount) {
-        NumberFormat.getIntegerInstance(Locale.US).format(deposit.amount)
+        AmountFormatter.format(deposit.amount)
     }
     val formattedDate = remember(deposit.depositDate) {
         DateUtils.formatDisplayDate(deposit.depositDate)
@@ -821,7 +821,7 @@ private fun ExpenseItemCard(
     modifier: Modifier = Modifier
 ) {
     val formattedAmount = remember(expense.amount) {
-        NumberFormat.getIntegerInstance(Locale.US).format(expense.amount)
+        AmountFormatter.format(expense.amount)
     }
     val formattedDate = remember(expense.expenseDate) {
         DateUtils.formatDisplayDate(expense.expenseDate)

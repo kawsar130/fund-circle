@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members
 
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.presentation.common.extractInitials
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -62,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -85,8 +87,6 @@ import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import com.fundcircle.app.presentation.theme.TabularNumSmall
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Screen 08: Stakeholders Roster Screen (CUJ-07).
@@ -494,13 +494,13 @@ fun MemberCardItem(
 
                 // Cumulative Contribution & Contact Info
                 val formattedAmount = remember(member.totalContributed) {
-                    NumberFormat.getIntegerInstance(Locale.US).format(member.totalContributed)
+                    AmountFormatter.format(member.totalContributed)
                 }
-                val countText = if (depositCount == 1) {
-                    stringResource(R.string.members_roster_deposits_count_singular)
-                } else {
-                    stringResource(R.string.members_roster_deposits_count_plural, depositCount)
-                }
+                val countText = pluralStringResource(
+                    R.plurals.members_roster_deposits_count,
+                    depositCount,
+                    depositCount
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically

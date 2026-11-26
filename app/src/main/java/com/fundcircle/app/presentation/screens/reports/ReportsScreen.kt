@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.FundCircle
 import com.fundcircle.app.domain.model.MonthlyFinancialReport
@@ -79,7 +80,6 @@ import com.fundcircle.app.presentation.theme.SectionHeaderStyle
 import com.fundcircle.app.presentation.theme.TabularNumMedium
 import com.fundcircle.app.presentation.theme.TabularNumSmall
 import java.text.DateFormatSymbols
-import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
 
@@ -557,8 +557,8 @@ fun ReportTypeSelectorCard(
 fun LivePreviewCard(
     circle: FundCircle?,
     monthlyReport: MonthlyFinancialReport?,
-    selectedReportType: ReportType = ReportType.MONTHLY_SUMMARY,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedReportType: ReportType = ReportType.MONTHLY_SUMMARY
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -753,7 +753,7 @@ fun StatementRow(
     textColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
     isBold: Boolean = false
 ) {
-    val formattedAmount = NumberFormat.getIntegerInstance(Locale.US).format(amount)
+    val formattedAmount = AmountFormatter.format(amount)
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

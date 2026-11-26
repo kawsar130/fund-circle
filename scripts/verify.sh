@@ -15,7 +15,7 @@ echo -e "${BLUE}  Fund Circle Pre-Flight Verification & Quality Gates ${NC}"
 echo -e "${BLUE}======================================================${NC}\n"
 
 # 1. Invariant 1: Whole-Integer Money (No Float or Double in financial entities/parameters/functions)
-echo -e "🔍 [1/4] Checking Architectural Invariant 1 (64-bit Long monetary model)..."
+echo -e "🔍 [1/5] Checking Architectural Invariant 1 (64-bit Long monetary model)..."
 if [ -d "app/src/main" ]; then
     FORBIDDEN_MONEY=$(grep -rnE '\b[a-zA-Z0-9_]*(amount|balance|deposit|expense|target|total)[a-zA-Z0-9_]*\s*:\s*(Double|Float)' app/src/main/ || true)
     if [ -n "$FORBIDDEN_MONEY" ]; then
@@ -29,7 +29,7 @@ else
 fi
 
 # 2. Invariant 4: Zero Hard Deletes (Verify no delete() on transaction collections/batches/tx)
-echo -e "\n🔍 [2/4] Checking Architectural Invariant 4 (Immutable Ledger / No Hard Deletes)..."
+echo -e "\n🔍 [2/5] Checking Architectural Invariant 4 (Immutable Ledger / No Hard Deletes)..."
 if [ -d "app/src/main" ]; then
     FORBIDDEN_DELETE=$(grep -rnE '(\.delete\(|(batch|tx|transaction)\.delete\()' app/src/main/ || true)
     if [ -n "$FORBIDDEN_DELETE" ]; then
@@ -44,7 +44,7 @@ else
 fi
 
 # 3. Security Rules & Production Hardening Checks
-echo -e "\n🔍 [3/4] Checking Production Security Rules & Hardening artifacts..."
+echo -e "\n🔍 [3/5] Checking Production Security Rules & Hardening artifacts..."
 if [ ! -f "firestore.rules" ] || [ ! -f "firestore.indexes.json" ] || [ ! -f "firebase.json" ]; then
     echo -e "${RED}❌ FAILED: Missing required Firestore security rules or index configuration files!${NC}"
     exit 1
@@ -56,8 +56,16 @@ if ! grep -q "isMinifyEnabled = true" app/build.gradle.kts; then
 fi
 echo -e "${GREEN}✓ Production hardening configuration satisfied (firestore.rules, firestore.indexes.json, R8 minification).${NC}"
 
-# 4. Gradle Quality Gates (Unit Tests & Lint)
-echo -e "\n🔍 [4/4] Running Gradle Quality Gates..."
+# 4. Invariant 6: No hardcoded user-facing strings in Compose code
+echo -e "\n🔍 [4/5] Checking Architectural Invariant 6 (strings in strings.xml)..."
+if ! python3 scripts/check_hardcoded_strings.py; then
+    echo -e "${RED}❌ FAILED: Invariant 6 Violation! Move the text above into res/values/strings.xml.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Localization invariant satisfied.${NC}"
+
+# 5. Gradle Quality Gates (Unit Tests & Lint)
+echo -e "\n🔍 [5/5] Running Gradle Quality Gates..."
 if [ -f "./gradlew" ]; then
     chmod +x ./gradlew
     echo -e "Running unit test suite..."
