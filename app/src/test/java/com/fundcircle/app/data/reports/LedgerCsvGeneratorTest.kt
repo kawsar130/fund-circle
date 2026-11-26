@@ -350,4 +350,67 @@ class LedgerCsvGeneratorTest {
         assertThat(generator.escapeCsv("Text with \"quotes\"")).isEqualTo("\"Text with \"\"quotes\"\"\"")
         assertThat(generator.escapeCsv("Text\nwith newline")).isEqualTo("\"Text\nwith newline\"")
     }
+
+    @Test
+    fun `escapeCsv neutralizes fields that a spreadsheet would run as a formula`() {
+        assertThat(generator.escapeCsv("=1+1")).isEqualTo("\"'=1+1\"")
+        assertThat(generator.escapeCsv("+8801700000000")).isEqualTo("\"'+8801700000000\"")
+        assertThat(generator.escapeCsv("-2+3")).isEqualTo("\"'-2+3\"")
+        assertThat(generator.escapeCsv("@SUM(A1)")).isEqualTo("\"'@SUM(A1)\"")
+        assertThat(generator.escapeCsv("\t=1")).isEqualTo("\"'\t=1\"")
+        assertThat(generator.escapeCsv("\r=1")).isEqualTo("\"'\r=1\"")
+        assertThat(generator.escapeCsv("=HYPERLINK(\"http://x\",\"a\")"))
+            .isEqualTo("\"'=HYPERLINK(\"\"http://x\"\",\"\"a\"\")\"")
+    }
+
+    @Test
+    fun `escapeCsv leaves text that only contains formula characters later on unchanged`() {
+        assertThat(generator.escapeCsv("")).isEqualTo("")
+        assertThat(generator.escapeCsv("a=b")).isEqualTo("a=b")
+        assertThat(generator.escapeCsv("user@example.com")).isEqualTo("user@example.com")
+        assertThat(generator.escapeCsv("2026-11-26")).isEqualTo("2026-11-26")
+    }
+
+    @Test
+    fun `generateDepositHistoryCsv writes a formula-looking note as inert text`() {
+        val deposit = Deposit(
+            id = "dep-1",
+            fundId = "circle-1",
+            memberId = "FC-001",
+            memberEmail = "kawsar@example.com",
+            memberName = "@evil",
+            amount = 500L,
+            depositDate = 1700000000000L,
+            paymentMethod = PaymentMethod.CASH,
+            note = "=HYPERLINK(\"http://x\",\"click\")",
+            isVoid = false
+        )
+
+        val csv = generator.generateDepositHistoryCsv(listOf(deposit))
+        val dataRow = csv.lines()[1]
+
+        assertThat(dataRow).contains(",\"'@evil\",")
+        assertThat(dataRow).contains(",\"'=HYPERLINK(\"\"http://x\"\",\"\"click\"\")\",")
+        assertThat(dataRow).doesNotContain(",=")
+        assertThat(dataRow).doesNotContain(",@")
+    }
+
+    @Test
+    fun `generateMonthlySummaryCsv keeps a negative net change numeric`() {
+        val report = MonthlyFinancialReport(
+            circleName = "Green Valley Property, LLC",
+            currency = Currency.BDT,
+            periodDisplay = "November 2026",
+            openingBalance = 10_000L,
+            totalDeposits = 1_000L,
+            totalExpenses = 6_000L,
+            netChange = -5_000L,
+            closingBalance = 5_000L,
+            transactionCount = 2
+        )
+
+        val csv = generator.generateMonthlySummaryCsv(sampleCircle, report)
+
+        assertThat(csv).contains("November 2026,10000,1000,6000,-5000,5000")
+    }
 }

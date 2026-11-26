@@ -956,22 +956,17 @@ These two rules are inseparable by design. The ledger rule checks the parent wit
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-
-    <!-- Debug overrides: Permit local testing and user trust anchors -->
-    <debug-overrides>
-        <trust-anchors>
-            <certificates src="system" />
-            <certificates src="user" />
-        </trust-anchors>
-    </debug-overrides>
-
-    <!-- Permit cleartext HTTP communication exclusively with local Firebase Emulator Suite on loopback -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">10.0.2.2</domain>
-        <domain includeSubdomains="false">localhost</domain>
-        <domain includeSubdomains="false">127.0.0.1</domain>
-    </domain-config>
 </network-security-config>
+```
+
+The release config above allows no cleartext at all. Debug builds replace it with `app/src/debug/res/xml/network_security_config.xml`, which also trusts user-installed CAs (`debug-overrides`) and adds one block for the local Firebase Emulator Suite:
+
+```xml
+<domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">10.0.2.2</domain>
+    <domain includeSubdomains="false">localhost</domain>
+    <domain includeSubdomains="false">127.0.0.1</domain>
+</domain-config>
 ```
 
 ### 5.3 ProGuard / R8 Optimization Rules (`proguard-rules.pro`)
