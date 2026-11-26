@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.transaction
 
+import com.fundcircle.app.domain.model.WriteStatus
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.fundcircle.app.R
@@ -169,8 +170,8 @@ class RecordTransactionViewModelTest {
     fun submitDeposit_success_callsRecordDepositUseCase_andEmitsEffects() = runTest {
         advanceUntilIdle()
 
-        coEvery { recordDepositUseCase(any(), any(), any()) } returns Result.success(Unit)
-        coEvery { recordDepositUseCase(any(), any()) } returns Result.success(Unit)
+        coEvery { recordDepositUseCase(any(), any(), any()) } returns Result.success(WriteStatus.SYNCED)
+        coEvery { recordDepositUseCase(any(), any()) } returns Result.success(WriteStatus.SYNCED)
 
         viewModel.uiEffect.test {
             viewModel.onAction(RecordTransactionUiAction.UpdateAmount("50000"))
@@ -207,8 +208,8 @@ class RecordTransactionViewModelTest {
     fun submitExpense_success_callsRecordExpenseUseCase_andEmitsEffects() = runTest {
         advanceUntilIdle()
 
-        coEvery { recordExpenseUseCase(any(), any(), any()) } returns Result.success(Unit)
-        coEvery { recordExpenseUseCase(any(), any()) } returns Result.success(Unit)
+        coEvery { recordExpenseUseCase(any(), any(), any()) } returns Result.success(WriteStatus.SYNCED)
+        coEvery { recordExpenseUseCase(any(), any()) } returns Result.success(WriteStatus.SYNCED)
 
         viewModel.uiEffect.test {
             viewModel.onAction(RecordTransactionUiAction.SelectMode(RecordTransactionMode.EXPENSE))
@@ -342,7 +343,7 @@ class RecordTransactionViewModelTest {
     @Test
     fun submit_tappedTwiceBeforeTheFirstSaveFinishes_recordsOnlyOneDeposit() = runTest {
         advanceUntilIdle()
-        coEvery { recordDepositUseCase(any(), any(), any()) } returns Result.success(Unit)
+        coEvery { recordDepositUseCase(any(), any(), any()) } returns Result.success(WriteStatus.SYNCED)
 
         viewModel.onAction(RecordTransactionUiAction.UpdateAmount("50000"))
         viewModel.onAction(RecordTransactionUiAction.Submit)
@@ -355,7 +356,7 @@ class RecordTransactionViewModelTest {
     @Test
     fun initialize_whileASaveIsInFlight_doesNotReEnableSubmit() = runTest {
         advanceUntilIdle()
-        val gate = CompletableDeferred<Result<Unit>>()
+        val gate = CompletableDeferred<Result<WriteStatus>>()
         coEvery { recordDepositUseCase(any(), any(), any()) } coAnswers { gate.await() }
 
         viewModel.onAction(RecordTransactionUiAction.UpdateAmount("50000"))
@@ -364,7 +365,7 @@ class RecordTransactionViewModelTest {
         viewModel.onAction(RecordTransactionUiAction.Initialize(testFundId, sessionKey = "sheet-9"))
 
         assertThat(viewModel.uiState.value.isSubmitting).isTrue()
-        gate.complete(Result.success(Unit))
+        gate.complete(Result.success(WriteStatus.SYNCED))
         advanceUntilIdle()
     }
 }

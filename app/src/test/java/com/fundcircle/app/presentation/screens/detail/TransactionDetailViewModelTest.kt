@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail
 
+import com.fundcircle.app.domain.model.WriteStatus
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.fundcircle.app.core.network.NetworkMonitor
@@ -311,7 +312,7 @@ class TransactionDetailViewModelTest {
                 voidReason = "Wrong entry recorded",
                 adminEmail = "admin@fundcircle.app"
             )
-        } returns Result.success(Unit)
+        } returns Result.success(WriteStatus.SYNCED)
 
         val viewModel = createViewModel(isExpense = false)
         advanceUntilIdle()

@@ -128,8 +128,9 @@ class MemberRepositoryImpl @Inject constructor(
         is FirebaseFirestoreException -> when (code) {
             FirebaseFirestoreException.Code.PERMISSION_DENIED -> FundCircleError.Authorization.NotAuthorized
             FirebaseFirestoreException.Code.NOT_FOUND -> FundCircleError.NotFound.ResourceNotFound
-            FirebaseFirestoreException.Code.UNAVAILABLE -> FundCircleError.Network.Timeout
-            else -> FundCircleError.Network.Timeout
+            FirebaseFirestoreException.Code.UNAVAILABLE,
+            FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> FundCircleError.Network.Timeout
+            else -> FundCircleError.Unexpected(code.name)
         }
         else -> this
     }

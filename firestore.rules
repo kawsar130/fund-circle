@@ -52,7 +52,8 @@ rules_version = '2';
 //   - name: string - Member display name
 //   - role: string ('ADMIN' | 'MEMBER') - Member role
 //   - status: string ('PENDING' | 'ACTIVE' | 'INACTIVE' | 'LEFT') - Member status
-//   - totalContributed: int (whole integer >= 0) - Total contributions
+//   - totalContributed: int (whole integer >= 0) - Sum of active deposits, moved only with a deposit or its reversal
+//   - depositCount: int (>= 0) - Number of active deposits, moved with totalContributed
 //   - joinedAt: int (epoch ms) - Joining timestamp
 //   - lastActiveAt: int (epoch ms) - Last activity timestamp
 //
@@ -323,11 +324,13 @@ service cloud.firestore {
       // -------------------------------------------------------------
       function memberKeysValid(d) {
         return d.keys().hasOnly(['userId', 'memberId', 'email', 'name', 'phone', 'role', 'status',
-                                 'totalContributed', 'joinedAt', 'lastActiveAt', 'updatedAt'])
+                                 'totalContributed', 'depositCount', 'joinedAt', 'lastActiveAt',
+                                 'updatedAt'])
           && d.role in ['ADMIN', 'MEMBER']
           && d.status in ['PENDING', 'ACTIVE', 'INACTIVE', 'LEFT']
           && d.email is string && d.email == d.email.lower()
-          && d.totalContributed == 0;
+          && d.totalContributed == 0
+          && d.get('depositCount', 0) == 0;
       }
 
       // Circle creation batch: the creator's own ADMIN member document.
@@ -376,6 +379,29 @@ service cloud.firestore {
               || (request.resource.data.status == 'LEFT' && !isAdminOf(fund)));
       }
 
+      // Per-member aggregates move only with the deposit named in the fund's
+      // lastTxId: up by its amount when it is created, down when it is reversed.
+      // The deposit rules check the reverse direction (Invariant 2).
+      function isContributionChange(memberDocId) {
+        let before = resource.data;
+        let after = request.resource.data;
+        let path = txPath(fundId, 'deposits', getAfter(fundPath(fundId)).data.lastTxId);
+        let delta = after.totalContributed - before.get('totalContributed', 0);
+        let countDelta = after.depositCount - before.get('depositCount', 0);
+        return isMemberOf(get(fundPath(fundId)).data)
+          && changed().hasOnly(['totalContributed', 'depositCount'])
+          && existsAfter(path)
+          && getAfter(path).data.memberId == memberDocId
+          && ((!exists(path)
+               && delta == getAfter(path).data.amount
+               && countDelta == 1)
+              || (exists(path)
+               && get(path).data.get('isVoid', false) == false
+               && getAfter(path).data.isVoid == true
+               && delta == -get(path).data.amount
+               && countDelta == -1));
+      }
+
       function isMemberSelf(memberDocId) {
         return hasEmail()
           && exists(memberPath(fundId, memberDocId))
@@ -385,7 +411,8 @@ service cloud.firestore {
       match /members/{memberDocId} {
         allow read: if isMemberOf(get(fundPath(fundId)).data);
         allow create: if isCreatorMemberCreate(memberDocId) || isInviteCreate(memberDocId);
-        allow update: if isAdminMemberUpdate() || isSelfMemberUpdate();
+        allow update: if isAdminMemberUpdate() || isSelfMemberUpdate()
+                      || isContributionChange(memberDocId);
         allow delete: if false;
 
         // Strictly Admin-or-owner KYC identity PII
@@ -439,14 +466,24 @@ service cloud.firestore {
           && getAfter(fundPath(fundId)).data.lastTxId == txId;
       }
 
+      // The contributing member's totals must move by the same amount in the same write.
+      function memberTotalMovesBy(memberDocId, amount) {
+        let member = memberPath(fundId, memberDocId);
+        return exists(member)
+          && getAfter(member).data.totalContributed
+             == get(member).data.get('totalContributed', 0) + amount;
+      }
+
       match /deposits/{depositId} {
         allow read: if isMemberOf(get(fundPath(fundId)).data);
         allow create: if validLedgerCreate(depositId, 'depositId', 'depositDate')
                       && getAfter(fundPath(fundId)).data.totalDeposits
-                         == get(fundPath(fundId)).data.totalDeposits + request.resource.data.amount;
+                         == get(fundPath(fundId)).data.totalDeposits + request.resource.data.amount
+                      && memberTotalMovesBy(request.resource.data.memberId, request.resource.data.amount);
         allow update: if validVoidUpdate(depositId)
                       && getAfter(fundPath(fundId)).data.totalDeposits
-                         == get(fundPath(fundId)).data.totalDeposits - resource.data.amount;
+                         == get(fundPath(fundId)).data.totalDeposits - resource.data.amount
+                      && memberTotalMovesBy(resource.data.memberId, -resource.data.amount);
         allow delete: if false; // Financial records are immutable; reversal protocol only
       }
 

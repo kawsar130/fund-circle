@@ -1,5 +1,6 @@
 package com.fundcircle.app.data.datasource.remote
 
+import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.data.dto.CircleMemberDto
 import com.fundcircle.app.data.dto.MemberKycDto
 import com.google.firebase.firestore.FieldValue
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 
 @Singleton
 class MemberRemoteDataSourceImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val networkMonitor: NetworkMonitor
 ) : MemberRemoteDataSource {
 
     override fun observeMembers(fundId: String): Flow<List<CircleMemberDto>> = callbackFlow {
@@ -117,7 +119,7 @@ class MemberRemoteDataSourceImpl @Inject constructor(
             .collection(COLLECTION_KYC)
             .document(DOCUMENT_IDENTITY)
             .set(kyc, SetOptions.merge())
-            .await()
+            .awaitSyncOrQueue(networkMonitor)
         Result.success(Unit)
     } catch (e: CancellationException) {
         throw e
@@ -140,7 +142,7 @@ class MemberRemoteDataSourceImpl @Inject constructor(
             )
         )
 
-        batch.commit().await()
+        batch.commit().awaitSyncOrQueue(networkMonitor)
         Result.success(Unit)
     } catch (e: CancellationException) {
         throw e
@@ -163,7 +165,7 @@ class MemberRemoteDataSourceImpl @Inject constructor(
                 FIELD_STATUS to status,
                 FIELD_LAST_ACTIVE_AT to System.currentTimeMillis()
             )
-        ).await()
+        ).awaitSyncOrQueue(networkMonitor)
         Result.success(Unit)
     } catch (e: CancellationException) {
         throw e

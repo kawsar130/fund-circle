@@ -191,6 +191,7 @@
     <string name="tx_detail_recorded_by_label">Recorded By</string>
     <string name="tx_detail_recorded_at_label">Recorded At</string>
     <string name="tx_detail_btn_reverse">↩ Reverse Transaction (Admin Only)</string>
+    <string name="tx_detail_reverse_pending_sync">Reversal saved on this device. It will sync when you\'re back online.</string>
     <string name="tx_detail_circle_locked_notice">This circle is locked. Transactions cannot be reversed.</string>
     <string name="tx_detail_reverse_success">Transaction reversed successfully.</string>
     <string name="tx_detail_error_not_found">Transaction not found.</string>
@@ -473,4 +474,9 @@
     <string name="reports_preview_closing">Closing Balance:</string>
 
     <string name="hub_create_circle_dashed_btn">+ Create New Fund Circle</string>
+    <!-- Offline writes and shared errors -->
+    <string name="tx_saved_pending_sync">Saved on this device. It will sync when you\'re back online.</string>
+    <string name="error_circle_locked">This circle is locked. New transactions are paused.</string>
+    <string name="error_network_retry">Couldn\'t reach the server. Check your connection and try again.</string>
+    <string name="error_unexpected">Something went wrong. Please try again.</string>
 </resources>

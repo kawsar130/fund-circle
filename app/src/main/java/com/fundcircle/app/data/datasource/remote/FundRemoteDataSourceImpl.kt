@@ -1,5 +1,6 @@
 package com.fundcircle.app.data.datasource.remote
 
+import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.data.dto.FundCircleDto
 import com.fundcircle.app.data.dto.MemberDto
 import com.google.firebase.firestore.FieldValue
@@ -9,13 +10,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class FundRemoteDataSourceImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val networkMonitor: NetworkMonitor
 ) : FundRemoteDataSource {
 
     override fun observeUserCircles(userEmail: String): Flow<List<FundCircleDto>> = callbackFlow {
@@ -71,7 +72,7 @@ class FundRemoteDataSourceImpl @Inject constructor(
         batch.set(memberRef, adminMember)
         batch.set(userRef, mapOf(FIELD_CREATED_CIRCLE_COUNT to FieldValue.increment(1)), SetOptions.merge())
 
-        batch.commit().await()
+        batch.commit().awaitSyncOrQueue(networkMonitor)
         Result.success(Unit)
     } catch (e: CancellationException) {
         throw e
@@ -87,7 +88,7 @@ class FundRemoteDataSourceImpl @Inject constructor(
                     FIELD_IS_LOCKED to isLocked,
                     FIELD_UPDATED_AT to System.currentTimeMillis()
                 )
-            ).await()
+            ).awaitSyncOrQueue(networkMonitor)
         Result.success(Unit)
     } catch (e: CancellationException) {
         throw e
@@ -129,7 +130,7 @@ class FundRemoteDataSourceImpl @Inject constructor(
             )
         )
 
-        batch.commit().await()
+        batch.commit().awaitSyncOrQueue(networkMonitor)
         Result.success(Unit)
     } catch (e: CancellationException) {
         throw e

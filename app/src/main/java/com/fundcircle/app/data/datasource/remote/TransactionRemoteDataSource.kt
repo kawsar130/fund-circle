@@ -2,6 +2,7 @@ package com.fundcircle.app.data.datasource.remote
 
 import com.fundcircle.app.data.dto.DepositDto
 import com.fundcircle.app.data.dto.ExpenseDto
+import com.fundcircle.app.domain.model.WriteStatus
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,8 +16,8 @@ interface TransactionRemoteDataSource {
     fun observeExpenses(fundId: String): Flow<List<ExpenseDto>>
     fun observeDeposit(fundId: String, depositId: String): Flow<DepositDto?>
     fun observeExpense(fundId: String, expenseId: String): Flow<ExpenseDto?>
-    suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<Unit>
-    suspend fun recordExpense(fundId: String, expense: ExpenseDto): Result<Unit>
+    suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<WriteStatus>
+    suspend fun recordExpense(fundId: String, expense: ExpenseDto): Result<WriteStatus>
     suspend fun voidTransaction(
         fundId: String,
         isExpense: Boolean,
@@ -24,5 +25,5 @@ interface TransactionRemoteDataSource {
         originalAmount: Long,
         voidReason: String,
         adminEmail: String
-    ): Result<Unit>
+    ): Result<WriteStatus>
 }

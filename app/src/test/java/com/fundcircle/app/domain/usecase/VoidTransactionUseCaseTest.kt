@@ -1,5 +1,6 @@
 package com.fundcircle.app.domain.usecase
 
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.repository.TransactionRepository
 import com.google.common.truth.Truth.assertThat
@@ -22,7 +23,7 @@ class VoidTransactionUseCaseTest {
 
     @Before
     fun setUp() {
-        useCase = VoidTransactionUseCase(transactionRepository)
+        useCase = VoidTransactionUseCase(transactionRepository, fundRepositoryWith(fundId))
     }
 
     @Test
@@ -136,6 +137,23 @@ class VoidTransactionUseCaseTest {
     }
 
     @Test
+    fun invoke_whenCircleIsLocked_returnsCircleLockedWithoutReversing() = runTest {
+        useCase = VoidTransactionUseCase(transactionRepository, fundRepositoryWith(fundId, isLocked = true))
+
+        val result = useCase(
+            fundId = fundId,
+            isExpense = false,
+            transactionId = txId,
+            originalAmount = 25_000L,
+            voidReason = validReason,
+            adminEmail = adminEmail
+        )
+
+        assertThat(result.exceptionOrNull()).isEqualTo(FundCircleError.Business.CircleLocked)
+        coVerify(exactly = 0) { transactionRepository.voidTransaction(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
     fun invoke_whenValid_trimsInputAndDelegatesToRepository() = runTest {
         coEvery {
             transactionRepository.voidTransaction(
@@ -146,7 +164,7 @@ class VoidTransactionUseCaseTest {
                 voidReason = validReason,
                 adminEmail = adminEmail
             )
-        } returns Result.success(Unit)
+        } returns Result.success(WriteStatus.SYNCED)
 
         val result = useCase(
             fundId = fundId,

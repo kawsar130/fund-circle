@@ -11,7 +11,6 @@ import com.fundcircle.app.domain.model.MemberRole
 import com.fundcircle.app.domain.repository.AuthRepository
 import com.fundcircle.app.domain.usecase.ObserveCircleMembersUseCase
 import com.fundcircle.app.domain.usecase.ObserveCircleUseCase
-import com.fundcircle.app.domain.usecase.ObserveDepositsUseCase
 import com.fundcircle.app.presentation.common.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -24,7 +23,6 @@ import javax.inject.Inject
 class MembersRosterViewModel @Inject constructor(
     private val observeCircleMembersUseCase: ObserveCircleMembersUseCase,
     private val observeCircleUseCase: ObserveCircleUseCase,
-    private val observeDepositsUseCase: ObserveDepositsUseCase,
     private val authRepository: AuthRepository,
     private val networkMonitor: NetworkMonitor,
     savedStateHandle: SavedStateHandle
@@ -94,33 +92,16 @@ class MembersRosterViewModel @Inject constructor(
             combine(
                 observeCircleUseCase(fundId),
                 observeCircleMembersUseCase(fundId),
-                observeDepositsUseCase(fundId),
                 authRepository.userSession
-            ) { circle, members, deposits, session ->
+            ) { circle, members, session ->
                 val currentUid = session?.uid.orEmpty()
                 val currentEmail = session?.email.orEmpty()
                 val isAdmin = circle.adminId == currentUid ||
                         circle.adminEmail.equals(currentEmail, ignoreCase = true) ||
                         members.any { it.userId == currentUid && it.role == MemberRole.ADMIN }
 
-                val updatedMembers = members.map { member ->
-                    val memberDeposits = deposits.filter { dep ->
-                        dep.memberId == member.userId || dep.memberEmail.equals(member.email, ignoreCase = true)
-                    }
-                    if (memberDeposits.isNotEmpty()) {
-                        val activeSum = memberDeposits.filter { !it.isVoid }.sumOf { it.amount }
-                        member.copy(totalContributed = activeSum)
-                    } else {
-                        member
-                    }
-                }
-
-                val counts = updatedMembers.associate { member ->
-                    val count = deposits.count { dep ->
-                        !dep.isVoid && (dep.memberId == member.userId || dep.memberEmail.equals(member.email, ignoreCase = true))
-                    }
-                    member.userId to count
-                }
+                // Totals come from each member document (Invariant 2), not from scanning deposits
+                val updatedMembers = members
 
                 val filtered = filterMembers(updatedMembers, uiState.value.searchQuery)
 
@@ -130,7 +111,6 @@ class MembersRosterViewModel @Inject constructor(
                         circle = circle,
                         members = updatedMembers,
                         filteredMembers = filtered,
-                        depositCounts = counts,
                         isAdmin = isAdmin,
                         errorMessage = null
                     )

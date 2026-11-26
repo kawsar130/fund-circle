@@ -393,7 +393,7 @@ fun MembersRosterScreen(
                     ) { member ->
                         MemberCardItem(
                             member = member,
-                            depositCount = state.depositCounts[member.userId] ?: 0,
+                            depositCount = member.depositCount.toInt(),
                             currency = state.circle?.currency ?: Currency.BDT,
                             onClick = { onAction(MembersRosterUiAction.ClickMember(member.userId)) },
                             modifier = Modifier
@@ -621,6 +621,7 @@ private fun MembersRosterPreviewLight() {
                         role = MemberRole.ADMIN,
                         status = MemberStatus.ACTIVE,
                         totalContributed = 300000L,
+                        depositCount = 3L,
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     ),
@@ -633,6 +634,7 @@ private fun MembersRosterPreviewLight() {
                         role = MemberRole.MEMBER,
                         status = MemberStatus.ACTIVE,
                         totalContributed = 250000L,
+                        depositCount = 2L,
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     ),
@@ -645,6 +647,7 @@ private fun MembersRosterPreviewLight() {
                         role = MemberRole.MEMBER,
                         status = MemberStatus.INACTIVE,
                         totalContributed = 100000L,
+                        depositCount = 1L,
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     ),
@@ -657,6 +660,7 @@ private fun MembersRosterPreviewLight() {
                         role = MemberRole.MEMBER,
                         status = MemberStatus.LEFT,
                         totalContributed = 50000L,
+                        depositCount = 1L,
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     )
@@ -671,6 +675,7 @@ private fun MembersRosterPreviewLight() {
                         role = MemberRole.ADMIN,
                         status = MemberStatus.ACTIVE,
                         totalContributed = 300000L,
+                        depositCount = 3L,
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     ),
@@ -683,11 +688,11 @@ private fun MembersRosterPreviewLight() {
                         role = MemberRole.MEMBER,
                         status = MemberStatus.ACTIVE,
                         totalContributed = 250000L,
+                        depositCount = 2L,
                         joinedAt = System.currentTimeMillis(),
                         lastActiveAt = System.currentTimeMillis()
                     )
-                ),
-                depositCounts = mapOf("usr_1" to 3, "usr_2" to 2, "usr_3" to 1, "usr_4" to 1)
+                )
             ),
             onAction = {}
         )

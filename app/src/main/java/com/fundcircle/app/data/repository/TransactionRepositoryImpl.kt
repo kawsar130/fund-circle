@@ -9,6 +9,7 @@ import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.FundCircleError
 import com.fundcircle.app.domain.model.TransactionItem
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.domain.repository.TransactionRepository
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -68,18 +69,18 @@ class TransactionRepositoryImpl @Inject constructor(
             .catch { e -> throw e.toDomainError() }
             .flowOn(ioDispatcher)
 
-    override suspend fun recordDeposit(fundId: String, deposit: Deposit): Result<Unit> =
+    override suspend fun recordDeposit(fundId: String, deposit: Deposit): Result<WriteStatus> =
         withContext(ioDispatcher) {
             transactionRemoteDataSource.recordDeposit(fundId, deposit.toDto()).fold(
-                onSuccess = { Result.success(Unit) },
+                onSuccess = { Result.success(it) },
                 onFailure = { Result.failure(it.toDomainError()) }
             )
         }
 
-    override suspend fun recordExpense(fundId: String, expense: Expense): Result<Unit> =
+    override suspend fun recordExpense(fundId: String, expense: Expense): Result<WriteStatus> =
         withContext(ioDispatcher) {
             transactionRemoteDataSource.recordExpense(fundId, expense.toDto()).fold(
-                onSuccess = { Result.success(Unit) },
+                onSuccess = { Result.success(it) },
                 onFailure = { Result.failure(it.toDomainError()) }
             )
         }
@@ -91,7 +92,7 @@ class TransactionRepositoryImpl @Inject constructor(
         originalAmount: Long,
         voidReason: String,
         adminEmail: String
-    ): Result<Unit> = withContext(ioDispatcher) {
+    ): Result<WriteStatus> = withContext(ioDispatcher) {
         transactionRemoteDataSource.voidTransaction(
             fundId = fundId,
             isExpense = isExpense,
@@ -100,7 +101,7 @@ class TransactionRepositoryImpl @Inject constructor(
             voidReason = voidReason,
             adminEmail = adminEmail
         ).fold(
-            onSuccess = { Result.success(Unit) },
+            onSuccess = { Result.success(it) },
             onFailure = { error ->
                 val domainError = when (error) {
                     is IllegalStateException -> FundCircleError.Conflict.TransactionAlreadyVoided(transactionId)
@@ -119,9 +120,10 @@ class TransactionRepositoryImpl @Inject constructor(
             FirebaseFirestoreException.Code.PERMISSION_DENIED -> FundCircleError.Authorization.NotAuthorized
             FirebaseFirestoreException.Code.NOT_FOUND -> FundCircleError.NotFound.ResourceNotFound
             FirebaseFirestoreException.Code.ALREADY_EXISTS -> FundCircleError.Conflict.DuplicateEntry()
-            FirebaseFirestoreException.Code.FAILED_PRECONDITION -> FundCircleError.Conflict.CurrencyLocked
-            FirebaseFirestoreException.Code.UNAVAILABLE -> FundCircleError.Network.Timeout
-            else -> FundCircleError.Network.Timeout
+            FirebaseFirestoreException.Code.UNAVAILABLE,
+            FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> FundCircleError.Network.Timeout
+            // FAILED_PRECONDITION usually means a missing index, not a locked currency
+            else -> FundCircleError.Unexpected(code.name)
         }
         else -> this
     }

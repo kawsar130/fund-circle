@@ -1,10 +1,13 @@
 package com.fundcircle.app.data.datasource.remote
 
 import com.fundcircle.app.data.dto.DepositDto
+import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.data.dto.ExpenseDto
+import com.fundcircle.app.domain.model.WriteStatus
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +18,8 @@ import javax.inject.Singleton
 
 @Singleton
 class TransactionRemoteDataSourceImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val networkMonitor: NetworkMonitor
 ) : TransactionRemoteDataSource {
 
     override fun observeRecentDeposits(fundId: String, limit: Int): Flow<List<DepositDto>> = callbackFlow {
@@ -180,54 +184,68 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<Unit> = try {
+    override suspend fun recordDeposit(fundId: String, deposit: DepositDto): Result<WriteStatus> = try {
         val batch = firestore.batch()
         val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
         val depositRef = fundRef.collection(COLLECTION_DEPOSITS).document(deposit.depositId)
+        val memberRef = fundRef.collection(COLLECTION_MEMBERS).document(deposit.memberId)
+        val now = System.currentTimeMillis()
 
-        batch.set(depositRef, deposit)
+        batch.set(depositRef, deposit.copy(createdAt = now))
         batch.update(
             fundRef,
             mapOf(
                 FIELD_TOTAL_DEPOSITS to FieldValue.increment(deposit.amount),
                 FIELD_RECORDED_BALANCE to FieldValue.increment(deposit.amount),
-                FIELD_UPDATED_AT to System.currentTimeMillis(),
+                FIELD_UPDATED_AT to now,
                 FIELD_LAST_TX_ID to deposit.depositId
             )
         )
+        // Per-member aggregates, so the roster and reports never scan the ledger (Invariant 2)
+        batch.update(
+            memberRef,
+            mapOf(
+                FIELD_TOTAL_CONTRIBUTED to FieldValue.increment(deposit.amount),
+                FIELD_DEPOSIT_COUNT to FieldValue.increment(1L)
+            )
+        )
 
-        batch.commit().await()
-        Result.success(Unit)
+        Result.success(batch.commit().awaitSyncOrQueue(networkMonitor))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Throwable) {
         Result.failure(e)
     }
 
-    override suspend fun recordExpense(fundId: String, expense: ExpenseDto): Result<Unit> = try {
+    override suspend fun recordExpense(fundId: String, expense: ExpenseDto): Result<WriteStatus> = try {
         val batch = firestore.batch()
         val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
         val expenseRef = fundRef.collection(COLLECTION_EXPENSES).document(expense.expenseId)
+        val now = System.currentTimeMillis()
 
-        batch.set(expenseRef, expense)
+        batch.set(expenseRef, expense.copy(createdAt = now))
         batch.update(
             fundRef,
             mapOf(
                 FIELD_TOTAL_EXPENSES to FieldValue.increment(expense.amount),
                 FIELD_RECORDED_BALANCE to FieldValue.increment(-expense.amount),
-                FIELD_UPDATED_AT to System.currentTimeMillis(),
+                FIELD_UPDATED_AT to now,
                 FIELD_LAST_TX_ID to expense.expenseId
             )
         )
 
-        batch.commit().await()
-        Result.success(Unit)
+        Result.success(batch.commit().awaitSyncOrQueue(networkMonitor))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Throwable) {
         Result.failure(e)
     }
 
+    /**
+     * Reverses a deposit or expense as one atomic batch. A batch (unlike a
+     * transaction) also works offline; firestore.rules reject a second
+     * reversal of the same document, so concurrent admins can't double-void.
+     */
     override suspend fun voidTransaction(
         fundId: String,
         isExpense: Boolean,
@@ -235,53 +253,68 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         originalAmount: Long,
         voidReason: String,
         adminEmail: String
-    ): Result<Unit> = try {
-        firestore.runTransaction { transaction ->
-            val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
-            val subCollectionName = if (isExpense) COLLECTION_EXPENSES else COLLECTION_DEPOSITS
-            val txRef = fundRef.collection(subCollectionName).document(transactionId)
+    ): Result<WriteStatus> = try {
+        val fundRef = firestore.collection(COLLECTION_FUNDS).document(fundId)
+        val subCollectionName = if (isExpense) COLLECTION_EXPENSES else COLLECTION_DEPOSITS
+        val txRef = fundRef.collection(subCollectionName).document(transactionId)
 
-            val txSnapshot = transaction.get(txRef)
-            if (!txSnapshot.exists()) {
-                throw NoSuchElementException("Transaction document $transactionId does not exist.")
-            }
+        val source = if (networkMonitor.isOnlineNow()) Source.DEFAULT else Source.CACHE
+        val txSnapshot = txRef.get(source).await()
+        if (!txSnapshot.exists()) {
+            throw NoSuchElementException("Transaction document $transactionId does not exist.")
+        }
 
-            val alreadyVoid = txSnapshot.getBoolean(FIELD_IS_VOID) ?: false
-            if (alreadyVoid) {
-                throw IllegalStateException("Transaction is already reversed.")
-            }
+        val alreadyVoid = txSnapshot.getBoolean(FIELD_IS_VOID) ?: false
+        if (alreadyVoid) {
+            throw IllegalStateException("Transaction is already reversed.")
+        }
 
-            val docAmount = txSnapshot.getLong("amount")
-            val effectiveAmount = if (docAmount != null && docAmount > 0L) docAmount else originalAmount
+        val docAmount = txSnapshot.getLong(FIELD_AMOUNT)
+        val effectiveAmount = if (docAmount != null && docAmount > 0L) docAmount else originalAmount
 
-            val now = System.currentTimeMillis()
-            val childUpdates = mapOf<String, Any>(
+        val now = System.currentTimeMillis()
+        val batch = firestore.batch()
+        batch.update(
+            txRef,
+            mapOf<String, Any>(
                 FIELD_IS_VOID to true,
                 FIELD_VOID_REASON to voidReason,
                 FIELD_VOIDED_BY to adminEmail,
                 FIELD_VOIDED_AT to now
             )
-            transaction.update(txRef, childUpdates)
+        )
 
-            val parentUpdates = if (isExpense) {
-                mapOf<String, Any>(
-                    FIELD_TOTAL_EXPENSES to FieldValue.increment(-effectiveAmount),
-                    FIELD_RECORDED_BALANCE to FieldValue.increment(effectiveAmount),
-                    FIELD_UPDATED_AT to now,
-                    FIELD_LAST_TX_ID to transactionId
-                )
-            } else {
-                mapOf<String, Any>(
-                    FIELD_TOTAL_DEPOSITS to FieldValue.increment(-effectiveAmount),
-                    FIELD_RECORDED_BALANCE to FieldValue.increment(-effectiveAmount),
-                    FIELD_UPDATED_AT to now,
-                    FIELD_LAST_TX_ID to transactionId
+        val parentUpdates = if (isExpense) {
+            mapOf<String, Any>(
+                FIELD_TOTAL_EXPENSES to FieldValue.increment(-effectiveAmount),
+                FIELD_RECORDED_BALANCE to FieldValue.increment(effectiveAmount),
+                FIELD_UPDATED_AT to now,
+                FIELD_LAST_TX_ID to transactionId
+            )
+        } else {
+            mapOf<String, Any>(
+                FIELD_TOTAL_DEPOSITS to FieldValue.increment(-effectiveAmount),
+                FIELD_RECORDED_BALANCE to FieldValue.increment(-effectiveAmount),
+                FIELD_UPDATED_AT to now,
+                FIELD_LAST_TX_ID to transactionId
+            )
+        }
+        batch.update(fundRef, parentUpdates)
+
+        if (!isExpense) {
+            val memberId = txSnapshot.getString(FIELD_MEMBER_ID).orEmpty()
+            if (memberId.isNotBlank()) {
+                batch.update(
+                    fundRef.collection(COLLECTION_MEMBERS).document(memberId),
+                    mapOf<String, Any>(
+                        FIELD_TOTAL_CONTRIBUTED to FieldValue.increment(-effectiveAmount),
+                        FIELD_DEPOSIT_COUNT to FieldValue.increment(-1L)
+                    )
                 )
             }
-            transaction.update(fundRef, parentUpdates)
-            null
-        }.await()
-        Result.success(Unit)
+        }
+
+        Result.success(batch.commit().awaitSyncOrQueue(networkMonitor))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Throwable) {
@@ -292,12 +325,17 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         private const val COLLECTION_FUNDS = "funds"
         private const val COLLECTION_DEPOSITS = "deposits"
         private const val COLLECTION_EXPENSES = "expenses"
+        private const val COLLECTION_MEMBERS = "members"
         private const val FIELD_DEPOSIT_DATE = "depositDate"
         private const val FIELD_EXPENSE_DATE = "expenseDate"
         private const val FIELD_TOTAL_DEPOSITS = "totalDeposits"
         private const val FIELD_TOTAL_EXPENSES = "totalExpenses"
         private const val FIELD_RECORDED_BALANCE = "recordedBalance"
         private const val FIELD_UPDATED_AT = "updatedAt"
+        private const val FIELD_AMOUNT = "amount"
+        private const val FIELD_MEMBER_ID = "memberId"
+        private const val FIELD_TOTAL_CONTRIBUTED = "totalContributed"
+        private const val FIELD_DEPOSIT_COUNT = "depositCount"
 
         /** Names the ledger document behind each aggregate change; firestore.rules verifies the pairing. */
         private const val FIELD_LAST_TX_ID = "lastTxId"

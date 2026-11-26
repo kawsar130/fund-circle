@@ -1,5 +1,6 @@
 package com.fundcircle.app.data.repository
 
+import com.fundcircle.app.domain.model.WriteStatus
 import com.fundcircle.app.data.datasource.remote.TransactionRemoteDataSource
 import com.fundcircle.app.data.dto.DepositDto
 import com.fundcircle.app.data.dto.ExpenseDto
@@ -317,7 +318,7 @@ class TransactionRepositoryImplTest {
     @Test
     fun recordDeposit_callsRemoteDataSource_andReturnsSuccess() = runTest(testDispatcher) {
         val depositSlot = slot<DepositDto>()
-        coEvery { remoteDataSource.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(Unit)
+        coEvery { remoteDataSource.recordDeposit(fundId, capture(depositSlot)) } returns Result.success(WriteStatus.SYNCED)
 
         val deposit = Deposit(
             id = "uuid-dep-1",
@@ -343,7 +344,7 @@ class TransactionRepositoryImplTest {
     @Test
     fun recordExpense_callsRemoteDataSource_andReturnsSuccess() = runTest(testDispatcher) {
         val expenseSlot = slot<ExpenseDto>()
-        coEvery { remoteDataSource.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(Unit)
+        coEvery { remoteDataSource.recordExpense(fundId, capture(expenseSlot)) } returns Result.success(WriteStatus.SYNCED)
 
         val expense = Expense(
             id = "uuid-exp-1",
@@ -474,7 +475,7 @@ class TransactionRepositoryImplTest {
                 voidReason = "Accidental duplicate entry",
                 adminEmail = "admin@example.com"
             )
-        } returns Result.success(Unit)
+        } returns Result.success(WriteStatus.SYNCED)
 
         val result = repository.voidTransaction(
             fundId = fundId,
@@ -509,7 +510,7 @@ class TransactionRepositoryImplTest {
                 voidReason = "Incorrect invoice billed",
                 adminEmail = "admin@example.com"
             )
-        } returns Result.success(Unit)
+        } returns Result.success(WriteStatus.SYNCED)
 
         val result = repository.voidTransaction(
             fundId = fundId,
