@@ -47,7 +47,6 @@ class TransactionDtoMapperTest {
         assertThat(item.paymentMethod).isEqualTo(PaymentMethod.BANK_TRANSFER)
         assertThat(item.isVoid).isFalse()
         assertThat(item.category).isNull()
-        assertThat(item.subtitle).contains("Bank Transfer")
     }
 
     @Test
@@ -111,11 +110,10 @@ class TransactionDtoMapperTest {
         assertThat(item.paymentMethod).isEqualTo(PaymentMethod.CASH)
         assertThat(item.category).isEqualTo(ExpenseCategory.OFFICE_AND_ADMINISTRATION)
         assertThat(item.isVoid).isFalse()
-        assertThat(item.subtitle).contains("Cash")
     }
 
     @Test
-    fun expenseDto_fallbackToCategoryNameWhenDescriptionIsBlank() {
+    fun expenseDto_blankDescription_leavesTitleBlankForTheUiToShowTheLocalizedCategory() {
         val dto = ExpenseDto(
             expenseId = "exp-201",
             fundId = "fund-1",
@@ -128,7 +126,47 @@ class TransactionDtoMapperTest {
 
         val item = dto.toTransactionItem()
 
-        assertThat(item.title).isEqualTo("Travel & Transportation")
+        assertThat(item.title).isEmpty()
+        assertThat(item.category).isEqualTo(ExpenseCategory.TRAVEL_AND_TRANSPORTATION)
+        assertThat(item.paymentMethod).isEqualTo(PaymentMethod.MOBILE_BANKING)
+    }
+
+    @Test
+    fun wireValues_matchTheApiSpecificationExactly() {
+        // These strings are what Firestore stores and the CSV exports; changing one breaks existing data.
+        assertThat(PaymentMethod.entries.map { it.wireValue })
+            .containsExactly("Cash", "Bank Transfer", "Mobile Banking").inOrder()
+        assertThat(ExpenseCategory.entries.map { it.wireValue }).containsExactly(
+            "Office & Administration",
+            "Travel & Transportation",
+            "Bank & Transaction Charges",
+            "Legal & Documentation",
+            "Meetings & Events",
+            "Utilities & Communication",
+            "Rent & Maintenance",
+            "Others"
+        ).inOrder()
+    }
+
+    @Test
+    fun domainToDto_writesWireValuesNotEnumNames() {
+        val expense = Expense(
+            id = "exp-1",
+            fundId = "fund-1",
+            amount = 500L,
+            expenseDate = 1_700_000_000_000L,
+            category = ExpenseCategory.BANK_AND_TRANSACTION_CHARGES,
+            description = "",
+            paymentMethod = PaymentMethod.MOBILE_BANKING,
+            paidBy = "Admin",
+            createdBy = "uid-1",
+            creatorEmail = "admin@example.com"
+        )
+
+        val dto = expense.toDto()
+
+        assertThat(dto.category).isEqualTo("Bank & Transaction Charges")
+        assertThat(dto.paymentMethod).isEqualTo("Mobile Banking")
     }
 
     @Test

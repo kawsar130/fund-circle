@@ -15,7 +15,9 @@ data class CircleHubUiState(
     val currentUser: UserSession? = null,
     val totalCircleCount: Int = 0,
     val isOffline: Boolean = false,
-    val errorMessage: UiText? = null
+    val errorMessage: UiText? = null,
+    val showSignOutConfirm: Boolean = false,
+    val isSigningOut: Boolean = false
 ) : UiState {
     val canCreateMoreCircles: Boolean get() = totalCircleCount < 5
     val isEmpty: Boolean get() = !isLoading && managedCircles.isEmpty() && joinedCircles.isEmpty()
@@ -26,7 +28,10 @@ sealed interface CircleHubUiAction : UiAction {
     data object CreateCircleClicked : CircleHubUiAction
     data object RefreshTriggered : CircleHubUiAction
     data object DismissError : CircleHubUiAction
+    /** Top-bar sign-out icon: asks for confirmation first. */
     data object SignOutClicked : CircleHubUiAction
+    data object ConfirmSignOut : CircleHubUiAction
+    data object DismissSignOut : CircleHubUiAction
 }
 
 sealed interface CircleHubUiEffect : UiEffect {

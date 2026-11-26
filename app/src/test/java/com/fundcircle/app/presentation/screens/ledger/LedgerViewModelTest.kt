@@ -2,6 +2,7 @@ package com.fundcircle.app.presentation.screens.ledger
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.Deposit
@@ -244,6 +245,79 @@ class LedgerViewModelTest {
         advanceUntilIdle()
 
         assertThat(viewModel.uiState.value.expenses).containsExactly(expense1, expense2)
+    }
+
+    /** Noon on the given day in the device time zone, as a recorded transaction timestamp. */
+    private fun localNoon(year: Int, month: Int, day: Int): Long =
+        java.util.Calendar.getInstance().apply {
+            clear()
+            set(year, month, day, 12, 0, 0)
+        }.timeInMillis
+
+    private fun pickerRange(from: Long, to: Long) = LedgerDateRange(
+        startUtcDay = DateUtils.localEpochToDatePickerUtc(from),
+        endUtcDay = DateUtils.localEpochToDatePickerUtc(to)
+    )
+
+    @Test
+    fun filterByDateRange_keepsOnlyTransactionsOnThePickedDays() = runTest {
+        val nov3 = localNoon(2026, java.util.Calendar.NOVEMBER, 3)
+        val nov10 = localNoon(2026, java.util.Calendar.NOVEMBER, 10)
+        val nov20 = localNoon(2026, java.util.Calendar.NOVEMBER, 20)
+        depositsFlow.value = listOf(
+            deposit1.copy(id = "early", depositDate = nov3),
+            deposit1.copy(id = "inside", depositDate = nov10),
+            deposit2.copy(id = "late", depositDate = nov20)
+        )
+        expensesFlow.value = listOf(
+            expense1.copy(id = "exp-inside", expenseDate = nov10),
+            expense2.copy(id = "exp-late", expenseDate = nov20)
+        )
+        advanceUntilIdle()
+
+        val range = pickerRange(localNoon(2026, java.util.Calendar.NOVEMBER, 5), localNoon(2026, java.util.Calendar.NOVEMBER, 15))
+        viewModel.onAction(LedgerUiAction.FilterByDateRange(range))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertThat(state.filterDateRange).isEqualTo(range)
+        assertThat(state.deposits.map { it.id }).containsExactly("inside")
+        assertThat(state.expenses.map { it.id }).containsExactly("exp-inside")
+    }
+
+    @Test
+    fun filterByDateRange_combinesWithThePaymentMethodFilter() = runTest {
+        val nov10 = localNoon(2026, java.util.Calendar.NOVEMBER, 10)
+        depositsFlow.value = listOf(
+            deposit1.copy(id = "bank", depositDate = nov10),
+            deposit2.copy(id = "cash", depositDate = nov10)
+        )
+        advanceUntilIdle()
+
+        viewModel.onAction(LedgerUiAction.FilterByDateRange(pickerRange(nov10, nov10)))
+        viewModel.onAction(LedgerUiAction.FilterByPaymentMethod(PaymentMethod.CASH))
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.deposits.map { it.id }).containsExactly("cash")
+    }
+
+    @Test
+    fun filterByDateRange_null_showsAllDatesAgain() = runTest {
+        val nov10 = localNoon(2026, java.util.Calendar.NOVEMBER, 10)
+        depositsFlow.value = listOf(
+            deposit1.copy(id = "a", depositDate = nov10),
+            deposit2.copy(id = "b", depositDate = localNoon(2026, java.util.Calendar.NOVEMBER, 20))
+        )
+        advanceUntilIdle()
+        viewModel.onAction(LedgerUiAction.FilterByDateRange(pickerRange(nov10, nov10)))
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.deposits).hasSize(1)
+
+        viewModel.onAction(LedgerUiAction.FilterByDateRange(null))
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.filterDateRange).isNull()
+        assertThat(viewModel.uiState.value.deposits.map { it.id }).containsExactly("b", "a").inOrder()
     }
 
     @Test

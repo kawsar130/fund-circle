@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -49,6 +50,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -314,6 +316,56 @@ fun CircleHubScreen(
             }
         }
     }
+
+    if (state.showSignOutConfirm) {
+        SignOutConfirmDialog(
+            isSigningOut = state.isSigningOut,
+            onConfirm = { onAction(CircleHubUiAction.ConfirmSignOut) },
+            onDismiss = { onAction(CircleHubUiAction.DismissSignOut) }
+        )
+    }
+}
+
+@Composable
+private fun SignOutConfirmDialog(
+    isSigningOut: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!isSigningOut) onDismiss() },
+        title = {
+            Text(
+                text = stringResource(R.string.hub_sign_out_dialog_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.hub_sign_out_dialog_body),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !isSigningOut,
+                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+            ) {
+                Text(stringResource(R.string.hub_sign_out_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSigningOut,
+                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+            ) {
+                Text(stringResource(R.string.hub_sign_out_dialog_cancel))
+            }
+        }
+    )
 }
 
 @Composable

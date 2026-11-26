@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.transaction
 
+import com.fundcircle.app.presentation.common.asUiText
 import java.util.UUID
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.animation.AnimatedVisibility
@@ -532,7 +533,7 @@ private fun DepositForm(
                     onClick = { onAction(RecordTransactionUiAction.SelectPaymentMethod(method)) },
                     label = {
                         Text(
-                            text = if (isSelected) "${method.displayName} ✓" else method.displayName,
+                            text = if (isSelected) "${method.asUiText().asString()} ✓" else method.asUiText().asString(),
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     },
@@ -682,7 +683,7 @@ private fun ExpenseForm(
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = "${state.category.iconEmoji()} ${state.category.displayName}",
+                value = "${state.category.iconEmoji()} ${state.category.asUiText().asString()}",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(stringResource(R.string.modal_add_tx_category_label)) },
@@ -698,7 +699,7 @@ private fun ExpenseForm(
             ) {
                 ExpenseCategory.entries.forEach { category ->
                     DropdownMenuItem(
-                        text = { Text("${category.iconEmoji()} ${category.displayName}") },
+                        text = { Text("${category.iconEmoji()} ${category.asUiText().asString()}") },
                         onClick = {
                             onAction(RecordTransactionUiAction.SelectCategory(category))
                             categoryDropdownExpanded = false
@@ -753,7 +754,7 @@ private fun ExpenseForm(
                     onClick = { onAction(RecordTransactionUiAction.SelectPaymentMethod(method)) },
                     label = {
                         Text(
-                            text = if (isSelected) "${method.displayName} ✓" else method.displayName,
+                            text = if (isSelected) "${method.asUiText().asString()} ✓" else method.asUiText().asString(),
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     },

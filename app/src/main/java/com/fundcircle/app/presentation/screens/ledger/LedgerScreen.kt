@@ -40,6 +40,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,16 +54,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -85,6 +93,7 @@ import com.fundcircle.app.domain.model.Deposit
 import com.fundcircle.app.domain.model.Expense
 import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.PaymentMethod
+import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.components.ReversedBadge
 import com.fundcircle.app.presentation.components.SegmentedControl
 import com.fundcircle.app.presentation.components.SegmentedItem
@@ -92,7 +101,10 @@ import com.fundcircle.app.presentation.theme.DesignTokens
 import com.fundcircle.app.presentation.theme.FundCircleTheme
 import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun TransactionsLedgerRoute(
@@ -152,6 +164,7 @@ fun TransactionsLedgerScreen(
     bottomBar: @Composable () -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    var showDateRangePicker by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -328,13 +341,10 @@ fun TransactionsLedgerScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (state.selectedTab == LedgerTab.DEPOSITS) {
-                        // Deposits View: All Dates + Payment Method Filters
-                        FilterChip(
-                            selected = true,
-                            onClick = { /* Date range selector */ },
-                            label = { Text(stringResource(R.string.ledger_filter_all_dates)) },
-                            modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
-                            colors = FilterChipDefaults.filterChipColors()
+                        // Deposits View: Date Range + Payment Method Filters
+                        DateRangeFilterChip(
+                            range = state.filterDateRange,
+                            onClick = { showDateRangePicker = true }
                         )
                         FilterChip(
                             selected = state.filterPaymentMethod == null,
@@ -347,13 +357,17 @@ fun TransactionsLedgerScreen(
                             FilterChip(
                                 selected = state.filterPaymentMethod == method,
                                 onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(method)) },
-                                label = { Text(method.displayName) },
+                                label = { Text(method.asUiText().asString()) },
                                 modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
                                 colors = FilterChipDefaults.filterChipColors()
                             )
                         }
                     } else {
-                        // Expenses View: Category Chips + Payment Method Filters
+                        // Expenses View: Date Range + Category Chips + Payment Method Filters
+                        DateRangeFilterChip(
+                            range = state.filterDateRange,
+                            onClick = { showDateRangePicker = true }
+                        )
                         FilterChip(
                             selected = state.filterCategory == null,
                             onClick = { onAction(LedgerUiAction.FilterByCategory(null)) },
@@ -365,7 +379,7 @@ fun TransactionsLedgerScreen(
                             FilterChip(
                                 selected = state.filterCategory == category,
                                 onClick = { onAction(LedgerUiAction.FilterByCategory(category)) },
-                                label = { Text(category.displayName) },
+                                label = { Text(category.asUiText().asString()) },
                                 modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
                                 colors = FilterChipDefaults.filterChipColors()
                             )
@@ -381,7 +395,7 @@ fun TransactionsLedgerScreen(
                             FilterChip(
                                 selected = state.filterPaymentMethod == method,
                                 onClick = { onAction(LedgerUiAction.FilterByPaymentMethod(method)) },
-                                label = { Text(method.displayName) },
+                                label = { Text(method.asUiText().asString()) },
                                 modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
                                 colors = FilterChipDefaults.filterChipColors()
                             )
@@ -462,7 +476,115 @@ fun TransactionsLedgerScreen(
             }
         }
     }
+
+    if (showDateRangePicker) {
+        LedgerDateRangePickerDialog(
+            initialRange = state.filterDateRange,
+            onApply = { range ->
+                showDateRangePicker = false
+                onAction(LedgerUiAction.FilterByDateRange(range))
+            },
+            onDismiss = { showDateRangePicker = false }
+        )
+    }
 }
+
+/** Shows "All Dates" with no filter, or the picked range ("3 Nov – 20 Nov 2026") once one is set. */
+@Composable
+private fun DateRangeFilterChip(
+    range: LedgerDateRange?,
+    onClick: () -> Unit
+) {
+    val label = if (range == null) {
+        stringResource(R.string.ledger_filter_all_dates)
+    } else {
+        stringResource(
+            R.string.ledger_filter_date_range,
+            formatPickerDay(range.startUtcDay),
+            formatPickerDay(range.endUtcDay)
+        )
+    }
+    FilterChip(
+        selected = range != null,
+        onClick = onClick,
+        label = { Text(label) },
+        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget),
+        colors = FilterChipDefaults.filterChipColors()
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LedgerDateRangePickerDialog(
+    initialRange: LedgerDateRange?,
+    onApply: (LedgerDateRange?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val pickerState = rememberDateRangePickerState(
+        initialSelectedStartDateMillis = initialRange?.startUtcDay,
+        initialSelectedEndDateMillis = initialRange?.endUtcDay,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                DateUtils.isDatePickerDateSelectable(utcTimeMillis)
+        }
+    )
+    val start = pickerState.selectedStartDateMillis
+    // A single tapped day counts as a one-day range.
+    val end = pickerState.selectedEndDateMillis ?: start
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = { if (start != null && end != null) onApply(LedgerDateRange(start, end)) },
+                enabled = start != null,
+                modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+            ) {
+                Text(stringResource(R.string.ledger_date_range_apply))
+            }
+        },
+        dismissButton = {
+            Row {
+                if (initialRange != null) {
+                    TextButton(
+                        onClick = { onApply(null) },
+                        modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                    ) {
+                        Text(stringResource(R.string.ledger_date_range_clear))
+                    }
+                }
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.defaultMinSize(minHeight = DesignTokens.MinTouchTarget)
+                ) {
+                    Text(stringResource(R.string.date_picker_cancel))
+                }
+            }
+        }
+    ) {
+        DateRangePicker(
+            state = pickerState,
+            title = {
+                Text(
+                    text = stringResource(R.string.ledger_date_range_title),
+                    modifier = Modifier.padding(
+                        start = DesignTokens.Spacing24,
+                        end = DesignTokens.Spacing12,
+                        top = DesignTokens.Spacing16
+                    )
+                )
+            },
+            showModeToggle = false,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/** Formats a DateRangePicker value (UTC midnight) as its calendar day, e.g. "3 Nov 2026". */
+private fun formatPickerDay(utcDay: Long): String =
+    SimpleDateFormat("d MMM yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(Date(utcDay))
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -660,9 +782,9 @@ private fun DepositItemCard(
                 )
             } else {
                 if (!deposit.note.isNullOrBlank()) {
-                    "${deposit.note} • ${deposit.paymentMethod.displayName}"
+                    stringResource(R.string.dashboard_tx_subtitle, deposit.note.orEmpty(), deposit.paymentMethod.asUiText().asString())
                 } else {
-                    deposit.paymentMethod.displayName
+                    deposit.paymentMethod.asUiText().asString()
                 }
             }
             Text(
@@ -704,7 +826,7 @@ private fun ExpenseItemCard(
     val formattedDate = remember(expense.expenseDate) {
         DateUtils.formatDisplayDate(expense.expenseDate)
     }
-    val displayTitle = expense.description.ifBlank { expense.category.displayName }
+    val displayTitle = expense.description.ifBlank { expense.category.asUiText().asString() }
     val a11yDesc = if (expense.isVoid) {
         stringResource(R.string.dashboard_tx_card_reversed_cd, displayTitle, currency.symbol, formattedAmount)
     } else {
@@ -780,7 +902,11 @@ private fun ExpenseItemCard(
                     formattedAmount
                 )
             } else {
-                "${expense.category.displayName} • ${expense.paymentMethod.displayName}"
+                stringResource(
+                    R.string.dashboard_tx_subtitle,
+                    expense.category.asUiText().asString(),
+                    expense.paymentMethod.asUiText().asString()
+                )
             }
             Text(
                 text = row2Text,

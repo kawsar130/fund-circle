@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members.detail
 
+import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.common.extractInitials
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -905,7 +906,7 @@ private fun DepositItemRow(
 
             // Row 2: Date • Payment Method
             Text(
-                text = "$formattedDate • ${deposit.paymentMethod.displayName}",
+                text = stringResource(R.string.dashboard_tx_subtitle, formattedDate, deposit.paymentMethod.asUiText().asString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

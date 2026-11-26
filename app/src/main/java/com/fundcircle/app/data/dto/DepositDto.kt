@@ -1,6 +1,5 @@
 package com.fundcircle.app.data.dto
 
-import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.TransactionItem
 import com.google.firebase.firestore.IgnoreExtraProperties
@@ -37,16 +36,13 @@ data class DepositDto(
 fun DepositDto.toTransactionItem(): TransactionItem {
     val method = PaymentMethod.fromString(paymentMethod)
     val effectiveTimestamp = if (depositDate > 0L) depositDate else createdAt
-    val formattedDate = DateUtils.formatDisplayDate(effectiveTimestamp)
     val displayTitle = memberName.ifBlank { memberEmail }
-    val displaySubtitle = "$formattedDate • ${method.displayName}"
 
     return TransactionItem(
         id = depositId,
         fundId = fundId,
         isExpense = false,
         title = displayTitle,
-        subtitle = displaySubtitle,
         amount = amount,
         timestamp = effectiveTimestamp,
         paymentMethod = method,
@@ -89,7 +85,7 @@ fun com.fundcircle.app.domain.model.Deposit.toDto(): DepositDto = DepositDto(
     memberName = memberName,
     amount = amount,
     depositDate = depositDate,
-    paymentMethod = paymentMethod.displayName,
+    paymentMethod = paymentMethod.wireValue,
     note = note,
     isVoid = isVoid,
     voidReason = voidMetadata?.reason,

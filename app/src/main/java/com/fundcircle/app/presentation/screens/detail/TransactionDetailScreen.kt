@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail
 
+import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -416,7 +417,7 @@ fun TransactionDetailScreen(
                             uiState.expense?.let { exp ->
                                 DetailRow(
                                     label = stringResource(R.string.tx_detail_category_label),
-                                    value = exp.category.displayName
+                                    value = exp.category.asUiText().asString()
                                 )
                                 DetailRow(
                                     label = stringResource(R.string.tx_detail_description_label),
@@ -428,7 +429,7 @@ fun TransactionDetailScreen(
                                 )
                                 DetailRow(
                                     label = stringResource(R.string.tx_detail_method_label),
-                                    value = exp.paymentMethod.displayName
+                                    value = exp.paymentMethod.asUiText().asString()
                                 )
                                 if (exp.paidBy.isNotBlank()) {
                                     DetailRow(
@@ -465,7 +466,7 @@ fun TransactionDetailScreen(
                                 )
                                 DetailRow(
                                     label = stringResource(R.string.tx_detail_method_label),
-                                    value = dep.paymentMethod.displayName
+                                    value = dep.paymentMethod.asUiText().asString()
                                 )
                                 dep.note?.takeIf { it.isNotBlank() }?.let { note ->
                                     DetailRow(

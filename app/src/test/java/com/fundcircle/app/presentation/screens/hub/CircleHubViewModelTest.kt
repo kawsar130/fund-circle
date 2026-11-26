@@ -109,15 +109,70 @@ class CircleHubViewModelTest {
     }
 
     @Test
-    fun signOutClicked_callsSignOutAndEmitsNavigateToAuth() = runTest {
+    fun signOutClicked_onlyAsksForConfirmation() = runTest {
         viewModel.uiEffect.test {
             viewModel.onAction(CircleHubUiAction.SignOutClicked)
             testDispatcher.scheduler.advanceUntilIdle()
 
-            coVerify(exactly = 1) { signOutUseCase() }
-            val effect = awaitItem()
-            assertThat(effect).isEqualTo(CircleHubUiEffect.NavigateToAuth)
+            assertThat(viewModel.uiState.value.showSignOutConfirm).isTrue()
+            coVerify(exactly = 0) { signOutUseCase() }
+            expectNoEvents()
         }
+    }
+
+    @Test
+    fun dismissSignOut_closesTheDialogWithoutSigningOut() = runTest {
+        viewModel.onAction(CircleHubUiAction.SignOutClicked)
+        viewModel.onAction(CircleHubUiAction.DismissSignOut)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.showSignOutConfirm).isFalse()
+        coVerify(exactly = 0) { signOutUseCase() }
+    }
+
+    @Test
+    fun confirmSignOut_signsOutAndEmitsNavigateToAuth() = runTest {
+        coEvery { signOutUseCase() } returns Result.success(Unit)
+
+        viewModel.uiEffect.test {
+            viewModel.onAction(CircleHubUiAction.SignOutClicked)
+            viewModel.onAction(CircleHubUiAction.ConfirmSignOut)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { signOutUseCase() }
+            assertThat(awaitItem()).isEqualTo(CircleHubUiEffect.NavigateToAuth)
+            assertThat(viewModel.uiState.value.showSignOutConfirm).isFalse()
+            assertThat(viewModel.uiState.value.isSigningOut).isFalse()
+        }
+    }
+
+    @Test
+    fun confirmSignOut_whenSignOutFails_staysOnHubAndShowsAnError() = runTest {
+        coEvery { signOutUseCase() } returns Result.failure(IllegalStateException("boom"))
+
+        viewModel.uiEffect.test {
+            viewModel.onAction(CircleHubUiAction.SignOutClicked)
+            viewModel.onAction(CircleHubUiAction.ConfirmSignOut)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertThat(awaitItem()).isEqualTo(
+                CircleHubUiEffect.ShowSnackbar(UiText.StringResource(R.string.hub_sign_out_failed))
+            )
+            expectNoEvents()
+            assertThat(viewModel.uiState.value.showSignOutConfirm).isFalse()
+        }
+    }
+
+    @Test
+    fun confirmSignOut_tappedTwice_signsOutOnce() = runTest {
+        coEvery { signOutUseCase() } returns Result.success(Unit)
+
+        viewModel.onAction(CircleHubUiAction.SignOutClicked)
+        viewModel.onAction(CircleHubUiAction.ConfirmSignOut)
+        viewModel.onAction(CircleHubUiAction.ConfirmSignOut)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { signOutUseCase() }
     }
 
     @Test

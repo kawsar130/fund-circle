@@ -45,6 +45,13 @@ class LedgerViewModel @Inject constructor(
     private val searchQuery = MutableStateFlow("")
     private val filterPaymentMethod = MutableStateFlow<PaymentMethod?>(null)
     private val filterCategory = MutableStateFlow<ExpenseCategory?>(null)
+    private val filterDateRange = MutableStateFlow<LedgerDateRange?>(null)
+
+    private data class Filters(
+        val method: PaymentMethod?,
+        val category: ExpenseCategory?,
+        val dateRange: LedgerDateRange?
+    )
 
     private var ledgerJob: Job? = null
 
@@ -70,6 +77,10 @@ class LedgerViewModel @Inject constructor(
             is LedgerUiAction.FilterByCategory -> {
                 filterCategory.value = action.category
                 setState { copy(filterCategory = action.category) }
+            }
+            is LedgerUiAction.FilterByDateRange -> {
+                filterDateRange.value = action.range
+                setState { copy(filterDateRange = action.range) }
             }
             is LedgerUiAction.ClickTransaction -> {
                 sendEffect(
@@ -175,32 +186,36 @@ class LedgerViewModel @Inject constructor(
 
     private fun observeFilterPipeline() {
         viewModelScope.launch {
+            val filters = combine(filterPaymentMethod, filterCategory, filterDateRange) { method, category, range ->
+                Filters(method, category, range)
+            }
             combine(
                 rawDeposits,
                 rawExpenses,
                 searchQuery,
-                filterPaymentMethod,
-                filterCategory
-            ) { deposits, expenses, query, method, category ->
+                filters
+            ) { deposits, expenses, query, (method, category, dateRange) ->
                 val trimmedQuery = query.trim()
 
                 val filteredDeposits = deposits.filter { dep ->
+                    val matchesDate = dateRange == null || dateRange.contains(dep.depositDate)
                     val matchesMethod = method == null || dep.paymentMethod == method
                     val matchesQuery = trimmedQuery.isBlank() ||
                         dep.memberName.contains(trimmedQuery, ignoreCase = true) ||
                         dep.memberEmail.contains(trimmedQuery, ignoreCase = true) ||
                         dep.note?.contains(trimmedQuery, ignoreCase = true) == true
-                    matchesMethod && matchesQuery
+                    matchesDate && matchesMethod && matchesQuery
                 }.sortedWith(compareByDescending<Deposit> { it.depositDate }.thenByDescending { it.id })
 
                 val filteredExpenses = expenses.filter { exp ->
+                    val matchesDate = dateRange == null || dateRange.contains(exp.expenseDate)
                     val matchesMethod = method == null || exp.paymentMethod == method
                     val matchesCategory = category == null || exp.category == category
                     val matchesQuery = trimmedQuery.isBlank() ||
                         exp.description.contains(trimmedQuery, ignoreCase = true) ||
                         exp.paidBy.contains(trimmedQuery, ignoreCase = true) ||
-                        exp.category.displayName.contains(trimmedQuery, ignoreCase = true)
-                    matchesMethod && matchesCategory && matchesQuery
+                        exp.category.wireValue.contains(trimmedQuery, ignoreCase = true)
+                    matchesDate && matchesMethod && matchesCategory && matchesQuery
                 }.sortedWith(compareByDescending<Expense> { it.expenseDate }.thenByDescending { it.id })
 
                 Pair(filteredDeposits, filteredExpenses)

@@ -54,8 +54,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signOut(): Result<Unit> = withContext(ioDispatcher) {
         try {
-            authRemoteDataSource.signOut()
-            sessionLocalDataSource.clearSession()
+            try {
+                authRemoteDataSource.signOut()
+            } finally {
+                // The cached session (active circle, profile) is wiped even if the remote call failed.
+                sessionLocalDataSource.clearSession()
+            }
             Result.success(Unit)
         } catch (e: CancellationException) {
             throw e
