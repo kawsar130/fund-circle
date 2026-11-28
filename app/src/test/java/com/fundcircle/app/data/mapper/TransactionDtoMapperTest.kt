@@ -17,6 +17,7 @@ import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.VoidMetadata
 import com.google.common.truth.Truth.assertThat
+import com.google.firebase.firestore.util.CustomClassMapper
 import org.junit.Test
 
 class TransactionDtoMapperTest {
@@ -83,6 +84,75 @@ class TransactionDtoMapperTest {
 
         assertThat(item.isVoid).isTrue()
         assertThat(item.amount).isEqualTo(75_000L)
+        assertThat(item.voidReason).isEqualTo("Typo in entry")
+    }
+
+    @Test
+    fun transactionItem_hasNoVoidReasonUnlessReversed() {
+        val active = DepositDto(
+            depositId = "dep-1", fundId = "fund-1", memberName = "Rahim", amount = 500L,
+            depositDate = 1_700_000_000_000L, paymentMethod = "Cash",
+            isVoid = false, voidReason = "stale reason left on an active document"
+        )
+        val voidBlankReason = active.copy(isVoid = true, voidReason = "  ")
+
+        assertThat(active.toTransactionItem().voidReason).isNull()
+        assertThat(voidBlankReason.toTransactionItem().voidReason).isNull()
+    }
+
+    @Test
+    fun expenseDto_toTransactionItem_carriesTheReversalReason() {
+        val dto = ExpenseDto(
+            expenseId = "exp-void", fundId = "fund-1", amount = 5_000L,
+            expenseDate = 1_700_000_000_000L, category = "Office & Administration",
+            description = "Office Supplies", paymentMethod = "Cash",
+            isVoid = true, voidReason = "Duplicate bank payment voucher entry."
+        )
+
+        assertThat(dto.toTransactionItem().voidReason).isEqualTo("Duplicate bank payment voucher entry.")
+    }
+
+    @Test
+    fun pendingSync_flowsFromTheSnapshotDtoToListItemsAndDomainModels() {
+        val deposit = DepositDto(
+            depositId = "dep-offline", fundId = "fund-1", memberName = "Rahim", amount = 700L,
+            depositDate = 1_700_000_000_000L, paymentMethod = "Cash", isPendingSync = true
+        )
+        val expense = ExpenseDto(
+            expenseId = "exp-offline", fundId = "fund-1", amount = 300L,
+            expenseDate = 1_700_000_000_000L, category = "Office & Administration",
+            description = "Printer paper", paymentMethod = "Cash", isPendingSync = true
+        )
+
+        assertThat(deposit.toTransactionItem().isPendingSync).isTrue()
+        assertThat(deposit.toDomain().isPendingSync).isTrue()
+        assertThat(expense.toTransactionItem().isPendingSync).isTrue()
+        assertThat(expense.toDomain().isPendingSync).isTrue()
+        assertThat(deposit.copy(isPendingSync = false).toTransactionItem().isPendingSync).isFalse()
+    }
+
+    @Test
+    fun pendingSync_isNeverWrittenToFirestore() {
+        // The same mapper batch.set() uses. The security rules reject documents with unknown fields.
+        val deposit = DepositDto(
+            depositId = "dep-offline", fundId = "fund-1", memberName = "Rahim", amount = 700L,
+            depositDate = 1_700_000_000_000L, paymentMethod = "Cash", isPendingSync = true
+        )
+        val expense = ExpenseDto(
+            expenseId = "exp-offline", fundId = "fund-1", amount = 300L,
+            expenseDate = 1_700_000_000_000L, category = "Office & Administration",
+            description = "Printer paper", paymentMethod = "Cash", isPendingSync = true
+        )
+
+        @Suppress("UNCHECKED_CAST")
+        val depositFields = (CustomClassMapper.convertToPlainJavaTypes(deposit) as Map<String, Any?>).keys
+        @Suppress("UNCHECKED_CAST")
+        val expenseFields = (CustomClassMapper.convertToPlainJavaTypes(expense) as Map<String, Any?>).keys
+
+        assertThat(depositFields).contains("isVoid")
+        assertThat(depositFields).containsNoneOf("isPendingSync", "pendingSync")
+        assertThat(expenseFields).contains("isVoid")
+        assertThat(expenseFields).containsNoneOf("isPendingSync", "pendingSync")
     }
 
     @Test

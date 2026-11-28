@@ -30,6 +30,10 @@ data class TransactionDetailUiState(
     val isVoid: Boolean
         get() = if (isExpense) expense?.isVoid == true else deposit?.isVoid == true
 
+    /** True while this transaction exists only on this device (Invariant 5). */
+    val isPendingSync: Boolean
+        get() = if (isExpense) expense?.isPendingSync == true else deposit?.isPendingSync == true
+
     val originalAmount: Long
         get() = if (isExpense) expense?.amount ?: 0L else deposit?.amount ?: 0L
 }

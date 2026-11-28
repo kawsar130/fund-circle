@@ -91,8 +91,8 @@
     <string name="dashboard_locked_notice">This circle is locked. New transactions cannot be recorded.</string>
     <string name="dashboard_recent_transactions_header">Recent Transactions</string>
     <string name="dashboard_btn_view_all">View All</string>
-    <string name="dashboard_action_deposit">+ Deposit</string>
-    <string name="dashboard_action_expense">- Expense</string>
+    <string name="dashboard_action_deposit">Deposit</string>
+    <string name="dashboard_action_expense">Expense</string>
     <string name="dashboard_action_reports">Reports</string>
     <string name="dashboard_action_members">Members</string>
     <string name="dashboard_empty_transactions_title">No Transactions Yet</string>
@@ -134,6 +134,7 @@
     <string name="tx_reversal_original_format">Original: %1$s %2$s • Reversal: %3$s %4$s</string>
     <string name="tx_reversal_reason_format">%1$s • Reason: %2$s</string>
     <string name="tx_verified_format">%1$s • Verified</string>
+    <string name="tx_pending_sync_format">%1$s • Pending sync</string>
     <string name="ledger_fab_record">Record</string>
     <string name="ledger_fab_record_cd">Record transaction</string>
     <string name="ledger_empty_deposits_title">No Deposits Found</string>
@@ -141,7 +142,7 @@
     <string name="ledger_empty_expenses_title">No Expenses Found</string>
     <string name="ledger_empty_expenses_subtitle">No expenses match the selected filter or search query.</string>
     <string name="ledger_offline_warning">Viewing Offline Cache</string>
-    <string name="ledger_paid_by_prefix">Paid by: %1$s</string>
+    <string name="ledger_paid_by_with_date">Paid by: %1$s • %2$s</string>
     <string name="ledger_deposit_amount_format">+ %1$s %2$s</string>
     <string name="ledger_expense_amount_format">- %1$s %2$s</string>
 
@@ -191,6 +192,8 @@
     <string name="tx_detail_type_expense">Operational Expense</string>
     <string name="tx_detail_status_completed">COMPLETED &amp; POSTED</string>
     <string name="tx_detail_status_completed_cd">Status: Completed and posted</string>
+    <string name="tx_detail_status_pending_sync">PENDING SYNC ⏳</string>
+    <string name="tx_detail_status_pending_sync_cd">Status: Saved on this device, waiting to sync with the server</string>
     <string name="tx_detail_specs_title">TRANSACTION SPECIFICATIONS</string>
     <string name="tx_detail_id_label">Transaction ID</string>
     <string name="tx_detail_contributor_label">Contributor</string>
@@ -431,6 +434,7 @@
     <string name="badge_role_admin">ADMIN 🛡️</string>
     <string name="badge_role_stakeholder">STAKEHOLDER 👤</string>
     <string name="badge_status_live">LIVE 🟢</string>
+    <string name="badge_status_offline">OFFLINE ⚪</string>
     <string name="badge_status_active">ACTIVE ✓</string>
     <string name="badge_status_inactive">INACTIVE ⏱</string>
     <string name="badge_status_locked">LOCKED 🔒</string>
@@ -444,6 +448,7 @@
     <string name="badge_role_admin_cd">Circle role: Administrator</string>
     <string name="badge_role_stakeholder_cd">Circle role: Stakeholder</string>
     <string name="badge_status_live_cd">Circle balance is live and synchronized</string>
+    <string name="badge_status_offline_cd">Offline: showing the last synced balance. Changes sync when you reconnect.</string>
     <string name="badge_status_active_cd">Status: Active</string>
     <string name="badge_status_inactive_cd">Status: Inactive</string>
     <string name="badge_status_locked_cd">Status: Locked</string>

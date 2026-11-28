@@ -14,5 +14,9 @@ data class TransactionItem(
     val timestamp: Long,
     val paymentMethod: PaymentMethod,
     val isVoid: Boolean,
-    val category: ExpenseCategory? = null
+    val category: ExpenseCategory? = null,
+    /** Reason typed when the transaction was reversed; null unless [isVoid]. */
+    val voidReason: String? = null,
+    /** True while the write exists only on this device and the server has not acknowledged it (Invariant 5). */
+    val isPendingSync: Boolean = false
 )

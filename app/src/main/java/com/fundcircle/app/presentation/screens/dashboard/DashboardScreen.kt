@@ -369,6 +369,7 @@ fun DashboardScreen(
                     item(key = "hero_balance_card") {
                         HeroBalanceCard(
                             circle = circle,
+                            isOffline = state.isOffline,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = DesignTokens.Spacing16, vertical = DesignTokens.Spacing12)
@@ -475,6 +476,7 @@ fun DashboardScreen(
 @Composable
 fun HeroBalanceCard(
     circle: FundCircle,
+    isOffline: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -503,7 +505,7 @@ fun HeroBalanceCard(
                     style = SectionHeaderStyle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                LiveBadge()
+                LiveBadge(isOffline = isOffline)
             }
 
             Spacer(modifier = Modifier.height(DesignTokens.Spacing12))
@@ -736,10 +738,14 @@ fun TransactionItemCard(
 
             // Row 3: Timestamp & Status
             val formattedDate = DateUtils.formatDisplayDate(item.timestamp)
-            val row3Text = if (item.isVoid) {
-                stringResource(R.string.tx_reversal_reason_format, formattedDate, stringResource(R.string.badge_status_reversed))
-            } else {
-                stringResource(R.string.tx_verified_format, formattedDate)
+            val row3Text = when {
+                item.isVoid -> stringResource(
+                    R.string.tx_reversal_reason_format,
+                    formattedDate,
+                    item.voidReason ?: stringResource(R.string.badge_status_reversed)
+                )
+                item.isPendingSync -> stringResource(R.string.tx_pending_sync_format, formattedDate)
+                else -> stringResource(R.string.tx_verified_format, formattedDate)
             }
             Text(
                 text = row3Text,

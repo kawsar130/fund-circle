@@ -65,6 +65,14 @@ class LedgerDateRangeTest {
         assertThat(oneDay.contains(localTime(dhaka, 2026, Calendar.NOVEMBER, 11, 12, 0), dhaka)).isFalse()
     }
 
+    @Test
+    fun isSingleDay_onlyWhenStartEqualsEnd() {
+        val nov10 = pickerDay(2026, Calendar.NOVEMBER, 10)
+
+        assertThat(LedgerDateRange(nov10, nov10).isSingleDay).isTrue()
+        assertThat(nov10to12.isSingleDay).isFalse()
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsAStartAfterTheEnd() {
         LedgerDateRange(
