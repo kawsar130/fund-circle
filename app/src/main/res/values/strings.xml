@@ -11,6 +11,7 @@
     <string name="auth_error_no_accounts">No Google accounts found on this device.</string>
     <string name="auth_loading_signing_in">Signing in…</string>
     <string name="auth_logo_content_description">Fund Circle Logo</string>
+    <string name="brand_logo_monogram" translatable="false">FC</string>
     <string name="auth_google_icon_content_description">Google Logo</string>
     <string name="auth_offline_cache_warning">Viewing Offline Cache</string>
 
@@ -19,8 +20,11 @@
     <string name="hub_signed_in_label">Signed In</string>
     <string name="hub_section_managed">CIRCLES I MANAGE (%1$d/5)</string>
     <string name="hub_section_joined">CIRCLES I JOINED (%1$d)</string>
-    <string name="hub_member_count_single">1 Member</string>
-    <string name="hub_members_count">%1$d Members</string>
+    <plurals name="hub_members_count">
+        <item quantity="one">%1$d Member</item>
+        <item quantity="other">%1$d Members</item>
+    </plurals>
+    <string name="hub_members_currency_line">%1$s • %2$s (%3$s)</string>
     <string name="hub_balance_label">Balance</string>
     <string name="hub_balance_format">%1$s %2$s</string>
     <string name="hub_empty_title">No Fund Circles Yet</string>
@@ -231,7 +235,7 @@
     <string name="dialog_reverse_recorded_info_with_actor">Recorded: %1$s by %2$s</string>
     <string name="dialog_reverse_reason_label">Reason for Reversal *</string>
     <string name="dialog_reverse_reason_placeholder">e.g., Duplicate bank payment voucher entry.</string>
-    <string name="dialog_reverse_reason_helper">Must provide explanatory reason (5-250 characters).</string>
+    <string name="dialog_reverse_reason_helper">Must provide explanatory reason (5–250 characters).</string>
     <string name="dialog_reverse_reason_error">Reason must be between 5 and 250 characters.</string>
     <string name="dialog_reverse_btn_keep">Keep Entry</string>
     <string name="dialog_reverse_btn_confirm">Confirm &amp; Reverse</string>
@@ -251,8 +255,10 @@
     <string name="members_roster_badge_left">LEFT</string>
     <string name="members_roster_badge_pending">PENDING</string>
     <string name="members_roster_deposits_format">Deposits: %1$s %2$s</string>
-    <string name="members_roster_deposits_count_singular">• 1 Transaction</string>
-    <string name="members_roster_deposits_count_plural">• %1$d Transactions</string>
+    <plurals name="members_roster_deposits_count">
+        <item quantity="one">• %1$d Transaction</item>
+        <item quantity="other">• %1$d Transactions</item>
+    </plurals>
     <string name="members_roster_fab_add_member">+ Add Member</string>
     <string name="members_roster_fab_add_member_cd">Add new stakeholder</string>
     <string name="members_roster_empty_title">No stakeholders found</string>
@@ -270,8 +276,10 @@
     <string name="member_detail_status_joined_format">Status: %1$s • Joined: %2$s</string>
     <string name="member_detail_cumulative_deposits_label">Cumulative Deposits</string>
     <string name="member_detail_transactions_count_label">Transactions Count</string>
-    <string name="member_detail_deposit_count_singular">1 Deposit</string>
-    <string name="member_detail_deposit_count_plural">%1$d Deposits</string>
+    <plurals name="member_detail_deposit_count">
+        <item quantity="one">%1$d Deposit</item>
+        <item quantity="other">%1$d Deposits</item>
+    </plurals>
     <string name="member_detail_section_deposits">Deposit History</string>
     <string name="member_detail_empty_deposits_title">No deposits recorded</string>
     <string name="member_detail_empty_deposits_subtitle">This member has not contributed any deposits yet.</string>

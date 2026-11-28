@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fundcircle.app.R
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.core.common.DateUtils
 import com.fundcircle.app.domain.model.Currency
 import com.fundcircle.app.domain.model.ExpenseCategory
@@ -91,8 +92,6 @@ import com.fundcircle.app.presentation.theme.SectionHeaderStyle
 import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
 import com.fundcircle.app.presentation.theme.TabularNumLarge
 import com.fundcircle.app.presentation.theme.TabularNumMedium
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun DashboardRoute(
@@ -101,8 +100,8 @@ fun DashboardRoute(
     onNavigateToRecordTransaction: (String, RecordTransactionMode) -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToMembers: (String) -> Unit,
-    onNavigateToReports: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    onNavigateToReports: (String) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -513,7 +512,7 @@ fun HeroBalanceCard(
             val isNegative = circle.recordedBalance < 0L
             val absBalance = if (isNegative) -circle.recordedBalance else circle.recordedBalance
             val formattedBalance = remember(absBalance) {
-                NumberFormat.getIntegerInstance(Locale.US).format(absBalance)
+                AmountFormatter.format(absBalance)
             }
             val balanceText = if (isNegative) {
                 stringResource(
@@ -560,7 +559,7 @@ fun HeroBalanceCard(
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
                     val formattedDeposits = remember(circle.totalDeposits) {
-                        NumberFormat.getIntegerInstance(Locale.US).format(circle.totalDeposits)
+                        AmountFormatter.format(circle.totalDeposits)
                     }
                     Text(
                         text = stringResource(
@@ -584,7 +583,7 @@ fun HeroBalanceCard(
                     )
                     Spacer(modifier = Modifier.height(DesignTokens.Spacing4))
                     val formattedExpenses = remember(circle.totalExpenses) {
-                        NumberFormat.getIntegerInstance(Locale.US).format(circle.totalExpenses)
+                        AmountFormatter.format(circle.totalExpenses)
                     }
                     Text(
                         text = stringResource(
@@ -615,7 +614,7 @@ fun TransactionItemCard(
     modifier: Modifier = Modifier
 ) {
     val formattedAmount = remember(item.amount) {
-        NumberFormat.getIntegerInstance(Locale.US).format(item.amount)
+        AmountFormatter.format(item.amount)
     }
 
     // An expense with no description is titled by its (localized) category.

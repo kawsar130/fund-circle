@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.detail
 
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.common.shortTransactionRef
 import androidx.activity.compose.BackHandler
@@ -91,7 +92,6 @@ import com.fundcircle.app.presentation.theme.SectionHeaderStyle
 import com.fundcircle.app.presentation.theme.TABULAR_DIGITS
 import com.fundcircle.app.presentation.theme.TabularNumLarge
 import kotlinx.coroutines.flow.collectLatest
-import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
@@ -223,7 +223,7 @@ fun TransactionDetailScreen(
         val scrollState = rememberScrollState()
         val originalAmount = uiState.originalAmount
         val formattedAmount = remember(originalAmount) {
-            NumberFormat.getIntegerInstance(Locale.US).format(originalAmount)
+            AmountFormatter.format(originalAmount)
         }
         val isVoid = uiState.isVoid
         val voidMetadata = if (uiState.isExpense) {

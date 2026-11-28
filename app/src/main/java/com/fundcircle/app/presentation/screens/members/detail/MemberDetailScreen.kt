@@ -1,5 +1,6 @@
 package com.fundcircle.app.presentation.screens.members.detail
 
+import com.fundcircle.app.core.common.AmountFormatter
 import com.fundcircle.app.presentation.common.asUiText
 import com.fundcircle.app.presentation.common.extractInitials
 import androidx.activity.compose.BackHandler
@@ -63,6 +64,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -92,7 +94,6 @@ import com.fundcircle.app.presentation.theme.SectionHeaderStyle
 import com.fundcircle.app.presentation.theme.TabularNumLarge
 import com.fundcircle.app.presentation.theme.TabularNumMedium
 import com.fundcircle.app.presentation.theme.TabularNumSmall
-import java.text.NumberFormat
 import java.util.Locale
 
 /**
@@ -399,7 +400,7 @@ fun MemberDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.height(DesignTokens.Spacing8))
                                 val formattedDeposits = remember(member.totalContributed) {
-                                    NumberFormat.getIntegerInstance(Locale.US).format(member.totalContributed)
+                                    AmountFormatter.format(member.totalContributed)
                                 }
                                 Text(
                                     text = "${currency.symbol} $formattedDeposits",
@@ -429,11 +430,11 @@ fun MemberDetailScreen(
                                     state.deposits.count { !it.isVoid }
                                 }
                                 Text(
-                                    text = if (activeCount == 1) {
-                                        stringResource(R.string.member_detail_deposit_count_singular)
-                                    } else {
-                                        stringResource(R.string.member_detail_deposit_count_plural, activeCount)
-                                    },
+                                    text = pluralStringResource(
+                                        R.plurals.member_detail_deposit_count,
+                                        activeCount,
+                                        activeCount
+                                    ),
                                     style = TabularNumMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -849,7 +850,7 @@ private fun DepositItemRow(
         DateUtils.formatDisplayDate(deposit.depositDate)
     }
     val formattedAmount = remember(deposit.amount) {
-        NumberFormat.getIntegerInstance(Locale.US).format(deposit.amount)
+        AmountFormatter.format(deposit.amount)
     }
 
     Card(
