@@ -257,6 +257,7 @@ fun CircleHubScreen(
                                     circle = circle,
                                     isAdmin = true,
                                     isActive = circle.id == state.activeCircleId,
+                                    isOffline = state.isOffline,
                                     onClick = { onAction(CircleHubUiAction.CircleSelected(circle.id)) },
                                     modifier = Modifier.animateItem()
                                 )
@@ -286,6 +287,7 @@ fun CircleHubScreen(
                                     circle = circle,
                                     isAdmin = false,
                                     isActive = circle.id == state.activeCircleId,
+                                    isOffline = state.isOffline,
                                     onClick = { onAction(CircleHubUiAction.CircleSelected(circle.id)) },
                                     modifier = Modifier.animateItem()
                                 )
@@ -374,6 +376,7 @@ fun CircleCard(
     circle: FundCircle,
     isAdmin: Boolean,
     isActive: Boolean,
+    isOffline: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -429,7 +432,7 @@ fun CircleCard(
                         CircleStatusBadge(isLocked = true)
                     }
                     if (isActive) {
-                        LiveBadge()
+                        LiveBadge(isOffline = isOffline)
                     }
                 }
 

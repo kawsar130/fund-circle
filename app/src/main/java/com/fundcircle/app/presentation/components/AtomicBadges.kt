@@ -70,19 +70,36 @@ fun RoleBadge(
     }
 }
 
+/**
+ * Sync status pill. Shows LIVE while the device is online and OFFLINE while it is reading
+ * from the persistent cache, so it never contradicts the offline banner (Invariant 5).
+ */
 @Composable
 fun LiveBadge(
+    isOffline: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val a11yDesc = stringResource(R.string.badge_status_live_cd)
+    val a11yDesc = stringResource(
+        if (isOffline) R.string.badge_status_offline_cd else R.string.badge_status_live_cd
+    )
     Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        color = if (isOffline) {
+            MaterialTheme.colorScheme.surfaceVariant
+        } else {
+            MaterialTheme.colorScheme.primaryContainer
+        },
+        contentColor = if (isOffline) {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        },
         shape = DesignTokens.PillShape,
         modifier = modifier.semantics { contentDescription = a11yDesc }
     ) {
         Text(
-            text = stringResource(R.string.badge_status_live),
+            text = stringResource(
+                if (isOffline) R.string.badge_status_offline else R.string.badge_status_live
+            ),
             style = BadgeTextStyle,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
@@ -230,7 +247,8 @@ private fun AtomicBadgesLightPreview() {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RoleBadge(role = MemberRole.ADMIN)
                 RoleBadge(role = MemberRole.MEMBER)
-                LiveBadge()
+                LiveBadge(isOffline = false)
+                LiveBadge(isOffline = true)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircleStatusBadge(isLocked = false)
@@ -258,7 +276,8 @@ private fun AtomicBadgesDarkPreview() {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RoleBadge(role = MemberRole.ADMIN)
                 RoleBadge(role = MemberRole.MEMBER)
-                LiveBadge()
+                LiveBadge(isOffline = false)
+                LiveBadge(isOffline = true)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircleStatusBadge(isLocked = false)

@@ -2,6 +2,7 @@ package com.fundcircle.app.presentation.screens.settings
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.core.theme.ThemePreferenceManager
 import com.fundcircle.app.domain.model.CircleMember
 import com.fundcircle.app.domain.model.Currency
@@ -44,6 +45,8 @@ class SettingsViewModelTest {
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val themePreferenceManager: ThemePreferenceManager = mockk(relaxed = true)
+    private val networkMonitor: NetworkMonitor = mockk(relaxed = true)
+    private val isOnlineFlow = MutableStateFlow(true)
     private val darkThemeOverrideFlow = MutableStateFlow<Boolean?>(null)
 
     private val testDispatcher = StandardTestDispatcher()
@@ -115,6 +118,7 @@ class SettingsViewModelTest {
         every { observeCircleMembersUseCase(testFundId) } returns flowOf(listOf(adminMember, regularMember))
         every { authRepository.userSession } returns flowOf(sampleAdminSession)
         every { themePreferenceManager.darkThemeOverride } returns darkThemeOverrideFlow
+        every { networkMonitor.isOnline } returns isOnlineFlow
     }
 
     @After
@@ -132,7 +136,8 @@ class SettingsViewModelTest {
             leaveCircleUseCase = leaveCircleUseCase,
             transferAdminOwnershipUseCase = transferAdminOwnershipUseCase,
             authRepository = authRepository,
-            themePreferenceManager = themePreferenceManager
+            themePreferenceManager = themePreferenceManager,
+            networkMonitor = networkMonitor
         )
     }
 
@@ -330,5 +335,20 @@ class SettingsViewModelTest {
 
         verify(exactly = 1) { themePreferenceManager.setDarkTheme(true) }
         verify(exactly = 1) { themePreferenceManager.setDarkTheme(false) }
+    }
+
+    @Test
+    fun `offline state follows the network monitor so the sync badge can switch to OFFLINE`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.isOffline).isFalse()
+
+        isOnlineFlow.value = false
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.isOffline).isTrue()
+
+        isOnlineFlow.value = true
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.isOffline).isFalse()
     }
 }

@@ -3,9 +3,11 @@ package com.fundcircle.app.data.dto
 import com.fundcircle.app.domain.model.ExpenseCategory
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.TransactionItem
+import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * Firestore DTO for /funds/{fundId}/expenses/{expenseId} subcollection documents.
@@ -32,7 +34,14 @@ data class ExpenseDto(
     val voidReason: String? = null,
     val voidedAt: Long? = null,
     val voidedBy: String? = null,
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    /**
+     * Local-only: set from the snapshot's `hasPendingWrites()`. Excluded from Firestore writes
+     * (the security rules reject unknown fields) and from serialization.
+     */
+    @get:Exclude
+    @Transient
+    val isPendingSync: Boolean = false
 )
 
 fun ExpenseDto.toTransactionItem(): TransactionItem {
@@ -50,7 +59,9 @@ fun ExpenseDto.toTransactionItem(): TransactionItem {
         timestamp = effectiveTimestamp,
         paymentMethod = method,
         isVoid = isVoid,
-        category = cat
+        category = cat,
+        voidReason = voidReason?.takeIf { isVoid && it.isNotBlank() },
+        isPendingSync = isPendingSync
     )
 }
 
@@ -78,7 +89,8 @@ fun ExpenseDto.toDomain(): com.fundcircle.app.domain.model.Expense {
                 voidedAt = voidedAt ?: 0L,
                 voidedBy = voidedBy.orEmpty()
             )
-        } else null
+        } else null,
+        isPendingSync = isPendingSync
     )
 }
 

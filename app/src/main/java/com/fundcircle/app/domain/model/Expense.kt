@@ -17,5 +17,7 @@ data class Expense(
     val createdBy: String,
     val creatorEmail: String,
     val isVoid: Boolean = false,
-    val voidMetadata: VoidMetadata? = null
+    val voidMetadata: VoidMetadata? = null,
+    /** True while the write exists only on this device and the server has not acknowledged it (Invariant 5). */
+    val isPendingSync: Boolean = false
 )

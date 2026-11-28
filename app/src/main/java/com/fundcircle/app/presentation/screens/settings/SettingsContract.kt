@@ -19,6 +19,7 @@ data class SettingsUiState(
     val currentUserId: String = "",
     val isAdmin: Boolean = false,
     val isCircleLocked: Boolean = false,
+    val isOffline: Boolean = false,
     val activeMembers: List<CircleMember> = emptyList(),
     val showLeaveDialog: Boolean = false,
     val showTransferAdminDialog: Boolean = false,

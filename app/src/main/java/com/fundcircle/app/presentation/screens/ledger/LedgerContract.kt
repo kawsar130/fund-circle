@@ -32,6 +32,10 @@ data class LedgerDateRange(
         require(startUtcDay <= endUtcDay) { "startUtcDay must not be after endUtcDay" }
     }
 
+    /** True when the user picked one day, so the chip shows that date once instead of "X – X". */
+    val isSingleDay: Boolean
+        get() = startUtcDay == endUtcDay
+
     fun contains(timestamp: Long, timeZone: TimeZone = TimeZone.getDefault()): Boolean {
         val day = DateUtils.localEpochToDatePickerUtc(timestamp, timeZone)
         return day in startUtcDay..endUtcDay

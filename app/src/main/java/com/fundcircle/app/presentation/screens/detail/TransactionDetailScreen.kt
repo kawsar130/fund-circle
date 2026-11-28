@@ -325,17 +325,38 @@ fun TransactionDetailScreen(
                         if (isVoid) {
                             ReversedBadge()
                         } else {
-                            val completedCd = stringResource(R.string.tx_detail_status_completed_cd)
+                            val isPendingSync = uiState.isPendingSync
+                            val statusCd = stringResource(
+                                if (isPendingSync) {
+                                    R.string.tx_detail_status_pending_sync_cd
+                                } else {
+                                    R.string.tx_detail_status_completed_cd
+                                }
+                            )
                             Surface(
                                 shape = DesignTokens.PillShape,
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                color = if (isPendingSync) {
+                                    MaterialTheme.colorScheme.tertiaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                },
+                                contentColor = if (isPendingSync) {
+                                    MaterialTheme.colorScheme.onTertiaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                },
                                 modifier = Modifier.semantics {
-                                    contentDescription = completedCd
+                                    contentDescription = statusCd
                                 }
                             ) {
                                 Text(
-                                    text = stringResource(R.string.tx_detail_status_completed),
+                                    text = stringResource(
+                                        if (isPendingSync) {
+                                            R.string.tx_detail_status_pending_sync
+                                        } else {
+                                            R.string.tx_detail_status_completed
+                                        }
+                                    ),
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold

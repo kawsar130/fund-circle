@@ -489,7 +489,10 @@ fun TransactionsLedgerScreen(
     }
 }
 
-/** Shows "All Dates" with no filter, or the picked range ("3 Nov – 20 Nov 2026") once one is set. */
+/**
+ * Shows "All Dates" with no filter, a single day ("20 Nov 2026") when one day is picked,
+ * or the picked range ("3 Nov 2026 – 20 Nov 2026").
+ */
 @Composable
 private fun DateRangeFilterChip(
     range: LedgerDateRange?,
@@ -497,6 +500,8 @@ private fun DateRangeFilterChip(
 ) {
     val label = if (range == null) {
         stringResource(R.string.ledger_filter_all_dates)
+    } else if (range.isSingleDay) {
+        formatPickerDay(range.startUtcDay)
     } else {
         stringResource(
             R.string.ledger_filter_date_range,
@@ -799,6 +804,8 @@ private fun DepositItemCard(
             val row3Text = if (deposit.isVoid) {
                 val reason = deposit.voidMetadata?.reason?.takeIf { it.isNotBlank() } ?: stringResource(R.string.badge_status_reversed)
                 stringResource(R.string.tx_reversal_reason_format, formattedDate, reason)
+            } else if (deposit.isPendingSync) {
+                stringResource(R.string.tx_pending_sync_format, formattedDate)
             } else {
                 stringResource(R.string.tx_verified_format, formattedDate)
             }
@@ -920,8 +927,10 @@ private fun ExpenseItemCard(
             val row3Text = if (expense.isVoid) {
                 val reason = expense.voidMetadata?.reason?.takeIf { it.isNotBlank() } ?: stringResource(R.string.badge_status_reversed)
                 stringResource(R.string.tx_reversal_reason_format, formattedDate, reason)
+            } else if (expense.isPendingSync) {
+                stringResource(R.string.tx_pending_sync_format, formattedDate)
             } else if (expense.paidBy.isNotBlank()) {
-                stringResource(R.string.ledger_paid_by_prefix, expense.paidBy) + " • " + formattedDate
+                stringResource(R.string.ledger_paid_by_with_date, expense.paidBy, formattedDate)
             } else {
                 stringResource(R.string.tx_verified_format, formattedDate)
             }

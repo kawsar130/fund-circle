@@ -2,9 +2,11 @@ package com.fundcircle.app.data.dto
 
 import com.fundcircle.app.domain.model.PaymentMethod
 import com.fundcircle.app.domain.model.TransactionItem
+import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * Firestore DTO for /funds/{fundId}/deposits/{depositId} subcollection documents.
@@ -30,7 +32,14 @@ data class DepositDto(
     val voidReason: String? = null,
     val voidedAt: Long? = null,
     val voidedBy: String? = null,
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    /**
+     * Local-only: set from the snapshot's `hasPendingWrites()`. Excluded from Firestore writes
+     * (the security rules reject unknown fields) and from serialization.
+     */
+    @get:Exclude
+    @Transient
+    val isPendingSync: Boolean = false
 )
 
 fun DepositDto.toTransactionItem(): TransactionItem {
@@ -47,7 +56,9 @@ fun DepositDto.toTransactionItem(): TransactionItem {
         timestamp = effectiveTimestamp,
         paymentMethod = method,
         isVoid = isVoid,
-        category = null
+        category = null,
+        voidReason = voidReason?.takeIf { isVoid && it.isNotBlank() },
+        isPendingSync = isPendingSync
     )
 }
 
@@ -73,7 +84,8 @@ fun DepositDto.toDomain(): com.fundcircle.app.domain.model.Deposit {
                 voidedAt = voidedAt ?: 0L,
                 voidedBy = voidedBy.orEmpty()
             )
-        } else null
+        } else null,
+        isPendingSync = isPendingSync
     )
 }
 

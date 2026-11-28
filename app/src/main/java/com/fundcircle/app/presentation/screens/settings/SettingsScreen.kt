@@ -399,7 +399,7 @@ fun SettingsScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            LiveBadge()
+                            LiveBadge(isOffline = state.isOffline)
                         }
                     }
                 }

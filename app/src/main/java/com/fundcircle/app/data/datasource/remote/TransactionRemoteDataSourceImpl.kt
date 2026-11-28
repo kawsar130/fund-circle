@@ -6,6 +6,7 @@ import com.fundcircle.app.data.dto.ExpenseDto
 import com.fundcircle.app.domain.model.WriteStatus
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.CancellationException
@@ -28,7 +29,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             .collection(COLLECTION_DEPOSITS)
             .orderBy(FIELD_DEPOSIT_DATE, Query.Direction.DESCENDING)
             .limit(limit.toLong())
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
@@ -37,7 +38,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                     doc.toObject(DepositDto::class.java)?.let { dto ->
                         dto.copy(
                             depositId = if (dto.depositId.isBlank()) doc.id else dto.depositId,
-                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId,
+                            isPendingSync = doc.metadata.hasPendingWrites()
                         )
                     }
                 }.orEmpty()
@@ -55,7 +57,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             .collection(COLLECTION_EXPENSES)
             .orderBy(FIELD_EXPENSE_DATE, Query.Direction.DESCENDING)
             .limit(limit.toLong())
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
@@ -64,7 +66,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                     doc.toObject(ExpenseDto::class.java)?.let { dto ->
                         dto.copy(
                             expenseId = if (dto.expenseId.isBlank()) doc.id else dto.expenseId,
-                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId,
+                            isPendingSync = doc.metadata.hasPendingWrites()
                         )
                     }
                 }.orEmpty()
@@ -81,7 +84,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             .document(fundId)
             .collection(COLLECTION_DEPOSITS)
             .orderBy(FIELD_DEPOSIT_DATE, Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
@@ -90,7 +93,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                     doc.toObject(DepositDto::class.java)?.let { dto ->
                         dto.copy(
                             depositId = if (dto.depositId.isBlank()) doc.id else dto.depositId,
-                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId,
+                            isPendingSync = doc.metadata.hasPendingWrites()
                         )
                     }
                 }.orEmpty()
@@ -107,7 +111,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             .document(fundId)
             .collection(COLLECTION_EXPENSES)
             .orderBy(FIELD_EXPENSE_DATE, Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
@@ -116,7 +120,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                     doc.toObject(ExpenseDto::class.java)?.let { dto ->
                         dto.copy(
                             expenseId = if (dto.expenseId.isBlank()) doc.id else dto.expenseId,
-                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId,
+                            isPendingSync = doc.metadata.hasPendingWrites()
                         )
                     }
                 }.orEmpty()
@@ -133,7 +138,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             .document(fundId)
             .collection(COLLECTION_DEPOSITS)
             .document(depositId)
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
@@ -142,7 +147,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                     snapshot.toObject(DepositDto::class.java)?.let { dto ->
                         dto.copy(
                             depositId = if (dto.depositId.isBlank()) snapshot.id else dto.depositId,
-                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId,
+                            isPendingSync = snapshot.metadata.hasPendingWrites()
                         )
                     }
                 } else {
@@ -161,7 +167,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
             .document(fundId)
             .collection(COLLECTION_EXPENSES)
             .document(expenseId)
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
@@ -170,7 +176,8 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
                     snapshot.toObject(ExpenseDto::class.java)?.let { dto ->
                         dto.copy(
                             expenseId = if (dto.expenseId.isBlank()) snapshot.id else dto.expenseId,
-                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId
+                            fundId = if (dto.fundId.isBlank()) fundId else dto.fundId,
+                            isPendingSync = snapshot.metadata.hasPendingWrites()
                         )
                     }
                 } else {

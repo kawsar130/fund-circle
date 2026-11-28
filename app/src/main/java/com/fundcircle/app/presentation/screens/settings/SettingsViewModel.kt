@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.fundcircle.app.R
 import com.fundcircle.app.core.common.UiText
+import com.fundcircle.app.core.network.NetworkMonitor
 import com.fundcircle.app.core.theme.ThemePreferenceManager
 import com.fundcircle.app.domain.model.MemberStatus
 import com.fundcircle.app.domain.repository.AuthRepository
@@ -30,7 +31,8 @@ class SettingsViewModel @Inject constructor(
     private val leaveCircleUseCase: LeaveCircleUseCase,
     private val transferAdminOwnershipUseCase: TransferAdminOwnershipUseCase,
     private val authRepository: AuthRepository,
-    private val themePreferenceManager: ThemePreferenceManager
+    private val themePreferenceManager: ThemePreferenceManager,
+    private val networkMonitor: NetworkMonitor
 ) : BaseViewModel<SettingsUiState, SettingsUiAction, SettingsUiEffect>(SettingsUiState()) {
 
     val fundId: String = savedStateHandle.get<String>(KEY_FUND_ID)
@@ -45,7 +47,16 @@ class SettingsViewModel @Inject constructor(
             )
         }
         observeThemePreference()
+        observeNetworkState()
         loadSettingsData()
+    }
+
+    private fun observeNetworkState() {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { isOnline ->
+                setState { copy(isOffline = !isOnline) }
+            }
+        }
     }
 
     private fun observeThemePreference() {
